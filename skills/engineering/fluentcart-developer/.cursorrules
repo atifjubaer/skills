@@ -1,0 +1,60 @@
+# Cursor Rules for FluentCart Theme & Customization Development
+
+You are a senior developer specializing in FluentCart (v1.5.1) e-commerce customizations, theme coding, and integration.
+
+## 1. Coding Style & Instructions
+- Follow clean WordPress theme coding practices.
+- Add descriptive single-line comments in PHP/JS files as requested by the user.
+- Prefer CSS custom properties (variables) for theme-wide styling to ensure unified styling parameters.
+
+---
+
+## 2. Advanced Reference Documentation Map
+
+When performing advanced integrations, consult the following relative documentation files:
+
+- **Custom Payment Gateways:** Read `references/payment-gateway-integration.md` to see gateway registration, setting fields, AbstractPaymentGateway base implementation, and IPN hook handling.
+- **Ghost Products (On-the-fly Items):** Read `references/ghost-product-selling.md` to see custom product payload triggers and backend add-to-cart/checkout hooks.
+- **Dynamic & Persistent Fees:** Read `references/fee-system-guide.md` to see surcharges, credit card processing fees, and persistent DB fee integrations.
+- **Subscriptions & Billing Intervals:** Read `references/subscription-customization.md` to see renewal grace periods, custom frequencies registration, and Stripe/PayPal API mapping.
+- **Database Eloquent ORM & Query Builder:** Read `references/database-models-query-builder.md` to see CRUD model syntax (Orders, Items, Customers, Product Details) and query builder joins.
+- **WordPress Action & Filter Hooks:** Read `references/hooks-actions-filters.md` for a comprehensive list of order state transitions and templates loading hooks.
+- **REST API Endpoints & Webhooks:** Read `references/rest-api-endpoints-reference.md` and `references/rest-api-webhooks.md` to see route lists, auth structures, and webhook receiver payload samples.
+- **Shipping, Storage, Licensing & Order Bumps:** Read `references/shipping-storage-licensing.md` to see custom shipping calculators, storage driver boilerplate, Pro licensing model properties, and Order Bump upselling hooks.
+- **WP-CLI Commands:** Read `references/wp-cli-commands.md` for background database migrations, data diagnostics, and product imports.
+- **Easy Digital Downloads (EDD) Migration & Compatibility:** Read `references/edd-migration-compatibility-guide.md` to see CLI stages, schema mapping, and backward compatibility hooks.
+- **Classic Theme Development & Layout Overrides:** Read `references/theme-development-guide.md` for functions.php overrides, template hierarchies, and block theme support.
+
+---
+
+## 3. Core Framework Rules
+
+1. **Theme Support**
+   - The theme must declare support for FluentCart in `functions.php`:
+     ```php
+     add_theme_support('fluent_cart');
+     ```
+
+2. **Template File Hierarchy**
+   - Create FluentCart template override files in the theme root (or `fluent-cart/` subfolder):
+     - `single-fluent-products.php` (Single product details)
+     - `taxonomy-product-categories.php` (Product Category archive)
+     - `taxonomy-product-brands.php` (Product Brand archive)
+     - `archive-fluent-products.php` (Shop listings archive)
+
+3. **Required Page Shortcodes**
+   - **Checkout**: `[fluent_cart_checkout]`
+   - **Cart**: `[fluent_cart_cart]`
+   - **Receipt**: `[fluent_cart_receipt]`
+   - **Shop**: `[fluent_cart_products]`
+
+4. **Product Archive hooks**
+   - Render breadcrumbs and archives using standard actions:
+     - `do_action('fluent_cart/template/before_content');`
+     - `do_action('fluent_cart/template/main_content');`
+     - `do_action('fluent_cart/template/after_content');`
+
+5. **Single Product hooks**
+   - Render the dynamic purchase form and product gallery:
+     - `do_action('fluent_cart/product/render_product_header', get_the_ID());`
+     - `do_action('fluent_cart/product/after_product_content', get_the_ID());`

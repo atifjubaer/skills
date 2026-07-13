@@ -1,0 +1,22 @@
+{
+  "name": "atifjubaer-skills",
+  "version": "1.0.0",
+  "description": "Atif Jubaer's custom agent skills for theme and plugin development",
+  "main": "bin/index.js",
+  "bin": {
+    "atifjubaer-skills": "./bin/index.js"
+  },
+  "keywords": [
+    "ai-skills",
+    "skills",
+    "antigravity",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "cline",
+    "zed",
+    "copilot"
+  ],
+  "author": "Atif Jubaer",
+  "license": "MIT"
+}

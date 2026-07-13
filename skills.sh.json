@@ -1,0 +1,13 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "WordPress & E-Commerce",
+      "description": "Skills for FluentCart theme and plugin development.",
+      "skills": [
+        "fluentcart-developer"
+      ]
+    }
+  ]
+}
