@@ -8,7 +8,7 @@ This repository provides ready-to-use configurations, reference manuals, and cod
 
 ## Included Skills
 
-- **`fluentcart-developer`**: Complete WordPress e-commerce developer skill, database Eloquent models, REST API reference, payment gateway integration, dynamic fee systems, shipping carriers, and shortcodes.
+- **`FluentCart Developer`** (`fluentcart-developer`): Complete WordPress e-commerce developer skill, database Eloquent models, REST API reference, payment gateway integration, dynamic fee systems, shipping carriers, and shortcodes.
 
 ---
 
@@ -22,18 +22,11 @@ Install this skill directly into your project's local workspace using the offici
 
 ```bash
 # Using npm
-npx skills add atifjubaer/skills --skill fluentcart-developer
+npx skills add atifjubaer/skills --skill "FluentCart Developer"
 
-# Using pnpm
-pnpm dlx skills add atifjubaer/skills --skill fluentcart-developer
-
-# Using yarn
-yarn dlx skills add atifjubaer/skills --skill fluentcart-developer
-
-# Using bun
-bunx --bun skills add atifjubaer/skills --skill fluentcart-developer
+# Or run interactively without flags to pick from list:
+npx skills add atifjubaer/skills
 ```
-*This fetches the skill metadata and automatically configures it in your project's agent directory (e.g., `.cursor/skills/`, `.claude/skills/`, or `.agents/skills/`).*
 
 ---
 
