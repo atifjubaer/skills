@@ -1,22 +1,37 @@
 {
-  "name": "atifjubaer-skills",
-  "version": "1.0.0",
-  "description": "Atif Jubaer's custom agent skills for theme and plugin development",
+  "name": "skills",
+  "version": "1.1.0",
+  "description": "Custom AI Agent Developer Skills for FluentCart theme, plugin, shipping, and payment gateway development",
   "main": "bin/index.js",
   "bin": {
-    "atifjubaer-skills": "./bin/index.js"
+    "skills": "./bin/index.js",
+    "fluentcart-ai-skill": "./bin/index.js"
+  },
+  "scripts": {
+    "build": "node copy-skills.js",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atifjubaer/skills.git"
+  },
+  "homepage": "https://github.com/atifjubaer/skills#readme",
+  "bugs": {
+    "url": "https://github.com/atifjubaer/skills/issues"
   },
   "keywords": [
+    "fluentcart",
+    "wordpress",
     "ai-skills",
     "skills",
     "antigravity",
-    "claude-code",
     "cursor",
+    "claude-code",
     "windsurf",
     "cline",
     "zed",
     "copilot"
   ],
-  "author": "Atif Jubaer",
+  "author": "Fastrsoft",
   "license": "MIT"
 }

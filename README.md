@@ -1,102 +1,108 @@
-# Atif Jubaer's AI Agent Skills
+# Atif Jubaer's Agent Skills Repository
 
-This repository is a central workspace for creating, managing, and distributing custom AI agent skills and project rules. It is designed to support multiple custom skills simultaneously across all IDEs and AI assistants (Antigravity/Gemini, Claude Code, Cursor, Windsurf, Cline, Zed, and GitHub Copilot).
+A comprehensive, platform-agnostic knowledge base, instruction set, and CLI toolkit for FluentCart (v1.5.1+) theme, plugin, shipping, and payment gateway development.
 
----
-
-## Setup & Installation
-
-To install and activate these agent skills globally on your machine, run the installer:
-```bash
-npx skills add atifjubaer/skills
-```
-From the interactive prompt, select the skills you wish to install (e.g. **`FluentCart Developer`**) and select the target AI assistants/editors.
-
-Alternatively, you can run our custom initializer directly:
-```bash
-npx atifjubaer-skills init
-```
-This will automatically sync and write the corresponding rule templates globally and locally inside your active workspace directories.
+This repository provides ready-to-use configurations, reference manuals, and code boilerplates for all major AI coding assistants, enabling them to write correct, compatible code for FluentCart out-of-the-box.
 
 ---
 
-## Discovered Skills
+## Included Skills
 
-*   **`fluentcart-developer`** - Comprehensive developer reference skill for building themes, plugins, and custom integrations (payment gateways, subscriptions) for FluentCart on WordPress.
+- **`fluentcart-developer`**: Complete WordPress e-commerce developer skill, database Eloquent models, REST API reference, payment gateway integration, dynamic fee systems, shipping carriers, and shortcodes.
 
 ---
 
-## Installation Methods
+## Installation & Setup
 
-### Method 1: Using the Custom Package CLI (Recommended)
+Choose the installation method that fits your environment and AI coding assistant:
 
-Run our custom initializer directly from npm/npx:
+### Method 1: The `skills.sh` Method (Recommended for Cursor, Claude Code, Windsurf, Open Code)
 
-```bash
-# Install all skills globally and locally for all editors (Antigravity, Claude Code, Cursor, Zed, etc.)
-npx atifjubaer-skills init
-
-# List all skills currently hosted in this repository
-npx atifjubaer-skills ls
-
-# Install a specific skill only (e.g. fluentcart-developer)
-npx atifjubaer-skills init --skill=fluentcart-developer
-```
-
-### Method 2: Using the Official `skills.sh` CLI
-
-To install a specific skill globally via the official skills ecosystem:
+Install this skill directly into your project's local workspace using the official `skills.sh` manager:
 
 ```bash
 # Using npm
-npx skills add atifjubaer/skills --skill "FluentCart Developer"
+npx skills add atifjubaer/skills --skill fluentcart-developer
 
 # Using pnpm
-pnpm dlx skills add atifjubaer/skills --skill "FluentCart Developer"
+pnpm dlx skills add atifjubaer/skills --skill fluentcart-developer
 
 # Using yarn
-yarn dlx skills add atifjubaer/skills --skill "FluentCart Developer"
+yarn dlx skills add atifjubaer/skills --skill fluentcart-developer
 
 # Using bun
-bunx --bun skills add atifjubaer/skills --skill "FluentCart Developer"
+bunx --bun skills add atifjubaer/skills --skill fluentcart-developer
+```
+*This fetches the skill metadata and automatically configures it in your project's agent directory (e.g., `.cursor/skills/`, `.claude/skills/`, or `.agents/skills/`).*
+
+---
+
+### Method 2: Direct CLI Initializer & Interactive Wizard
+
+Run the CLI command without arguments for an interactive selection prompt:
+
+```bash
+npx fluentcart-ai-skill
+```
+
+Or pass direct command flags:
+
+```bash
+# Initialize both global skills and current project rules for all IDEs
+npx fluentcart-ai-skill init
+
+# Setup ONLY global skills (~/.gemini/, ~/.claude/)
+npx fluentcart-ai-skill global
+
+# Setup ONLY local project rules
+npx fluentcart-ai-skill project
+
+# Safely remove rule markers from project and global files
+npx fluentcart-ai-skill remove
 ```
 
 ---
 
-## Guidelines for AI Assistants: Adding & Modifying Skills
+### Method 3: Manual Installation
 
-If you are an AI assistant helping Atif Jubaer maintain this repository:
+If you prefer manual setup:
+1. **For Antigravity / Gemini**: Copy `SKILL.md`, `references/`, and `examples/` from `skills/fluentcart-developer/` into your global Gemini config path:
+   `~/.gemini/config/skills/fluentcart-developer/`
+2. **For Cursor / Windsurf / Cline / Zed**: Copy `.cursorrules` to your project root.
+3. **For Claude Code**: Copy `CLAUDE.md` to your project root.
+4. **For Web-based AIs**: Copy the content of `fluentcart-rules.md` and paste it into your chat session.
 
-### Directory Structure Convention
-Every skill must be nested inside a subdirectory under the `skills/` folder:
+---
+
+## Repository Folder Structure
+
 ```
-skills/skills/<category>/<skill-slug>/
-├── SKILL.md            <-- [Required] YAML frontmatter + main prompts
-├── rules.md            <-- [Optional] Custom agent style/coding guidelines
-├── .cursorrules        <-- [Optional] Editor rules (Cursor, Windsurf, Cline)
-├── CLAUDE.md           <-- [Optional] Claude Code system rules
-├── references/         <-- [Optional] Level 3 documentation manuals
-└── assets/             <-- [Optional] Code templates or presets
+skills/
+├── README.md                  # Installation guide and repository overview
+├── package.json               # Package configuration
+├── copy-skills.js             # Automated skill sync builder
+├── skills.sh.json             # skills.sh catalog layout configuration
+├── CLAUDE.md                  # Claude Code instructions
+├── CONTRIBUTING.md            # Guidelines for repository contributors
+├── LICENSE                    # MIT License
+├── bin/
+│   └── index.js               # Interactive CLI runner
+├── .github/
+│   └── workflows/
+│       └── sync-docs.yml      # GitHub Actions automated doc sync workflow
+├── references/                # Root reference manuals catalog
+├── examples/                  # Standalone boilerplate code examples
+│   ├── sample-custom-payment-gateway/
+│   ├── sample-shipping-carrier/
+│   └── fluentcart-starter-child-theme/
+└── skills/
+    └── fluentcart-developer/  # 👈 Clean skill directory for skills.sh
+        ├── SKILL.md           # Main index prompt file
+        ├── references/        # Complete developer manuals & schemas
+        └── examples/          # Standalone plugin & theme boilerplates
 ```
 
-### How to Modify a Skill
-1.  Navigate to `skills/skills/<category>/<skill-slug>/`.
-2.  Edit the instructions in `SKILL.md` or update files inside `references/`.
-3.  Instruct the user to run `node bin/index.js init` from the repository root to verify the files and sync them locally.
-4.  Push the updates to GitHub via GitHub Desktop.
+---
 
-### How to Add a New Skill
-1.  Create a folder representing the new skill under `skills/` (e.g., `skills/skills/productivity/fluentcart-checkout/`).
-2.  Create a `SKILL.md` file starting with YAML frontmatter (ensure strings are wrapped in double quotes):
-    ```markdown
-    ---
-    name: "FluentCart Checkout Specialist"
-    description: "Optimizes WooCommerce alternative checkout panels."
-    ---
-    ```
-3.  Register the new skill slug in `skills.sh.json` at the root of the repository.
-4.  Run `node bin/index.js init` locally to test installation.
-5.  Push to GitHub. Users can now install it using:
-    ```bash
-    npx skills add atifjubaer/skills --skill "FluentCart Checkout Specialist"
-    ```
+## Created by
+Developed and maintained by **Fastrsoft** (Atif Jubaer).

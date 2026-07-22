@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const readline = require('readline');
 
 // Helper to copy directory recursively
 function copyDir(src, dest) {
@@ -21,7 +22,7 @@ function copyDir(src, dest) {
     }
 }
 
-// Helper to safely write rules to a file with markers (prevents duplication)
+// Helper to safely write rules to a file with markers
 function writeRulesWithMarkers(filePath, rulesContent, bannerName) {
     try {
         const dir = path.dirname(filePath);
@@ -54,20 +55,28 @@ function writeRulesWithMarkers(filePath, rulesContent, bannerName) {
     }
 }
 
-const args = process.argv.slice(2);
-const command = args[0] || 'init';
+// Helper to safely remove rules markers from a file
+function removeRulesWithMarkers(filePath, bannerName) {
+    try {
+        if (!fs.existsSync(filePath)) return;
+        let existingContent = fs.readFileSync(filePath, 'utf8');
+        const startMarker = `<!-- BEGIN ${bannerName} -->`;
+        const endMarker = `<!-- END ${bannerName} -->`;
 
-if (command === 'help' || command === '--help' || command === '-h') {
-    console.log(`
-FluentCart AI Developer Skill CLI (by Fastrsoft)
-
-Usage:
-  npx fluentcart-ai-skill init      Install skills globally and initialize project rules for all IDEs
-  npx fluentcart-ai-skill global    Install global skills for Antigravity, Claude Code, and Zed
-  npx fluentcart-ai-skill project   Initialize project-specific skills and rules in current directory
-    `);
-    process.exit(0);
+        if (existingContent.includes(startMarker) && existingContent.includes(endMarker)) {
+            const startIndex = existingContent.indexOf(startMarker);
+            const endIndex = existingContent.indexOf(endMarker) + endMarker.length;
+            const updatedContent = existingContent.substring(0, startIndex) + existingContent.substring(endIndex);
+            fs.writeFileSync(filePath, updatedContent.trim(), 'utf8');
+            console.log(`✓ Removed rules from: ${filePath}`);
+        }
+    } catch (err) {
+        console.error(`Error removing rules from ${filePath}:`, err.message);
+    }
 }
+
+const args = process.argv.slice(2);
+const initialCommand = args[0];
 
 const homeDir = os.homedir();
 const localSkillSrc = path.join(__dirname, '..'); // package root
@@ -92,27 +101,18 @@ if (fs.existsSync(rulesFileSrc)) {
 
 // Global install function
 function installGlobal() {
-    console.log('Installing FluentCart Developer Skill globally for all IDEs...');
+    console.log('\nInstalling FluentCart Developer Skill globally for all IDEs...');
     
-    const srcSkillMd = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'SKILL.md');
-    const srcReferences = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'references');
-    const srcAssets = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'assets');
-    const srcScripts = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'scripts');
+    const srcSkillMd = path.join(localSkillSrc, 'SKILL.md');
+    const srcReferences = path.join(localSkillSrc, 'references');
+    const srcExamples = path.join(localSkillSrc, 'examples');
 
     // 1. Antigravity/Gemini Global Skill & Rules
     try {
         fs.mkdirSync(geminiGlobalSkillDir, { recursive: true });
-        fs.copyFileSync(srcSkillMd, path.join(geminiGlobalSkillDir, 'SKILL.md'));
-        
-        if (fs.existsSync(srcReferences)) {
-            copyDir(srcReferences, path.join(geminiGlobalSkillDir, 'references'));
-        }
-        if (fs.existsSync(srcAssets)) {
-            copyDir(srcAssets, path.join(geminiGlobalSkillDir, 'assets'));
-        }
-        if (fs.existsSync(srcScripts)) {
-            copyDir(srcScripts, path.join(geminiGlobalSkillDir, 'scripts'));
-        }
+        if (fs.existsSync(srcSkillMd)) fs.copyFileSync(srcSkillMd, path.join(geminiGlobalSkillDir, 'SKILL.md'));
+        if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(geminiGlobalSkillDir, 'references'));
+        if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(geminiGlobalSkillDir, 'examples'));
         
         writeRulesWithMarkers(geminiGlobalRulesFile, rulesContent, 'FLUENTCART_RULES');
         console.log('✓ Global skill and rules installed for Antigravity/Gemini!');
@@ -123,17 +123,9 @@ function installGlobal() {
     // 2. Claude Code Global Skill
     try {
         fs.mkdirSync(claudeGlobalSkillDir, { recursive: true });
-        fs.copyFileSync(srcSkillMd, path.join(claudeGlobalSkillDir, 'SKILL.md'));
-        
-        if (fs.existsSync(srcReferences)) {
-            copyDir(srcReferences, path.join(claudeGlobalSkillDir, 'references'));
-        }
-        if (fs.existsSync(srcAssets)) {
-            copyDir(srcAssets, path.join(claudeGlobalSkillDir, 'assets'));
-        }
-        if (fs.existsSync(srcScripts)) {
-            copyDir(srcScripts, path.join(claudeGlobalSkillDir, 'scripts'));
-        }
+        if (fs.existsSync(srcSkillMd)) fs.copyFileSync(srcSkillMd, path.join(claudeGlobalSkillDir, 'SKILL.md'));
+        if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(claudeGlobalSkillDir, 'references'));
+        if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(claudeGlobalSkillDir, 'examples'));
         
         console.log('✓ Global skill installed for Claude Code!');
     } catch (err) {
@@ -155,67 +147,47 @@ function installGlobal() {
 
 // Project install function
 function installProject() {
-    console.log('Initializing project-specific skills and rules in the current directory...');
+    console.log('\nInitializing project-specific skills and rules in current directory...');
     const cwd = process.cwd();
-    const srcSkillMd = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'SKILL.md');
-    const srcReferences = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'references');
-    const srcAssets = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'assets');
-    const srcScripts = path.join(localSkillSrc, 'skills', 'fluentcart-developer', 'scripts');
+    const srcSkillMd = path.join(localSkillSrc, 'SKILL.md');
+    const srcReferences = path.join(localSkillSrc, 'references');
+    const srcExamples = path.join(localSkillSrc, 'examples');
     
     try {
         // A. Project rules files
-        // 1. Cursor & Zed
-        fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.cursorrules'));
-        // 2. Windsurf
-        fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.windsurfrules'));
-        // 3. Cline / Open Code
-        fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.clinerules'));
-        // 4. Zed specific file
-        fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.rules'));
-        // 5. Claude Code
-        fs.copyFileSync(path.join(localSkillSrc, 'CLAUDE.md'), path.join(cwd, 'CLAUDE.md'));
-        // 6. Generic rules
-        fs.copyFileSync(path.join(localSkillSrc, 'fluentcart-rules.md'), path.join(cwd, 'fluentcart-rules.md'));
-        // 7. Copilot Instructions
+        if (fs.existsSync(path.join(localSkillSrc, '.cursorrules'))) {
+            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.cursorrules'));
+            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.windsurfrules'));
+            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.clinerules'));
+            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.rules'));
+        }
+        if (fs.existsSync(path.join(localSkillSrc, 'CLAUDE.md'))) {
+            fs.copyFileSync(path.join(localSkillSrc, 'CLAUDE.md'), path.join(cwd, 'CLAUDE.md'));
+        }
+        
         const copilotDir = path.join(cwd, '.github');
         fs.mkdirSync(copilotDir, { recursive: true });
-        fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(copilotDir, 'copilot-instructions.md'));
+        if (fs.existsSync(path.join(localSkillSrc, '.cursorrules'))) {
+            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(copilotDir, 'copilot-instructions.md'));
+        }
         
         console.log('✓ Created project rules files (.cursorrules, .windsurfrules, .clinerules, .rules, CLAUDE.md, .github/copilot-instructions.md)');
 
         // B. Project-level Skills
-        // 1. Antigravity Local Skill
         const geminiLocalSkillDir = path.join(cwd, '.agents', 'skills', 'fluentcart-developer');
         fs.mkdirSync(geminiLocalSkillDir, { recursive: true });
-        fs.copyFileSync(srcSkillMd, path.join(geminiLocalSkillDir, 'SKILL.md'));
-        
-        if (fs.existsSync(srcReferences)) {
-            copyDir(srcReferences, path.join(geminiLocalSkillDir, 'references'));
-        }
-        if (fs.existsSync(srcAssets)) {
-            copyDir(srcAssets, path.join(geminiLocalSkillDir, 'assets'));
-        }
-        if (fs.existsSync(srcScripts)) {
-            copyDir(srcScripts, path.join(geminiLocalSkillDir, 'scripts'));
-        }
+        if (fs.existsSync(srcSkillMd)) fs.copyFileSync(srcSkillMd, path.join(geminiLocalSkillDir, 'SKILL.md'));
+        if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(geminiLocalSkillDir, 'references'));
+        if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(geminiLocalSkillDir, 'examples'));
         
         writeRulesWithMarkers(path.join(cwd, '.agents', 'AGENTS.md'), rulesContent, 'FLUENTCART_RULES');
         console.log('✓ Initialized local skill and rules for Antigravity (.agents/)');
 
-        // 2. Claude Code Local Skill
         const claudeLocalSkillDir = path.join(cwd, '.claude', 'skills', 'fluentcart-developer');
         fs.mkdirSync(claudeLocalSkillDir, { recursive: true });
-        fs.copyFileSync(srcSkillMd, path.join(claudeLocalSkillDir, 'SKILL.md'));
-        
-        if (fs.existsSync(srcReferences)) {
-            copyDir(srcReferences, path.join(claudeLocalSkillDir, 'references'));
-        }
-        if (fs.existsSync(srcAssets)) {
-            copyDir(srcAssets, path.join(claudeLocalSkillDir, 'assets'));
-        }
-        if (fs.existsSync(srcScripts)) {
-            copyDir(srcScripts, path.join(claudeLocalSkillDir, 'scripts'));
-        }
+        if (fs.existsSync(srcSkillMd)) fs.copyFileSync(srcSkillMd, path.join(claudeLocalSkillDir, 'SKILL.md'));
+        if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(claudeLocalSkillDir, 'references'));
+        if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(claudeLocalSkillDir, 'examples'));
         
         console.log('✓ Initialized local skill for Claude Code (.claude/skills/)');
 
@@ -224,14 +196,80 @@ function installProject() {
     }
 }
 
-if (command === 'init') {
-    installGlobal();
-    installProject();
-    console.log('FluentCart AI Skill is ready to use on all IDEs & assistants! 🚀');
-} else if (command === 'global') {
-    installGlobal();
-} else if (command === 'project') {
-    installProject();
+// Uninstall / Remove function
+function uninstall() {
+    console.log('\nRemoving FluentCart rules and markers from current project and global configs...');
+    const cwd = process.cwd();
+    
+    // Remove global rules
+    removeRulesWithMarkers(geminiGlobalRulesFile, 'FLUENTCART_RULES');
+    const isWindows = process.platform === 'win32';
+    const zedGlobalRulesPath = isWindows ? zedGlobalRulesWin : zedGlobalRulesUnix;
+    removeRulesWithMarkers(zedGlobalRulesPath, 'FLUENTCART_RULES');
+    
+    // Remove local AGENTS.md rules
+    removeRulesWithMarkers(path.join(cwd, '.agents', 'AGENTS.md'), 'FLUENTCART_RULES');
+    
+    console.log('✓ Cleaned FluentCart rule markers successfully!');
+}
+
+function processCommand(cmd) {
+    if (cmd === 'init') {
+        installGlobal();
+        installProject();
+        console.log('FluentCart AI Skill is ready to use on all IDEs & assistants! 🚀');
+    } else if (cmd === 'global') {
+        installGlobal();
+    } else if (cmd === 'project') {
+        installProject();
+    } else if (cmd === 'remove' || cmd === 'uninstall') {
+        uninstall();
+    } else if (cmd === 'help' || cmd === '--help' || cmd === '-h') {
+        console.log(`
+FluentCart AI Developer Skill CLI (by Fastrsoft)
+
+Usage:
+  npx skills add atifjubaer/skills --skill fluentcart-developer
+  npx fluentcart-ai-skill           Interactive selection menu
+  npx fluentcart-ai-skill init      Install skills globally and initialize project rules for all IDEs
+  npx fluentcart-ai-skill global    Install global skills for Antigravity, Claude Code, and Zed
+  npx fluentcart-ai-skill project   Initialize project-specific skills and rules in current directory
+  npx fluentcart-ai-skill remove    Remove rule markers from project and global files
+        `);
+    } else {
+        console.log(`Unknown command: ${cmd}. Run with --help for usage info.`);
+    }
+}
+
+// Interactive prompt if no command provided
+if (!initialCommand) {
+    console.log(`
+=====================================================
+ FluentCart AI Developer Skill CLI Setup (Fastrsoft)
+=====================================================
+
+Select an action:
+  1) Initialize both Global Skills and Project Rules (init)
+  2) Install Global Skills only (global)
+  3) Initialize Project Rules in current directory only (project)
+  4) Remove / Uninstall rule markers (remove)
+  5) Exit
+    `);
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    rl.question('Enter choice [1-5]: ', (answer) => {
+        rl.close();
+        const choice = answer.trim();
+        if (choice === '1') processCommand('init');
+        else if (choice === '2') processCommand('global');
+        else if (choice === '3') processCommand('project');
+        else if (choice === '4') processCommand('remove');
+        else console.log('Exited setup.');
+    });
 } else {
-    console.log(`Unknown command: ${command}. Run with --help for usage info.`);
+    processCommand(initialCommand);
 }
