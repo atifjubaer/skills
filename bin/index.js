@@ -229,12 +229,12 @@ function processCommand(cmd) {
 FluentCart AI Developer Skill CLI (by Fastrsoft)
 
 Usage:
-  npx skills add atifjubaer/skills --skill fluentcart-developer
-  npx fluentcart-ai-skill           Interactive selection menu
-  npx fluentcart-ai-skill init      Install skills globally and initialize project rules for all IDEs
-  npx fluentcart-ai-skill global    Install global skills for Antigravity, Claude Code, and Zed
-  npx fluentcart-ai-skill project   Initialize project-specific skills and rules in current directory
-  npx fluentcart-ai-skill remove    Remove rule markers from project and global files
+  npx skills add atifjubaer/skills --skill "FluentCart Developer"
+  npx fluentcart-developer           Interactive selection menu
+  npx fluentcart-developer init      Install skills globally and initialize project rules for all IDEs
+  npx fluentcart-developer global    Install global skills for Antigravity, Claude Code, and Zed
+  npx fluentcart-developer project   Initialize project-specific skills and rules in current directory
+  npx fluentcart-developer remove    Remove rule markers from project and global files
         `);
     } else {
         console.log(`Unknown command: ${cmd}. Run with --help for usage info.`);

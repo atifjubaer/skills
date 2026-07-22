@@ -35,23 +35,23 @@ npx skills add atifjubaer/skills
 Run the CLI command without arguments for an interactive selection prompt:
 
 ```bash
-npx fluentcart-ai-skill
+npx fluentcart-developer
 ```
 
 Or pass direct command flags:
 
 ```bash
 # Initialize both global skills and current project rules for all IDEs
-npx fluentcart-ai-skill init
+npx fluentcart-developer init
 
 # Setup ONLY global skills (~/.gemini/, ~/.claude/)
-npx fluentcart-ai-skill global
+npx fluentcart-developer global
 
 # Setup ONLY local project rules
-npx fluentcart-ai-skill project
+npx fluentcart-developer project
 
 # Safely remove rule markers from project and global files
-npx fluentcart-ai-skill remove
+npx fluentcart-developer remove
 ```
 
 ---

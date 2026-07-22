@@ -1,11 +1,12 @@
 {
-  "name": "skills",
+  "name": "fluentcart-developer",
   "version": "1.1.0",
-  "description": "Custom AI Agent Developer Skills for FluentCart theme, plugin, shipping, and payment gateway development",
+  "description": "CLI tool and developer knowledge base for FluentCart theme, plugin, shipping, and payment gateway development",
   "main": "bin/index.js",
   "bin": {
-    "skills": "./bin/index.js",
-    "fluentcart-ai-skill": "./bin/index.js"
+    "fluentcart-developer": "./bin/index.js",
+    "fluentcart-ai-skill": "./bin/index.js",
+    "skills": "./bin/index.js"
   },
   "scripts": {
     "build": "node copy-skills.js",
@@ -20,6 +21,7 @@
     "url": "https://github.com/atifjubaer/skills/issues"
   },
   "keywords": [
+    "fluentcart-developer",
     "fluentcart",
     "wordpress",
     "ai-skills",
