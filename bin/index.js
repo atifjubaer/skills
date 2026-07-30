@@ -79,7 +79,8 @@ const args = process.argv.slice(2);
 const initialCommand = args[0];
 
 const homeDir = os.homedir();
-const localSkillSrc = path.join(__dirname, '..'); // package root
+const packageRoot = path.join(__dirname, '..');
+const localSkillSrc = path.join(packageRoot, 'skills', 'fluentcart-developer');
 
 // Global Paths
 const geminiGlobalSkillDir = path.join(homeDir, '.gemini', 'config', 'skills', 'fluentcart-developer');
@@ -91,7 +92,7 @@ const zedGlobalRulesWin = path.join(process.env.APPDATA || path.join(homeDir, 'A
 const zedGlobalRulesUnix = path.join(homeDir, '.config', 'zed', 'AGENTS.md');
 
 // Load rules source
-const rulesFileSrc = path.join(localSkillSrc, 'fluentcart-rules.md');
+const rulesFileSrc = path.join(packageRoot, 'fluentcart-rules.md');
 let rulesContent = '';
 if (fs.existsSync(rulesFileSrc)) {
     rulesContent = fs.readFileSync(rulesFileSrc, 'utf8');
@@ -155,20 +156,20 @@ function installProject() {
     
     try {
         // A. Project rules files
-        if (fs.existsSync(path.join(localSkillSrc, '.cursorrules'))) {
-            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.cursorrules'));
-            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.windsurfrules'));
-            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.clinerules'));
-            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(cwd, '.rules'));
+        if (fs.existsSync(path.join(packageRoot, '.cursorrules'))) {
+            fs.copyFileSync(path.join(packageRoot, '.cursorrules'), path.join(cwd, '.cursorrules'));
+            fs.copyFileSync(path.join(packageRoot, '.cursorrules'), path.join(cwd, '.windsurfrules'));
+            fs.copyFileSync(path.join(packageRoot, '.cursorrules'), path.join(cwd, '.clinerules'));
+            fs.copyFileSync(path.join(packageRoot, '.cursorrules'), path.join(cwd, '.rules'));
         }
-        if (fs.existsSync(path.join(localSkillSrc, 'CLAUDE.md'))) {
-            fs.copyFileSync(path.join(localSkillSrc, 'CLAUDE.md'), path.join(cwd, 'CLAUDE.md'));
+        if (fs.existsSync(path.join(packageRoot, 'CLAUDE.md'))) {
+            fs.copyFileSync(path.join(packageRoot, 'CLAUDE.md'), path.join(cwd, 'CLAUDE.md'));
         }
         
         const copilotDir = path.join(cwd, '.github');
         fs.mkdirSync(copilotDir, { recursive: true });
-        if (fs.existsSync(path.join(localSkillSrc, '.cursorrules'))) {
-            fs.copyFileSync(path.join(localSkillSrc, '.cursorrules'), path.join(copilotDir, 'copilot-instructions.md'));
+        if (fs.existsSync(path.join(packageRoot, '.cursorrules'))) {
+            fs.copyFileSync(path.join(packageRoot, '.cursorrules'), path.join(copilotDir, 'copilot-instructions.md'));
         }
         
         console.log('✓ Created project rules files (.cursorrules, .windsurfrules, .clinerules, .rules, CLAUDE.md, .github/copilot-instructions.md)');
@@ -180,96 +181,101 @@ function installProject() {
         if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(geminiLocalSkillDir, 'references'));
         if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(geminiLocalSkillDir, 'examples'));
         
-        writeRulesWithMarkers(path.join(cwd, '.agents', 'AGENTS.md'), rulesContent, 'FLUENTCART_RULES');
-        console.log('✓ Initialized local skill and rules for Antigravity (.agents/)');
-
-        const claudeLocalSkillDir = path.join(cwd, '.claude', 'skills', 'fluentcart-developer');
-        fs.mkdirSync(claudeLocalSkillDir, { recursive: true });
-        if (fs.existsSync(srcSkillMd)) fs.copyFileSync(srcSkillMd, path.join(claudeLocalSkillDir, 'SKILL.md'));
-        if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(claudeLocalSkillDir, 'references'));
-        if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(claudeLocalSkillDir, 'examples'));
-        
-        console.log('✓ Initialized local skill for Claude Code (.claude/skills/)');
-
+        console.log('✓ Created project skills directory (.agents/skills/fluentcart-developer)');
+        console.log('✓ Project initialization completed successfully!\n');
     } catch (err) {
-        console.error('Error installing project rules:', err.message);
+        console.error('Error initializing project rules:', err.message);
     }
 }
 
-// Uninstall / Remove function
-function uninstall() {
-    console.log('\nRemoving FluentCart rules and markers from current project and global configs...');
+// Remove rules function
+function removeRules() {
+    console.log('\nRemoving FluentCart rules from global and project files...');
     const cwd = process.cwd();
-    
-    // Remove global rules
+
     removeRulesWithMarkers(geminiGlobalRulesFile, 'FLUENTCART_RULES');
+    
     const isWindows = process.platform === 'win32';
     const zedGlobalRulesPath = isWindows ? zedGlobalRulesWin : zedGlobalRulesUnix;
     removeRulesWithMarkers(zedGlobalRulesPath, 'FLUENTCART_RULES');
-    
-    // Remove local AGENTS.md rules
-    removeRulesWithMarkers(path.join(cwd, '.agents', 'AGENTS.md'), 'FLUENTCART_RULES');
-    
-    console.log('✓ Cleaned FluentCart rule markers successfully!');
-}
 
-function processCommand(cmd) {
-    if (cmd === 'init') {
-        installGlobal();
-        installProject();
-        console.log('FluentCart AI Skill is ready to use on all IDEs & assistants! 🚀');
-    } else if (cmd === 'global') {
-        installGlobal();
-    } else if (cmd === 'project') {
-        installProject();
-    } else if (cmd === 'remove' || cmd === 'uninstall') {
-        uninstall();
-    } else if (cmd === 'help' || cmd === '--help' || cmd === '-h') {
-        console.log(`
-FluentCart AI Developer Skill CLI (by Fastrsoft)
+    // Remove project rules files
+    const projectFilesToRemove = [
+        path.join(cwd, '.cursorrules'),
+        path.join(cwd, '.windsurfrules'),
+        path.join(cwd, '.clinerules'),
+        path.join(cwd, '.rules'),
+        path.join(cwd, 'CLAUDE.md'),
+        path.join(cwd, '.github', 'copilot-instructions.md')
+    ];
 
-Usage:
-  npx skills add atifjubaer/skills --skill "FluentCart Developer"
-  npx fluentcart-developer           Interactive selection menu
-  npx fluentcart-developer init      Install skills globally and initialize project rules for all IDEs
-  npx fluentcart-developer global    Install global skills for Antigravity, Claude Code, and Zed
-  npx fluentcart-developer project   Initialize project-specific skills and rules in current directory
-  npx fluentcart-developer remove    Remove rule markers from project and global files
-        `);
-    } else {
-        console.log(`Unknown command: ${cmd}. Run with --help for usage info.`);
+    projectFilesToRemove.forEach(file => {
+        if (fs.existsSync(file)) {
+            try {
+                fs.unlinkSync(file);
+                console.log(`✓ Removed: ${file}`);
+            } catch (err) {
+                console.error(`Error removing ${file}:`, err.message);
+            }
+        }
+    });
+
+    // Remove local skills directory
+    const geminiLocalSkillDir = path.join(cwd, '.agents', 'skills', 'fluentcart-developer');
+    if (fs.existsSync(geminiLocalSkillDir)) {
+        try {
+            fs.rmSync(geminiLocalSkillDir, { recursive: true, force: true });
+            console.log(`✓ Removed project skill directory: ${geminiLocalSkillDir}`);
+        } catch (err) {
+            console.error(`Error removing project skill dir:`, err.message);
+        }
     }
+
+    console.log('✓ Removal completed!\n');
 }
 
-// Interactive prompt if no command provided
-if (!initialCommand) {
-    console.log(`
-=====================================================
- FluentCart AI Developer Skill CLI Setup (Fastrsoft)
-=====================================================
-
-Select an action:
-  1) Initialize both Global Skills and Project Rules (init)
-  2) Install Global Skills only (global)
-  3) Initialize Project Rules in current directory only (project)
-  4) Remove / Uninstall rule markers (remove)
-  5) Exit
-    `);
-
+// CLI Command Router
+if (initialCommand === 'init') {
+    installGlobal();
+    installProject();
+} else if (initialCommand === 'global') {
+    installGlobal();
+} else if (initialCommand === 'project') {
+    installProject();
+} else if (initialCommand === 'remove') {
+    removeRules();
+} else {
+    // Interactive Wizard
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
-    rl.question('Enter choice [1-5]: ', (answer) => {
-        rl.close();
+    console.log('\n======================================================');
+    console.log('    FluentCart Developer Skill & Rules Installer');
+    console.log('======================================================');
+    console.log('Select an installation option:');
+    console.log(' 1. Initialize BOTH Global & Current Project Rules (Recommended)');
+    console.log(' 2. Install ONLY Global Skill (~/.gemini/, ~/.claude/, Zed)');
+    console.log(' 3. Setup ONLY Current Project Rules & Local Skills (.agents/)');
+    console.log(' 4. Remove FluentCart rules & skills');
+    console.log(' 5. Exit');
+    console.log('------------------------------------------------------');
+
+    rl.question('Enter your choice (1-5): ', (answer) => {
         const choice = answer.trim();
-        if (choice === '1') processCommand('init');
-        else if (choice === '2') processCommand('global');
-        else if (choice === '3') processCommand('project');
-        else if (choice === '4') processCommand('remove');
-        else console.log('Exited setup.');
+        if (choice === '1') {
+            installGlobal();
+            installProject();
+        } else if (choice === '2') {
+            installGlobal();
+        } else if (choice === '3') {
+            installProject();
+        } else if (choice === '4') {
+            removeRules();
+        } else {
+            console.log('Exiting without changes.');
+        }
+        rl.close();
     });
-} else {
-    processCommand(initialCommand);
 }

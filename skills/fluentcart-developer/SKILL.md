@@ -1,127 +1,135 @@
 ---
-name: "FluentCart Developer"
-description: "Comprehensive knowledge base for FluentCart WordPress e-commerce plugin and theme development. Covers theme compatibility, template system, shortcodes, action/filter hooks, Elementor & Bricks integration, custom payment gateways, database models, REST API, fee systems, ghost products, subscriptions, and variations. Use this skill when building themes, plugins, or custom extensions for FluentCart."
+name: FluentCart Developer
+description: Comprehensive developer knowledge base for FluentCart e-commerce plugin development. Covers theme compatibility, template system, classic & block themes, action & filter hooks, Facebook Meta Pixel & GA4 tracking, Elementor, Gutenberg & Bricks integration, custom payment gateways, dynamic shipping carriers, database models, REST API, fee surcharges, ghost products, subscriptions, and WP-CLI.
 ---
 
-# FluentCart Developer Knowledge Base
+# FluentCart Developer Skill
 
-This skill is the comprehensive developer index and reference guide for building WordPress themes, custom plugins, payment gateways, builder blocks, REST API extensions, and custom e-commerce workflows for FluentCart.
-
----
-
-## 1. Advanced Developer References
-
-For detailed code guides, schemas, and API specifications, consult the individual manuals in the `references/` directory:
-
-- [Theme Development Guide](references/theme-development-guide.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/theme-development-guide.md)) — Complete guide for block and classic themes, template overrides, page types, and asset enqueuing.
-- [Custom Payment Gateway Integration](references/payment-gateway-integration.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/payment-gateway-integration.md)) — Register custom gateways (`AbstractPaymentGateway`), settings schemas (`BaseGatewaySettings`), capture/refund methods, and card update redirect flows.
-- [Paddle Payment Gateway Case Study](references/paddle-gateway-case-study.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/paddle-gateway-case-study.md)) — Implementation detail, setting fields schema, and webhook listener setup.
-- [Ghost Product Selling (Non-Catalog Items)](references/ghost-product-selling.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/ghost-product-selling.md)) — Dynamically create virtual line items without adding products to the database catalog.
-- [Fee System (Surcharges & Custom Fees)](references/fee-system-guide.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/fee-system-guide.md)) — Inject dynamic cart surcharges or store persistent fees in database tables.
-- [Subscription Customization](references/subscription-customization.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/subscription-customization.md)) — Adjust renewal grace periods, custom billing cycles, auto-renew cancellation, and license key defaults.
-- [Database Models & Query Builder](references/database-models-query-builder.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/database-models-query-builder.md)) — Query FluentCart records using Eloquent ORM models (`Order`, `Customer`, `Product`, `Subscription`, `Cart`).
-- [Exhaustive Database Models Reference](references/database-models-reference.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/database-models-reference.md)) — Deep field definitions, properties, and relationships for 30+ database models.
-- [Database Schema Reference](references/database-schema-reference.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/database-schema-reference.md)) — Tables, column types, and index catalog (`fc_orders`, `fc_order_items`, `fc_customers`, etc.).
-- [Action & Filter Hooks Reference](references/hooks-actions-filters.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/hooks-actions-filters.md)) — Hook overview for order status changes, payment triggers, and UI extensions.
-- [Exhaustive Action Hooks Reference](references/hooks-actions-reference.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/hooks-actions-reference.md)) — Full catalog of actions triggered across the FluentCart lifecycle.
-- [Exhaustive Filter Hooks Reference](references/hooks-filters-reference.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/hooks-filters-reference.md)) — Full catalog of filters allowing data modification (e.g. `fluent_cart/transaction/max_refundable_amount`).
-- [REST API Endpoints Reference](references/rest-api-endpoints-reference.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/rest-api-endpoints-reference.md)) — Quick list of API paths and payload parameters.
-- [Exhaustive REST API Reference](references/rest-api-reference.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/references/rest-api-reference.md)) — Complete request payloads, response schemas, and authentication endpoints.
-- [REST API & Webhooks Guide](references/rest-api-webhooks.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/rest-api-webhooks.md)) — Authorization tokens, nonce validation, and outgoing webhook listeners.
-- [Shipping, Storage, Licensing & Order Bumps](references/shipping-storage-licensing.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/shipping-storage-licensing.md)) — Custom shipping rate carriers, storage driver APIs, software license keys, and checkout bumps.
-- [Gutenberg Blocks & Elementor / Bricks Widgets](references/gutenberg-blocks-elementor-widgets.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/gutenberg-blocks-elementor-widgets.md)) — Block names, elementor locations, and 15+ Bricks Builder blocks (v1.5.4+).
-- [WP-CLI Commands Reference](references/wp-cli-commands.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/wp-cli-commands.md)) — CLI commands for maintenance, database synchronization, and migrations.
-- [Easy Digital Downloads (EDD) Migration Guide](references/edd-migration-compatibility-guide.md) ([Online](https://raw.githubusercontent.com/atifjubaer/skills/master/skills/fluentcart-developer/references/edd-migration-compatibility-guide.md)) — Store migration steps and legacy EDD licensing endpoint emulation.
-
-### Standalone Code Examples (`examples/`)
-For full boilerplate plugins and child theme files, consult the `examples/` directory:
-- `examples/sample-custom-payment-gateway/fluentcart-custom-gateway-example.php` — Complete custom payment gateway plugin boilerplate.
-- `examples/sample-shipping-carrier/fluentcart-custom-shipping-carrier.php` — Custom dynamic shipping calculation plugin.
-- `examples/fluentcart-starter-child-theme/` — Starter child theme with `functions.php` theme support & `fluent-cart/checkout.php` override.
+Complete technical reference, architectural manual, and AI guidance system for developing extensions, themes, custom payment gateways, shipping carriers, fee surcharges, REST API integrations, and hook listeners for **FluentCart**.
 
 ---
 
-## 2. Core Framework & Architecture Setup
+## 🤖 AI Agent Execution Protocol & Routing Guidelines
 
-### A. Theme Support Declaration
-To enable FluentCart template loading, template overrides, and custom page detection in a theme, declare support in `functions.php`:
+When assisting a developer with FluentCart tasks, follow this step-by-step workflow:
 
+### Step 1: Identify Task Scope & Domain
+Determine which area of FluentCart the user's request touches:
+- **Order Lifecycle & Payments:** Creating orders, handling refunds, checkout hooks, payment gateway integration.
+- **Subscriptions & Recurring Revenue:** Subscription status transitions, renewals, grace periods, billing cycles.
+- **Software Licensing (Pro):** License key generation, site activations/deactivations, update API.
+- **Cart & Checkout:** Cart items, validation, custom items, custom fee surcharges, checkout form schema.
+- **Database & Architecture:** Querying FluentCart tables (`wp_fct_*`), Eloquent models, relationships.
+- **REST API:** Administrative endpoints, customer portal endpoints, external API consumption.
+
+### Step 2: Read Target Reference File(s)
+Do not guess hook names, parameter signatures, or schema columns. Open and inspect the dedicated reference file under `references/`:
+
+#### Action Hooks (8 Modular Files)
+- [action-hooks-orders.md](references/action-hooks-orders.md) — Order creation, paid/completion events, refunds, status transitions, shipping fulfillment.
+- [action-hooks-subscriptions.md](references/action-hooks-subscriptions.md) — Subscription lifecycle, status changes, renewal processing, reminder notifications.
+- [action-hooks-licenses.md](references/action-hooks-licenses.md) — Software license updates, site activations/deactivations, license keys (Pro).
+- [action-hooks-cart-checkout.md](references/action-hooks-cart-checkout.md) — Shopping flow from cart item additions to checkout page and thank-you receipt rendering.
+- [action-hooks-customers-users.md](references/action-hooks-customers-users.md) — Customer lifecycle, user registration, customer portal tab/section rendering.
+- [action-hooks-products-coupons.md](references/action-hooks-products-coupons.md) — Product creation, duplication, single product and archive page hooks, coupon creation.
+- [action-hooks-payments-integrations.md](references/action-hooks-payments-integrations.md) — Payment gateway webhooks (Stripe, PayPal, Mollie, Paddle), integration feeds, dev logging.
+- [action-hooks-admin-templates.md](references/action-hooks-admin-templates.md) — Application boot (`fluentcart_loaded`), admin UI menus, block/email editor, shortcode views, REST policy checks.
+
+#### Filter Hooks (6 Modular Files)
+- [filter-hooks-settings-configuration.md](references/filter-hooks-settings-configuration.md) — Store settings defaults, currency options, translations, email notifications, admin menu items.
+- [filter-hooks-orders-payments.md](references/filter-hooks-orders-payments.md) — Order/payment/shipping statuses, Stripe/PayPal/Mollie/Paddle gateway parameters, tax titles, invoice numbers.
+- [filter-hooks-products-pricing.md](references/filter-hooks-products-pricing.md) — Product query builder (`shop_query`), variation display, button texts, stock availability, coupon validation.
+- [filter-hooks-cart-checkout.md](references/filter-hooks-cart-checkout.md) — Cart item validation, fee items, estimated totals, checkout address fields, EU VAT/business rules.
+- [filter-hooks-customers-subscriptions.md](references/filter-hooks-customers-subscriptions.md) — Customer portal tabs/endpoints, subscription statuses, grace periods, billing cycles, reminder schedules.
+- [filter-hooks-integrations-advanced.md](references/filter-hooks-integrations-advanced.md) — Integration feeds, S3/local file storage, template paths, dashboard widgets, list filter queries, e-invoicing.
+
+#### Core Architecture & System References (4 Files)
+- [database-schema-reference.md](references/database-schema-reference.md) — Complete database schema for all `wp_fct_*` tables.
+- [database-models-reference.md](references/database-models-reference.md) — FluentCart Eloquent Models, relationships, query builder rules.
+- [rest-api-reference.md](references/rest-api-reference.md) — Full REST API endpoints index, authentication, request/response formats.
+- [modules-and-extensions-reference.md](references/modules-and-extensions-reference.md) — Building payment gateways, shipping carriers, fee surcharges, ghost products.
+
+---
+
+## 📜 Core Technical Rules & Conventions
+
+### 1. Monetary Values & Currency Storage
+- **ALWAYS store and calculate monetary values as integers in CENTS** (e.g. `$10.00` = `1000`, `$19.99` = `1999`).
+- Convert decimal inputs to cents before saving: `\FluentCart\App\Helpers\Helper::toCent($decimalAmount)`.
+- Format cents into decimal string for display: `\FluentCart\App\Helpers\Helper::toDecimal($amountInCents)`.
+
+### 2. Code Commenting Standards
+- **ALWAYS add meaningful single-line explanatory comments to PHP code snippets** (above/inside hook callbacks and helper calls) so developers can easily understand the logic.
+
+### 3. Asynchronous Post-Payment Tasks
+- **NEVER** perform blocking API calls (CRMs, webhooks, external emails) synchronously inside payment execution loops.
+- Use `fluent_cart/order_paid_done` or Action Scheduler for asynchronous background processing.
+
+### 4. Database Access
+- Use FluentCart Eloquent Models (`\FluentCart\App\Models\*`) rather than raw `$wpdb` queries whenever possible.
+
+### 5. IoC Container & Global Helpers
+- Access container services: `\FluentCart\App\App::make('cart')` or `\FluentCart\App\App::getInstance()`.
+- Store configuration: `\FluentCart\App\Helpers\Helper::getStoreSettings()`.
+- Default store currency: `\FluentCart\App\Helpers\Helper::getCurrency()`.
+- System logging: `fluent_cart_add_log($title, $content, $type)` (`'info'`, `'error'`, `'warning'`).
+
+---
+
+## 🛠 Extension Code Templates
+
+### 1. Extension Plugin Boilerplate
 ```php
-// Must be added to your theme's functions.php
-add_action('after_setup_theme', function() {
-    add_theme_support('fluent_cart');
+<?php
+/**
+ * Plugin Name: Custom FluentCart Addon
+ * Description: Custom extension for FluentCart.
+ * Version:     1.0.0
+ * Author:      Developer
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Guard execution until WordPress plugins are loaded and FluentCart is active
+add_action('plugins_loaded', function () {
+    if (!defined('FLUENT_CART')) {
+        return; // FluentCart is not active
+    }
+
+    // Initialize custom hook listeners and extension logic
 });
 ```
 
-### B. Global Helper Functions & Formatting
+### 2. Surcharge / Extra Fee Filter Pattern
 ```php
-// Check if FluentCart core is installed & active
-if (defined('FLUENTCART_VERSION')) {
-    $version = FLUENTCART_VERSION; // e.g. '1.5.5'
-}
-
-// Detect current FluentCart page type
-$pageType = \FluentCart\App\Services\Templates\TemplateService::getCurrentFcPageType();
-// Returns: 'shop' | 'single_product' | 'product_taxonomy' | 'cart' | 'checkout' | 'receipt' | 'customer_dashboard'
-
-// Access Store Settings API & Format Currency
-$storeSettings = new \FluentCart\Api\StoreSettings();
-$shopPageUrl   = $storeSettings->getShopPage();
-$currency      = $storeSettings->getCurrency();
-
-// Format monetary amounts using store settings
-$formattedPrice = \FluentCart\App\Helpers\Helper::formatMoney(4990); // Formats $49.90
+// Add custom handling fee to cart estimated total
+add_filter('fluent_cart/fee_items', function ($fees, $cart) {
+    // Append $5.00 handling fee (500 cents)
+    $fees[] = [
+        'id'       => 'handling_fee',
+        'title'    => __('Special Handling Fee', 'my-extension'),
+        'amount'   => 500, // Amount in cents
+        'taxable'  => false,
+    ];
+    return $fees;
+}, 10, 2);
 ```
 
----
-
-## 3. Checkout Execution Lifecycle (Order of Operations)
-
-Senior developers must understand the exact execution sequence during checkout processing:
-
-```
-[Customer Submits Form]
-       │
-       ▼
-1. fluent_cart/checkout/before_validate_cart   --> Add custom pre-checks
-       │
-       ▼
-2. fluent_cart/checkout/validate_cart          --> Validate input data & stock
-       │
-       ▼
-3. fluent_cart/checkout/before_order_create    --> Modify cart payload or totals
-       │
-       ▼
-4. fluent_cart/order_created                   --> Order model created in DB (Status: pending)
-       │
-       ▼
-5. Payment Gateway -> makePaymentFromPaymentInstance()
-       │
-       ▼
-6. (new StatusHelper($order))->syncOrderStatuses($transaction)
-       │
-       ├─► fluent_cart/payment_completed       --> Payment record created
-       ├─► fluent_cart/order_paid             --> Fired if transaction succeeded
-       └─► fluent_cart/order_status_updated   --> Order status changed to 'processing'/'completed'
-```
-
----
-
-## 4. Security, Nonce Validation & Capability Checks
-
-All custom endpoints, AJAX actions, and admin settings handlers must follow strict security standards:
-
+### 3. Order Paid Event Listener Pattern
 ```php
-// 1. Check FluentCart Admin Permissions
-if (!current_user_can('manage_options') && !fluent_cart_user_can('manage_fluentcart')) {
-    wp_send_json(['status' => 'error', 'message' => 'Unauthorized access'], 403);
-}
+// Listen for completed order payments to trigger post-payment processing
+add_action('fluent_cart/order_paid_done', function ($data) {
+    // Extract order model and customer model instances from payload
+    $order    = $data['order'];
+    $customer = $data['customer'];
 
-// 2. Validate Nonce Verification in AJAX Endpoints
-if (!check_ajax_referer('fluent_cart_nonce', 'nonce', false)) {
-    wp_send_json(['status' => 'error', 'message' => 'Invalid security token'], 403);
-}
-
-// 3. Input Sanitization Example
-$cleanInput = sanitize_text_field($_POST['custom_field'] ?? '');
+    // Log order completion event to FluentCart logs
+    fluent_cart_add_log(
+        'Order Completed',
+        'Processed order #' . $order->id . ' for customer ' . $customer->email,
+        'info'
+    );
+}, 10, 1);
 ```

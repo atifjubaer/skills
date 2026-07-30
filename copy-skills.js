@@ -19,7 +19,7 @@ function copyDir(src, dest) {
 }
 
 const packageRoot = __dirname;
-const targetSkillDir = path.join(packageRoot, 'skills', 'engineering', 'fluentcart-developer');
+const targetSkillDir = path.join(packageRoot, 'skills', 'fluentcart-developer');
 const srcSkillMd = path.join(targetSkillDir, 'SKILL.md');
 const srcReferences = path.join(targetSkillDir, 'references');
 const srcExamples = path.join(targetSkillDir, 'examples');
@@ -28,8 +28,9 @@ const geminiGlobalSkillDir = path.join(os.homedir(), '.gemini', 'config', 'skill
 
 console.log('Syncing skill files to global Gemini skills directory...');
 try {
-    // Sync from skills/engineering/fluentcart-developer to global Gemini skill dir
-    if (fs.existsSync(geminiGlobalSkillDir)) {
+    // Sync from skills/skills/fluentcart-developer to global Gemini skill dir
+    if (fs.existsSync(targetSkillDir)) {
+        fs.mkdirSync(geminiGlobalSkillDir, { recursive: true });
         if (fs.existsSync(srcSkillMd)) fs.copyFileSync(srcSkillMd, path.join(geminiGlobalSkillDir, 'SKILL.md'));
         if (fs.existsSync(srcReferences)) copyDir(srcReferences, path.join(geminiGlobalSkillDir, 'references'));
         if (fs.existsSync(srcExamples)) copyDir(srcExamples, path.join(geminiGlobalSkillDir, 'examples'));

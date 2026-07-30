@@ -16,21 +16,40 @@ This repository provides ready-to-use configurations, reference manuals, and cod
 
 Choose the installation method that fits your environment and AI coding assistant:
 
-### Method 1: The `skills.sh` Method (Recommended for Cursor, Claude Code, Windsurf, Open Code)
+### Method 1: The `skills.sh` Method (Recommended for Cursor, Claude Code, Windsurf, Antigravity)
 
 Install this skill directly into your project's local workspace using the official `skills.sh` manager:
 
 ```bash
-# Using npm
-npx skills add atifjubaer/skills --skill "FluentCart Developer"
+# Install specific skill into current project
+npx skills add atifjubaer/skills --skill "fluentcart-developer"
 
-# Or run interactively without flags to pick from list:
+# Or run interactively without flags to pick from list
 npx skills add atifjubaer/skills
 ```
 
 ---
 
-### Method 2: Direct CLI Initializer & Interactive Wizard
+### Method 2: Updating Installed Skills
+
+To fetch and update your installed skills to the latest version on GitHub:
+
+```bash
+# Update all installed skills in current workspace via skills.sh
+npx skills update
+
+# Or force reinstall the latest version from GitHub
+npx skills add atifjubaer/skills --skill "fluentcart-developer" --force
+```
+
+If you cloned this repository locally:
+```bash
+git pull origin main
+```
+
+---
+
+### Method 3: Direct CLI Initializer & Interactive Wizard
 
 Run the CLI command without arguments for an interactive selection prompt:
 
@@ -56,7 +75,7 @@ npx fluentcart-developer remove
 
 ---
 
-### Method 3: Manual Installation
+### Method 4: Manual Installation
 
 If you prefer manual setup:
 1. **For Antigravity / Gemini**: Copy `SKILL.md`, `references/`, and `examples/` from `skills/fluentcart-developer/` into your global Gemini config path:
