@@ -1,16 +1,25 @@
 # FluentCart Developer Examples & Boilerplates
 
-This directory contains production-ready code examples and project templates for extending FluentCart.
+This directory contains production-ready code examples, runnable plugins, and project templates for extending FluentCart.
 
 ## Available Examples
 
-### 1. Custom Payment Gateway Plugin (`sample-custom-payment-gateway/`)
-- Demonstrates how to create a custom payment gateway extension extending `AbstractPaymentGateway` and `BaseGatewaySettings`.
-- Features: Gateway registration, settings schema, payment execution, error responses, and refund support.
+### 1. Custom Starter Addon Plugin (`sample-custom-addon/fluentcart-custom-addon.php`)
+- Standalone WordPress plugin boilerplate for FluentCart.
+- Features: Plugin initialization guards, `order_paid_done` event listener, system logging, dynamic fee surcharges, and a custom REST API endpoint (`/wp-json/fc-custom/v1/order-status/{id}`).
 
-### 2. Custom Shipping Carrier Method (`sample-shipping-carrier/`)
-- Demonstrates dynamic shipping calculation via the `fluent_cart/shipping/methods` filter.
-- Features: Weight-based rate calculation, free shipping thresholds, and real-time shipping rate responses.
+### 2. Fee & Surcharge Plugin (`sample-fee-surcharge-plugin/fluentcart-fee-surcharge.php`)
+- Dynamic cart fee calculations using the `fluent_cart/fee_items` filter.
+- Features: Conditional fixed fees (cents), percentage-based payment surcharges, and taxable flag settings.
 
-### 3. Starter Child Theme (`fluentcart-starter-child-theme/`)
-- Demonstrates how to declare `add_theme_support('fluent_cart')`, override checkout templates in `fluent-cart/checkout.php`, and hook into the checkout lifecycle.
+### 3. Custom Payment Gateway Plugin (`sample-custom-payment-gateway/fluentcart-custom-gateway-example.php`)
+- Demonstrates custom payment gateway development extending `AbstractPaymentGateway` and `BaseGatewaySettings`.
+- Features: Gateway registration, settings schema, payment execution, error responses, and refund handling.
+
+### 4. Custom Shipping Carrier (`sample-shipping-carrier/fluentcart-custom-shipping-carrier.php`)
+- Dynamic shipping calculation via the `fluent_cart/shipping/methods` filter hook.
+- Features: Rate calculation, free shipping thresholds, and real-time carrier response arrays.
+
+### 5. Starter Child Theme (`fluentcart-starter-child-theme/`)
+- Declarative `add_theme_support('fluent_cart')` child theme template.
+- Features: Overriding checkout templates in `fluent-cart/checkout.php` and custom checkout hooks in `functions.php`.
