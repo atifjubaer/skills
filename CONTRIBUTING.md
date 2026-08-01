@@ -11,11 +11,11 @@ Here is a guide on how you (or your AI coding assistant) can add new skills and 
 To submit a new skill to the repository, follow these directory and file guidelines:
 
 ### Step A: Create your Skill Folder
-Skills are grouped under categories under the main `skills/` folder. Create a new directory matching your category and skill name:
+Skills are located directly inside the `skills/` directory. Create a new folder matching your skill slug:
 ```bash
-mkdir -p skills/skills/<category-name>/<skill-slug>
+mkdir -p skills/<skill-name>
 ```
-*Example:* `skills/skills/productivity/wordpress-seo`
+*Example:* `skills/fluentcart-developer` or `skills/wordpress-seo`
 
 ### Step B: Create the `SKILL.md` file
 Inside your skill folder, create a `SKILL.md` file containing a YAML frontmatter header and the main instruction set:
