@@ -1,14 +1,21 @@
 # Atif Jubaer's Agent Skills Repository
 
-A comprehensive, platform-agnostic knowledge base, instruction set, and CLI toolkit for FluentCart (v1.5.1+) theme, plugin, shipping, and payment gateway development.
+[![npm version](https://img.shields.io/npm/v/fluentcart-developer.svg)](https://www.npmjs.com/package/fluentcart-developer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This repository provides ready-to-use configurations, reference manuals, and code boilerplates for all major AI coding assistants, enabling them to write correct, compatible code for FluentCart out-of-the-box.
+A comprehensive, platform-agnostic knowledge base, instruction set, and CLI toolkit for FluentCart theme, plugin, shipping, and payment gateway development.
+
+This repository provides ready-to-use configurations, reference manuals, and code boilerplates for all major AI coding assistants (Antigravity, Cursor, Claude Code, Windsurf, Cline, Zed, GitHub Copilot), enabling them to write correct, compatible code for FluentCart out-of-the-box.
 
 ---
 
 ## Included Skills
 
-- **`FluentCart Developer`** (`fluentcart-developer`): Complete WordPress e-commerce developer skill, database Eloquent models, REST API reference, payment gateway integration, dynamic fee systems, shipping carriers, and shortcodes.
+- **`FluentCart Developer`** (`fluentcart-developer`):
+  - **Complete Database Manual:** 34 DB migrations, all `wp_fct_*` schema tables, Eloquent ORM models, relationships, and Query Builder.
+  - **315+ Action & Filter Hooks:** 14 dedicated hook reference files covering order lifecycles, payment webhooks, cart fees, and admin UI.
+  - **15 REST API Modules (Core & Pro):** Orders, Products, Customers, Coupons, Subscriptions, Tax, Shipping, Settings, Email Notifications, Reports, Integrations, Files, Labels & Attributes, Dashboard & Utilities, Public Shop, Checkout, Customer Profile, Software Licensing (Pro), Roles & Permissions (Pro), Order Bumps (Pro).
+  - **5 Runnable Example Projects:** Custom Addon plugin, Fee Surcharge plugin, Payment Gateway plugin, Shipping Carrier, and Starter Child Theme.
 
 ---
 

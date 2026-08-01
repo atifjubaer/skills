@@ -2,10 +2,10 @@
   "name": "fluentcart-developer",
   "version": "1.1.0",
   "description": "CLI tool and developer knowledge base for FluentCart theme, plugin, shipping, and payment gateway development",
-  "main": "./bin/index.js",
+  "main": "bin/index.js",
   "bin": {
-    "fluentcart-developer": "./bin/index.js",
-    "fluentcart-ai-skill": "./bin/index.js"
+    "fluentcart-developer": "bin/index.js",
+    "fluentcart-ai-skill": "bin/index.js"
   },
   "scripts": {
     "build": "node copy-skills.js",
