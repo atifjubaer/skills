@@ -17,6 +17,36 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **15 REST API Modules (Core & Pro):** Orders, Products, Customers, Coupons, Subscriptions, Tax, Shipping, Settings, Email Notifications, Reports, Integrations, Files, Labels & Attributes, Dashboard & Utilities, Public Shop, Checkout, Customer Profile, Software Licensing (Pro), Roles & Permissions (Pro), Order Bumps (Pro).
   - **5 Runnable Example Projects:** Custom Addon plugin, Fee Surcharge plugin, Payment Gateway plugin, Shipping Carrier, and Starter Child Theme.
 
+- **`Lemon Squeezy Developer`** (`lemonsqueezy-developer`):
+  - **Complete JSON:API Manual:** Stores, Products, Variants, Prices, Files, Orders, and Subscriptions specifications.
+  - **HMAC-SHA256 Webhook Security:** Timing-safe raw request signature verifiers for Node.js, Next.js App Router, and PHP.
+  - **Subscriptions Lifecycle:** State transitions, pausing, cancellations, dunning retries, and hosted customer portal URLs.
+  - **Software Licensing:** Public `/activate`, `/validate`, and `/deactivate` endpoints for desktop software and plugins.
+  - **Dynamic Checkouts & Lemon.js:** API checkout generation, in-app modal overlays, and custom metadata tracking.
+
+---
+
+## Playing Cards (MCP Server)
+
+Skills tell the model what to do. The MCP server in [`server/`](./server/README.md) gives it the tools to do it — without loading a single large markdown file into context.
+
+| Card | Core (free) | Pro |
+| --- | --- | --- |
+| **Card 1 — FluentCart Pro Agent** | `fc_search_hooks`, `fc_get_db_schema` | `fc_generate_payment_gateway_boilerplate` |
+| **Card 2 — Lemon Squeezy Developer Agent** | `ls_search_docs`, `ls_get_schema` | `ls_verify_webhook`, `ls_validate_license` |
+
+Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base.
+
+```bash
+cd server && npm install && npm run build
+node dist/index.js        # stdio: Claude Code, Cursor, Windsurf, Smithery CLI
+node dist/http.js         # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
+```
+
+Pro tools are not registered on a free session — the schemas never reach the client. Unlock with a Lemon Squeezy license key (`Authorization: Bearer <key>` over HTTP, `PRO_LICENSE_KEY` for local stdio). Tier resolution, marketplace gateway secrets and deployment are documented in [`server/README.md`](./server/README.md).
+
+**Licensing:** skill content (`skills/`) is MIT and stays public for discovery and `skills.sh` indexing. The server implementation (`server/`) is BSL-1.1 — see [`server/LICENSE.md`](./server/LICENSE.md).
+
 ---
 
 ## Installation & Setup
@@ -114,11 +144,23 @@ skills/
 │   ├── sample-custom-payment-gateway/
 │   ├── sample-shipping-carrier/
 │   └── fluentcart-starter-child-theme/
-└── skills/
-    └── fluentcart-developer/  # 👈 Clean skill directory for skills.sh
-        ├── SKILL.md           # Main index prompt file
-        ├── references/        # Complete developer manuals & schemas
-        └── examples/          # Standalone plugin & theme boilerplates
+├── server/                    # 👈 MCP server (BSL-1.1, commercial)
+│   ├── src/
+│   │   ├── auth.ts            # Core / Pro tier resolution
+│   │   ├── server.ts          # Server factory + skills catalog
+│   │   ├── index.ts           # stdio entry
+│   │   ├── http.ts            # Streamable HTTP entry
+│   │   └── cards/             # One folder per Playing Card
+│   ├── scripts/               # Build bundler + protocol probe
+│   └── Dockerfile             # Build from repo root
+└── skills/                    # 👈 Skill content (MIT, public)
+    ├── fluentcart-developer/  # Card 1
+    │   ├── SKILL.md
+    │   ├── references/
+    │   └── examples/
+    └── lemonsqueezy-developer/ # Card 2
+        ├── SKILL.md
+        └── references/
 ```
 
 ---

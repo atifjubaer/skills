@@ -9,6 +9,8 @@
   },
   "scripts": {
     "build": "node copy-skills.js",
+    "build:server": "npm --prefix server run build",
+    "verify:server": "npm --prefix server run verify",
     "prepublishOnly": "npm run build"
   },
   "repository": {
