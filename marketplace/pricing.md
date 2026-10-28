@@ -12,6 +12,18 @@ from `PRO_LICENSE_KEY` on stdio.
 | **Card 2 — Lemon Squeezy Developer Agent** | $12/mo | `ls_verify_webhook`, `ls_validate_license` | all 5 |
 | **All-Access** | $19/mo | all 3 | all 5 |
 
+### Live SKUs (FastrSoft store `428520`, published 2026-10-28)
+
+| SKU | Product id | Variant id | Checkout |
+| --- | --- | --- | --- |
+| All-Access Suite | `1479567` | `2306572` | <https://fastrsoft.lemonsqueezy.com/all-access-suite> |
+| FluentCart Pro Agent | `1479582` | `2306601` | <https://fastrsoft.lemonsqueezy.com/fluentcart-pro-agent> |
+| Lemon Squeezy Developer Agent | `1479604` | `2306630` | <https://fastrsoft.lemonsqueezy.com/lemon-squeezy-developer-agent> |
+
+All three are monthly subscriptions with licence keys enabled; verified by
+`scripts/sync-lemon-squeezy-ids.mjs` against the live API. Hosted checkout:
+`https://fastrsoft.lemonsqueezy.com/checkout/buy/<variant_id>`.
+
 Core tools are always free, on every SKU and with no key at all: `fc_search_hooks`,
 `fc_get_db_schema`, `ls_search_docs`, `ls_get_schema`, `suite_get_pro_info`.
 
@@ -67,10 +79,14 @@ not a single tier:
 Covered by `npm run verify` (per-card and fail-closed cases in
 `server/scripts/verify-stdio.mjs`).
 
-**Before the two $12 SKUs go live**, set the three `LS_PRODUCT_*` ids in the
-deploy environment. With none set — today's state — any valid licence unlocks
-both cards, so the cards are not actually separable yet; only All-Access is
-correct to sell until that mapping exists.
+The three `LS_PRODUCT_*` ids are **defaulted in `server/src/auth.ts`** to the
+published FastrSoft SKUs, so the mapping holds with no deploy-time configuration
+at all — MCPize's free plan allows one secret per server, which is why the ids
+are constants rather than required env. Every `LS_*` variable still overrides its
+default for a self-hosted or white-label deployment.
+
+Consequence: a card key unlocks only its own card. `4531…`-style unmapped
+products (e.g. the existing Nexus Radar product) resolve to core.
 
 ## Open question — what Agensi sells
 
