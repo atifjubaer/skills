@@ -92,11 +92,15 @@ Works as-is on Railway / Render / Fly.io / MCPize: the image serves `POST /mcp` 
 
 [`mcpize.yaml`](../mcpize.yaml) is the deploy manifest: `runtime: container`, `build.dockerfile: server/Dockerfile` with the repository root as build context (the image copies `skills/` in), `startCommand.type: http`. It validates against MCPize's published JSON schema.
 
-Connect the repository in the MCPize dashboard, or from this directory:
+Check the manifest locally, then deploy — `mcpize doctor` reports `mcpize.yaml: Found and valid`, and the only remaining failure it flags is the login:
 
 ```bash
-npx -y mcpize deploy
+npx -y mcpize doctor    # local pre-deploy validation
+npx -y mcpize login     # opens the browser
+npx -y mcpize deploy    # build + ship from this directory
 ```
+
+Connecting the GitHub repository in the MCPize dashboard deploys on every push to `main` instead.
 
 Publisher secrets are entered in the dashboard — `ALLOWED_HOSTS`, `LS_STORE_ID`, the three `LS_PRODUCT_*` ids, `VALID_LICENSE_KEYS`, `MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`. Every one is optional, so a deploy on an empty dashboard still serves the core tools; set `ALLOWED_HOSTS` to the assigned `*.mcpize.run` host once the service exists.
 
