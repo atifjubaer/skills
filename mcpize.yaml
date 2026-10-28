@@ -1,22 +1,44 @@
 # MCPize deployment manifest.
 #
-# Hosting: runtime `container` builds server/Dockerfile with the repository root
-# as build context, exactly like the local `docker build -f server/Dockerfile .`
-# — the image copies skills/ in, so the context cannot be narrowed to server/.
+# The deploy root is the repository root, but the MCP server package lives in
+# server/ — every build and start command is prefixed accordingly. `entry` points
+# MCPize's capability scan at the file that imports the MCP SDK; without it the
+# scan reports "no MCP capabilities" because the root package.json is the skills
+# CLI, not the server.
 #
-# Deploy: connect https://github.com/atifjubaer/skills in the MCPize dashboard,
-# or run `npx mcpize deploy` from this directory. Secrets below are entered in
+# `runtime: container` rejects this image ("HTTP base Dockerfile not supported
+# for runtime: container"), so the manifest uses the TypeScript runtime and lets
+# MCPize build and run the server directly. server/Dockerfile stays for local
+# runs and for hosts that take a Docker image.
+#
+# Deploy: `npx mcpize deploy` from this directory. Secrets below are entered in
 # the MCPize dashboard, never committed.
 version: 1
 name: fastr-mcp-suite
 description: FluentCart Pro Agent and Lemon Squeezy Developer Agent — hooks, DB schemas, API docs, webhook and licence verification for AI coding clients.
-runtime: container
+runtime: typescript
+
+# The MCP HTTP entry point. server/build also bundles skills/ into server/dist/skills.
+entry: server/src/http.ts
 
 build:
-  dockerfile: server/Dockerfile
+  # The generated Dockerfile copies only the *root* package manifests before
+  # running `install` (COPY package*.json ./), so server/package-lock.json does not
+  # exist at that point and `npm --prefix server ci` dies with EUSAGE. Dependencies
+  # are installed by the build command instead, which runs after the full source
+  # copy. `install` is deliberately a no-op.
+  #
+  # The build command is a Node script rather than a shell one-liner: `mcpize
+  # deploy` runs it through cmd.exe on Windows and /bin/sh in the image, so it has
+  # to be portable. See scripts/build-for-mcpize.mjs.
+  install: echo "dependencies are installed by the build command"
+  command: node scripts/build-for-mcpize.mjs
 
+# The runtime image only carries /app/dist and /app/node_modules, so the build
+# command moves the server's output up to the image root.
 startCommand:
   type: http
+  command: node dist/http.js
 
 # Publisher secrets: infrastructure config only. All optional, so a deploy
 # succeeds on an empty dashboard and the server falls back to core behaviour.

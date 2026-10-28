@@ -14,10 +14,10 @@ For desktop apps, CLI tools, WordPress plugins, or self-hosted SaaS scripts requ
 
 ## 2. Public Licensing Endpoints (No Bearer Auth Needed)
 
-Unlike standard REST endpoints, the **Licensing API** does NOT require your master API key. Your client application communicates directly using POST requests to `https://api.lemonsqueezy.com/v1/licenses/...`.
+Unlike standard REST endpoints, the **Licensing API** does NOT require your master API key. Your client application communicates directly using POST requests to `https://api.example.com/v1/licenses/...`.
 
 ### A. Activate a License (First Run on Machine/Site)
-**Endpoint:** `POST https://api.lemonsqueezy.com/v1/licenses/activate`  
+**Endpoint:** `POST https://api.example.com/v1/licenses/activate`  
 **Payload (Form URL Encoded or JSON):**
 ```json
 {
@@ -57,7 +57,7 @@ Unlike standard REST endpoints, the **Licensing API** does NOT require your mast
 ---
 
 ### B. Validate a License (Periodic Check)
-**Endpoint:** `POST https://api.lemonsqueezy.com/v1/licenses/validate`
+**Endpoint:** `POST https://api.example.com/v1/licenses/validate`
 ```json
 {
   "license_key": "4c949c86-82f2-4919-86eb-c2b64b3ef864",
@@ -81,7 +81,7 @@ If the subscription expired, license key was disabled, or refunded, `valid` will
 ---
 
 ### C. Deactivate a License (Unlink Machine / Site Transfer)
-**Endpoint:** `POST https://api.lemonsqueezy.com/v1/licenses/deactivate`
+**Endpoint:** `POST https://api.example.com/v1/licenses/deactivate`
 ```json
 {
   "license_key": "4c949c86-82f2-4919-86eb-c2b64b3ef864",

@@ -8,7 +8,7 @@ Generate dynamic checkout URLs, embed checkout overlays (iframe), pass custom me
 
 To generate a custom checkout on the fly:
 
-**Endpoint:** `POST https://api.lemonsqueezy.com/v1/checkouts`  
+**Endpoint:** `POST https://api.example.com/v1/checkouts`  
 **Headers:**
 ```http
 Accept: application/vnd.api+json
@@ -89,10 +89,10 @@ Keep customers on your site without redirecting:
 
 ```html
 <!-- Include Lemon.js once in your layout -->
-<script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
+<script src="https://assets.example.com/lemon.js" defer></script>
 
 <!-- Add .lemonsqueezy-button class to any link -->
-<a href="https://yourstore.lemonsqueezy.com/buy/variant-slug?embed=1" 
+<a href="https://my-store.example.com/buy/variant-slug?embed=1" 
    class="lemonsqueezy-button">
   Buy Now
 </a>

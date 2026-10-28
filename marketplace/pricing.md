@@ -12,6 +12,18 @@ from `PRO_LICENSE_KEY` on stdio.
 | **Card 2 — Lemon Squeezy Developer Agent** | $12/mo | `ls_verify_webhook`, `ls_validate_license` | all 5 |
 | **All-Access** | $19/mo | all 3 | all 5 |
 
+### Live SKUs (FastrSoft store `428520`, published 2026-10-28)
+
+| SKU | Product id | Variant id | Checkout |
+| --- | --- | --- | --- |
+| All-Access Suite | `1479567` | `2306572` | <https://fastrsoft.lemonsqueezy.com/all-access-suite> |
+| FluentCart Pro Agent | `1479582` | `2306601` | <https://fastrsoft.lemonsqueezy.com/fluentcart-pro-agent> |
+| Lemon Squeezy Developer Agent | `1479604` | `2306630` | <https://fastrsoft.lemonsqueezy.com/lemon-squeezy-developer-agent> |
+
+All three are monthly subscriptions with licence keys enabled; verified by
+`scripts/sync-lemon-squeezy-ids.mjs` against the live API. Hosted checkout:
+`https://fastrsoft.lemonsqueezy.com/checkout/buy/<variant_id>`.
+
 Core tools are always free, on every SKU and with no key at all: `fc_search_hooks`,
 `fc_get_db_schema`, `ls_search_docs`, `ls_get_schema`, `suite_get_pro_info`.
 
@@ -36,11 +48,12 @@ against each platform's own docs on 2026-10-28:
 Two consequences for the build:
 
 - **MCPize is both the host and the only channel with real billing.** Railway
-  sign-up is closed, so the suite deploys to MCPize directly
-  (`runtime: container`, `build.dockerfile: server/Dockerfile` in
-  `mcpize.yaml`). MCPize revenue bypasses the Lemon Squeezy checkout — Lemon
-  Squeezy stays the direct-sales and licence-issuing channel, and direct buyers
-  paste their key as the `LICENSE_KEY` credential on MCPize.
+  sign-up is closed, so the suite deploys to MCPize directly (`runtime:
+  typescript` in `mcpize.yaml`; MCPize builds and runs the server itself, so
+  `server/Dockerfile` is only for local runs and image-based hosts). MCPize
+  revenue bypasses the Lemon Squeezy checkout — Lemon Squeezy stays the
+  direct-sales and licence-issuing channel, and direct buyers paste their key as
+  the `LICENSE_KEY` credential on MCPize.
 - **Apify needs a code change before it can host this image**: the server listens
   on `PORT || 8080`, Apify requires `ACTOR_WEB_SERVER_PORT` (default 4321) and a
   readiness probe on `GET /`. Railway injects `PORT`, so it needs nothing.
@@ -66,10 +79,14 @@ not a single tier:
 Covered by `npm run verify` (per-card and fail-closed cases in
 `server/scripts/verify-stdio.mjs`).
 
-**Before the two $12 SKUs go live**, set the three `LS_PRODUCT_*` ids in the
-deploy environment. With none set — today's state — any valid licence unlocks
-both cards, so the cards are not actually separable yet; only All-Access is
-correct to sell until that mapping exists.
+The three `LS_PRODUCT_*` ids are **defaulted in `server/src/auth.ts`** to the
+published FastrSoft SKUs, so the mapping holds with no deploy-time configuration
+at all — MCPize's free plan allows one secret per server, which is why the ids
+are constants rather than required env. Every `LS_*` variable still overrides its
+default for a self-hosted or white-label deployment.
+
+Consequence: a card key unlocks only its own card. `4531…`-style unmapped
+products (e.g. the existing Nexus Radar product) resolve to core.
 
 ## Open question — what Agensi sells
 

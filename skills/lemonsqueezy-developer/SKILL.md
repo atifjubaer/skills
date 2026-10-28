@@ -1,6 +1,7 @@
 ---
 name: "lemonsqueezy-developer"
 description: "Comprehensive developer knowledge base and architectural manual for integrating Lemon Squeezy e-commerce, subscriptions, checkouts, and licensing into any web or mobile stack. Covers JSON:API conventions, checkout sessions, Lemon.js overlays, HMAC-SHA256 webhook security, subscription lifecycles, and software license keys."
+summary: "Developer reference for Lemon Squeezy e-commerce: checkout overlays, HMAC-SHA256 webhooks, subscription lifecycles, and software license key validation."
 version: "1.0.0"
 license: "MIT"
 tags:
@@ -9,12 +10,24 @@ tags:
   - lemonsqueezy
   - billing
   - licensing
-  - e-commerce
+  - ecommerce
+keywords:
+  - lemonsqueezy
+  - payment checkout
+  - webhook verification
+  - license activation
+  - subscription billing
+use_cases:
+  - Integrating Lemon Squeezy checkout overlays and hosted checkouts
+  - Securing and handling Lemon Squeezy webhooks with HMAC-SHA256
+  - Validating and managing software license keys
 ---
 
 # Lemon Squeezy Developer Skill
 
 Complete technical reference, architectural manual, and guidance system for integrating **Lemon Squeezy** payments, subscriptions, digital downloads, software licenses, and webhooks into Next.js, Node.js, Laravel, Python, WordPress, or any backend stack.
+
+> **URL placeholders used throughout this document:** `api.example.com` stands in for the API host of your payment provider (Lemon Squeezy serves its REST and Licensing APIs from its `api.` subdomain), `{slug}.example.com` / `my-store.example.com` stand in for your store subdomain, and `app.example.com` stands in for the seller dashboard host. Substitute your real hosts when making requests — every path and payload in the examples is otherwise literal.
 
 ---
 
@@ -52,6 +65,6 @@ Do not guess payload structures, header formats, or webhook signing code. Read a
 3. **Integer Cents Representation:**
    All monetary amounts in the API are in **cents** as integers (`$19.99` = `1999`). Never perform currency math in floating points.
 4. **License API Does Not Require API Keys:**
-   Endpoints under `https://api.lemonsqueezy.com/v1/licenses/...` are public client endpoints designed to be called from client apps (desktop/plugin) without exposing master secret keys.
+   Endpoints under `/v1/licenses/...` (relative to the API host) are public client endpoints designed to be called from client apps (desktop/plugin) without exposing master secret keys.
 5. **Subscription Cancellation Grace Period:**
    Deleting a subscription via API sets `cancelled: true` and sets `ends_at` to the end of the paid period. Do NOT revoke customer access immediately; allow access until `ends_at`.

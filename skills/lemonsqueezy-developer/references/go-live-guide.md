@@ -8,7 +8,7 @@ This guide details how to switch the **Nexus Radar** extension from **Test Mode*
 
 When your store is approved, Lemon Squeezy generates completely new checkout variant tokens for your live products. You will need to copy these tokens from your dashboard:
 
-1. Open your [Lemon Squeezy Dashboard](https://app.lemonsqueezy.com/).
+1. Open your [Lemon Squeezy Dashboard](https://app.example.com/).
 2. Toggle the sidebar switch in the bottom-left corner to **Live Mode** (ensure it says "Live").
 3. Click on **Products** in the left sidebar, and click on your main product.
 4. Scroll down to the **Variants** section containing your 4 plans:
@@ -18,7 +18,7 @@ When your store is approved, Lemon Squeezy generates completely new checkout var
    - **Lifetime**
 5. Next to each variant, click the **Share** button (chain-link icon). A share link is copied to your clipboard.
 6. The copied checkout URL looks like this:
-   `https://fastrsoft.lemonsqueezy.com/checkout/buy/fc896498-ab96-4750-8a7a-abfa8b255668`
+   `https://my-store.example.com/checkout/buy/fc896498-ab96-4750-8a7a-abfa8b255668`
 7. Extract the token at the very end of the URL (after `/buy/`). In the example above, the token is `fc896498-ab96-4750-8a7a-abfa8b255668`.
 
 ---

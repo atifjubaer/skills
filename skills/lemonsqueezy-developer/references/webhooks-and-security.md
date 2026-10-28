@@ -132,11 +132,11 @@ Every webhook payload delivers the resource under `data` and event metadata unde
       "updated_at": "2024-05-21T14:14:19.000000Z"
     },
     "relationships": {
-      "store": { "links": { "related": "https://api.lemonsqueezy.com/v1/orders/1/store" } },
-      "customer": { "links": { "related": "https://api.lemonsqueezy.com/v1/orders/1/customer" } },
-      "order-items": { "links": { "related": "https://api.lemonsqueezy.com/v1/orders/1/order-items" } },
-      "subscriptions": { "links": { "related": "https://api.lemonsqueezy.com/v1/orders/1/subscriptions" } },
-      "license-keys": { "links": { "related": "https://api.lemonsqueezy.com/v1/orders/1/license-keys" } }
+      "store": { "links": { "related": "https://api.example.com/v1/orders/1/store" } },
+      "customer": { "links": { "related": "https://api.example.com/v1/orders/1/customer" } },
+      "order-items": { "links": { "related": "https://api.example.com/v1/orders/1/order-items" } },
+      "subscriptions": { "links": { "related": "https://api.example.com/v1/orders/1/subscriptions" } },
+      "license-keys": { "links": { "related": "https://api.example.com/v1/orders/1/license-keys" } }
     }
   }
 }

@@ -23,7 +23,7 @@ Make sure you keep your API keys private. Never save API keys in your code or in
 If you lose an API key, you can always make new ones or remove old ones from the Settings » API page in your Lemon Squeezy dashboard.
 
 Making requests
-The Lemon Squeezy API can be accessed from <https://api.lemonsqueezy.com/v1/>. All requests should be made over HTTPS and every request requires authentication.
+The Lemon Squeezy API can be accessed from <https://api.example.com/v1/>. All requests should be made over HTTPS and every request requires authentication.
 
 The API is based on the JSON:API spec and as such you are required to add the following headers in each request.
 
@@ -65,7 +65,7 @@ For example:
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/orders/1>"
+    "self": "<https://api.example.com/v1/orders/1>"
   },
   "data": {
     "type": "orders",
@@ -111,7 +111,7 @@ For example:
         "test_mode": false
       },
       "urls": {
-        "receipt": "<https://app.lemonsqueezy.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
+        "receipt": "<https://app.example.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
       },
       "created_at": "2021-08-17T09:45:53.000000Z",
       "updated_at": "2021-08-17T09:45:53.000000Z"
@@ -119,43 +119,43 @@ For example:
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/store>"
+          "related": "<https://api.example.com/v1/orders/1/store>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/store>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/subscriptions/1/customer>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/customer>"
         }
       },
       "order-items": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/order-items>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/order-items>"
+          "related": "<https://api.example.com/v1/orders/1/order-items>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/order-items>"
         }
       },
       "subscriptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/subscriptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/subscriptions>"
+          "related": "<https://api.example.com/v1/orders/1/subscriptions>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/subscriptions>"
         }
       },
       "license-keys": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/license-keys>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/license-keys>"
+          "related": "<https://api.example.com/v1/orders/1/license-keys>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/license-keys>"
         }
       },
       "discount-redemptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/discount-redemptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/discount-redemptions>"
+          "related": "<https://api.example.com/v1/orders/1/discount-redemptions>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/discount-redemptions>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/orders/1>"
+      "self": "<https://api.example.com/v1/orders/1>"
     }
   }
 }
@@ -180,7 +180,7 @@ Let’s consider an example: imagine you have a subscription product with two va
 
 The structure of a checkout URL is as follows:
 
-https://[STORE].lemonsqueezy.com/checkout/buy/[VARIANT_ID]
+https://[STORE].example.com/checkout/buy/[VARIANT_ID]
 When sharing a checkout URL you can specify whether you want to use a hosted checkout, which loads the checkout in a browser window, or our checkout overlay, which will load the checkout over the current page. When integrating into apps, the checkout overlay keeps the experience more streamlined.
 
 Shareable Checkout URLs vs. Cart URLs
@@ -215,7 +215,7 @@ The most basic request contains required relationships to the store and variant.
 
 The following request will create a checkout for a specified variant:
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -294,7 +294,7 @@ Find out more about pre-filled Checkout fields
 
 To add this information to an existing checkout URL, append query string parameters. For example:
 
-https://[STORE].lemonsqueezy.com/checkout/buy/[VARIANT_ID]
+https://[STORE].example.com/checkout/buy/[VARIANT_ID]
 ?checkout[email]=<johndoe@example.com>
 &checkout[name]=John Doe
 &checkout[billing_address][country]=US
@@ -304,7 +304,7 @@ https://[STORE].lemonsqueezy.com/checkout/buy/[VARIANT_ID]
 &checkout[discount_code]=10PERCENTOFF
 If you are using API to create checkouts pass a JSON object inside checkout_data.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -329,10 +329,10 @@ You can pass custom data to checkout, which you can then access later in webhook
 
 Custom data can be passed to checkout URLs with query string parameters. For example, if you want to pass user_id of value 123 to the checkout, you can do it like so:
 
-https://[STORE].lemonsqueezy.com/checkout/buy/[VARIANT_ID]?checkout[custom][user_id]=123
+https://[STORE].example.com/checkout/buy/[VARIANT_ID]?checkout[custom][user_id]=123
 With the API, you can add custom data using a custom object within checkout_data, like this:
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -372,7 +372,7 @@ Dashboard: When sharing a product, you’ll find options to show or hide specifi
 Query params: Manually adjust any checkout URL to customize its appearance.
 Here’s an example of creating a checkout overlay with a hidden logo and a dark grey button:
 
-https://[STORE].lemonsqueezy.com/checkout/buy/[VARIANT_ID]
+https://[STORE].example.com/checkout/buy/[VARIANT_ID]
 ?embed=1
 &logo=0&
 button_color=%23111111
@@ -389,7 +389,7 @@ The custom_price value must be in the currency’s smallest unit i.e. 599 would 
 
 For example:
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -413,7 +413,7 @@ Beyond overriding a product’s price at checkout, you can also modify other pro
 
 The product_options object in the API allows you to update the fields used during the product creation process, including name, description, media, redirect URL, and the variants to be displayed.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -439,7 +439,7 @@ The final option in this guide is to create checkout URLs that expire at a speci
 
 To set this up, simply add a date in the expires_at attribute. Lemon Squeezy will invalidate the checkout after that date, preventing any further purchases.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -475,7 +475,7 @@ You can change this button’s URL by changing the “Button link” option in t
 Lemon Squeezy: Redirects
 If you’re creating checkouts with the API, simply add a product_options.redirect_url in your request to change the button’s link:
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -506,7 +506,7 @@ Receipts can be customized when editing products in Lemon Squeezy:
 Lemon Squeezy: Customize ReceiptLemon Squeezy: Customize Receipt
 You can also achieve the same result with the API by adding attributes to the product_options object when creating checkouts:
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -575,8 +575,8 @@ Subscription and Customer objects contain a signed customer_portal URL in the ur
   "trial_ends_at": null,
   "billing_anchor": 30,
   "urls": {
-    "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1688469629&signature=4577154142b49da48f73809288ef0f52ae6a91c860b7bdc22ff5bddba842a455>",
-    "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1688469629&user=60000&signature=f040cb5a25ccebd8d05c2937e9a0559a750f5d5b8b32a40162ca43e130187d2c>"
+    "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1688469629&signature=4577154142b49da48f73809288ef0f52ae6a91c860b7bdc22ff5bddba842a455>",
+    "customer_portal": "<https://my-store.example.com/billing?expires=1688469629&user=60000&signature=f040cb5a25ccebd8d05c2937e9a0559a750f5d5b8b32a40162ca43e130187d2c>"
   },
   "renews_at": "2023-07-30T11:48:33.000000Z",
   "ends_at": null,
@@ -610,7 +610,7 @@ function handleClick(e) {
 Unsigned URL
 If you don’t want to make an API call when a customer clicks through to the Customer Portal you can use the unsigned URL:
 
-https://[STORE].lemonsqueezy.com/billing
+https://[STORE].example.com/billing
 Note that with this option, if your customer is not already logged into their Lemon Squeezy account, they will see a form to log in via an email magic link like My Orders.
 
 Customizing the Customer Portal
@@ -699,9 +699,9 @@ An example subscription_created event’s request looks like this:
       "updated_at": "2021-08-11T13:47:28.000000Z"
     },
     "urls": {
-      "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
-      "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>",
-      "customer_portal_update_subscription": "<https://my-store.lemonsqueezy.com/billing/1/update?expires=1666869343&signature=e4fabc7ee703664d644bba9e79a9cd3dd00622308b335f3c166787f0b18999f2>"
+      "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
+      "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>",
+      "customer_portal_update_subscription": "<https://my-store.example.com/billing/1/update?expires=1666869343&signature=e4fabc7ee703664d644bba9e79a9cd3dd00622308b335f3c166787f0b18999f2>"
     },
     "renews_at": "2022-11-12T00:00:00.000000Z",
     "ends_at": null,
@@ -742,7 +742,7 @@ The last step is to select the events you want to be sent to your app. It’s re
 Using the Lemon Squeezy Webhooks API
 Creating a new webhook using the API requires a simple POST request, specifying the webhook endpoint you want data to be sent to, the events you want to subscribe to and a signing secret to keep webhook requests safe and secure.
 
-POST <https://api.lemonsqueezy.com/v1/webhooks>
+POST <https://api.example.com/v1/webhooks>
 {
   "data": {
     "type": "webhooks",
@@ -843,7 +843,7 @@ To change a subscription’s plan (variant):
 
 Send a PATCH request to the specific subscription endpoint
 Include the new variant ID in the request body.
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/{subscription_id}>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -883,7 +883,7 @@ Important notes:
 
 If both options are used in the same request, disable_prorations overrides invoice_immediately
 The plan change takes effect immediately, regardless of the proration option chosen
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/{subscription_id}>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -914,7 +914,7 @@ If a subscription is cancelled mid billing period (either by the customer or by 
 During this cancelled grace period, it’s possible to resume the subscription with a quick API call with cancelled set to false.
 
 Resuming a subscription in grace period
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/{subscription_id}>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -942,7 +942,7 @@ A paused subscription with have a status of paused.
 Pausing a subscription
 To pause a subscription, send a PATCH request containing a pause object:
 
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/{subscription_id}>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -971,7 +971,7 @@ Send a PATCH request to the specific subscription endpoint.
 Include pause attribute with null value.
 Similarly to resuming a cancelled subscription, the subscription will be changed to active and payment collection will resume on its original schedule.
 
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/{subscription_id}>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -997,8 +997,8 @@ We provide a signed URL in every Subscription-related API request and webhook ev
   "attributes": {
     ...
     "urls": {
-      "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1674045831&signature=31cf3c83983a03a6cf92e4ec3b469fc044eace0a13183dcb1d7bc0da3bad6f31>",
-      "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1674045831&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
+      "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1674045831&signature=31cf3c83983a03a6cf92e4ec3b469fc044eace0a13183dcb1d7bc0da3bad6f31>",
+      "customer_portal": "<https://my-store.example.com/billing?expires=1674045831&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
     }
     ...
   }
@@ -1015,7 +1015,7 @@ To make the URL open in a more seamless overlay on top of your app (similar to t
 Changing the billing date
 Send a PATCH request to the specific subscription endpoint.
 Include billing_anchor attribute.
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/{subscription_id}>" \
      -H 'Accept: application/vnd.api+json' \
      -H 'Content-Type: application/vnd.api+json' \
      -H 'Authorization: Bearer {api_key}' \
@@ -1121,10 +1121,10 @@ We recommend you test changing the quantity value at checkout to see how prices 
 
 To specify a quantity at checkout you can add the query parameter quantity to a product’s share URL:
 
-https://[STORE].lemonsqueezy.com/checkout/buy/[VARIANT_ID]?quantity=100
+https://[STORE].example.com/checkout/buy/[VARIANT_ID]?quantity=100
 If you create checkouts using the API, you can similarly determine a quantity in checkout_data.variant_quantities.
 
-POST <https://api.lemonsqueezy.com/v1/checkouts>
+POST <https://api.example.com/v1/checkouts>
 {
   "data": {
     "type": "checkouts",
@@ -1161,7 +1161,7 @@ Where to find the Subscription item ID?
 
 You can get the subscription item ID from a Subscription object’s first_subscription_item.id value.
 
-PATCH <https://api.lemonsqueezy.com/v1/subscription-items/1>
+PATCH <https://api.example.com/v1/subscription-items/1>
 {
   "data": {
     "type": "subscription-items",
@@ -1178,7 +1178,7 @@ A prorated amount will be added to the customer’s next subscription invoice if
 Querying quantity
 If you ever need to query the current quantity of a subscription, send a GET request to the Subscription item endpoint.
 
-GET <https://api.lemonsqueezy.com/v1/subscription-items/1>
+GET <https://api.example.com/v1/subscription-items/1>
 to get a response like this:
 
 {
@@ -1216,7 +1216,7 @@ If you have chosen the “Most recent usage during a period” or “Most recent
 
 In this example, we are adding 1 more unit to the existing usage (aggregation for this product is “Sum of usage during period”).
 
-POST <https://api.lemonsqueezy.com/v1/usage-records>
+POST <https://api.example.com/v1/usage-records>
 {
   "data": {
     "type": "usage-records",
@@ -1242,7 +1242,7 @@ You can always view a subscription’s real-time billable usage from your dashbo
 Querying usage
 To retrieve the current usage of a subscription with the API, make a GET request to the subscription item’s current usage endpoint.
 
-GET <https://api.lemonsqueezy.com/v1/subscription-items/1/current-usage>
+GET <https://api.example.com/v1/subscription-items/1/current-usage>
 {
   "jsonapi": {
     "version": "1.0"
@@ -1270,23 +1270,23 @@ In this guide we will go though a couple of examples how you can use Lemon.js to
 Add the script to your app
 You can get started using Lemon.js by embedding our tiny (2.3kB) library via our CDN into the head or body of your page.
 
-<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+<script src="https://app.example.com/js/lemon.js" defer></script>
 Buy buttons and checkout overlays
 With Lemon.js on your page, you can make checkout URLs automatically open in a checkout overlay by adding lemonsqueezy-button CSS class to your links:
 
-<a class="lemonsqueezy-button" href="https://[STORE].lemonsqueezy.com/checkout/buy/...">
+<a class="lemonsqueezy-button" href="https://[STORE].example.com/checkout/buy/...">
     Buy this
 </a>
 Or you can open checkout URLs using the LemonSqueezy.Url.Open() method:
 
-const checkoutUrl = 'https://[STORE].lemonsqueezy.com/checkout/custom/...';
+const checkoutUrl = 'https://[STORE].example.com/checkout/custom/...';
 LemonSqueezy.Url.Open(checkoutUrl);
 This is useful if you’re generating custom checkout URLs on-the-fly using the API.
 
 Opening other overlays
 You can also load the update payment method URLs in an overlay using Lemon.js, creating a much more seamless experience inside your app.
 
-const updatePaymentMethodUrl = '<https://app.lemonsqueezy.com/subscription/.../payment-details>...';
+const updatePaymentMethodUrl = '<https://app.example.com/subscription/.../payment-details>...';
 LemonSqueezy.Url.Open(updatePaymentMethodUrl);
 Handling events
 When a Lemon.js overlay is in use (either a checkout or an update payment method form), you can listen for certain events that happen during the form flow:
