@@ -57,21 +57,23 @@ Point a client at the built file:
 
 ## Tiers
 
-| Tier | What is registered |
+| Entitlement | What is registered |
 | --- | --- |
 | `core` (free) | `ls_search_docs`, `ls_get_schema`, `fc_search_hooks`, `fc_get_db_schema`, `suite_get_pro_info`, plus `skills/list` and `resources/read` for both skills |
-| `pro` (paid) | everything above **and** `ls_verify_webhook`, `ls_validate_license`, `fc_generate_payment_gateway_boilerplate` |
+| Card 1 — FluentCart Pro Agent | everything above **and** `fc_generate_payment_gateway_boilerplate` |
+| Card 2 — Lemon Squeezy Developer Agent | everything above **and** `ls_verify_webhook`, `ls_validate_license` |
+| All-Access | everything above **and** all three Pro tools |
 
-Pro tools are **not registered** on a core session — the schema never reaches the client, so there is nothing to call. `suite_get_pro_info` is the upgrade surface: it always answers with the current tier and what Pro adds.
+A session's entitlement is a **set of cards** (`fluentcart`, `lemonsqueezy`), not a single on/off. One card makes the session paid; the other card's Pro tools are **not registered** — the schema never reaches the client, so there is nothing to call. `suite_get_pro_info` is the upgrade surface: it reports the session's cards and marks each Pro tool `unlocked`.
 
-How a tier is decided:
+How entitlement is decided:
 
-- **stdio** — `PRO_LICENSE_KEY` in the environment unlocks Pro. Convenience switch, not a security boundary.
+- **stdio** — `PRO_LICENSE_KEY` (16+ characters) unlocks both cards. Convenience switch, not a security boundary. `PRO_CARDS=fluentcart` or `PRO_CARDS=lemonsqueezy` (comma-separated for both) narrows the session; a value naming no known card fails closed to core.
 - **HTTP** — every request carries `Authorization: Bearer <token>`:
-  1. token in `VALID_LICENSE_KEYS` → Pro (ops/CI seats)
-  2. equals `MCPIZE_GATEWAY_SECRET` → Pro (constant-time compare)
-  3. equals `AGENSI_GATEWAY_SECRET` → Pro (constant-time compare)
-  4. otherwise validated live against `https://api.lemonsqueezy.com/v1/licenses/validate`, cached 10 minutes, active status and store id checked. Any failure fails closed to core.
+  1. token in `VALID_LICENSE_KEYS` → both cards (ops/CI seats)
+  2. equals `MCPIZE_GATEWAY_SECRET` → both cards (constant-time compare)
+  3. equals `AGENSI_GATEWAY_SECRET` → both cards (constant-time compare)
+  4. otherwise validated live against `https://api.lemonsqueezy.com/v1/licenses/validate`, cached 10 minutes, active status and store id checked. The response's `meta.product_id` is mapped to cards through `LS_PRODUCT_ALL_ACCESS`, `LS_PRODUCT_FLUENTCART` and `LS_PRODUCT_LEMONSQUEEZY`; a product that matches none of them is treated as core. With no `LS_PRODUCT_*` variable set, any valid key unlocks both cards (single-product behaviour). Any validation failure fails closed to core.
 
 Copy [`.env.example`](./.env.example) to `.env` for the HTTP transport.
 

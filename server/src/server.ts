@@ -75,13 +75,21 @@ const PRO_TOOLS: ProTool[] = [
 ];
 
 function proInfo(auth: AuthContext, card: CardFilter = 'all') {
+  const entitled = new Set(auth.cards);
+  const visible = card === 'all' ? PRO_TOOLS : PRO_TOOLS.filter(t => t.cardId === card);
+  const proTools = visible.map(t => ({ ...t, unlocked: entitled.has(t.cardId) }));
+  const locked = proTools.filter(t => !t.unlocked);
+
   return {
     tier: auth.tier,
+    cards: auth.cards,
     reason: auth.reason,
-    proTools: card === 'all' ? PRO_TOOLS : PRO_TOOLS.filter(t => t.cardId === card),
+    proTools,
     unlock:
-      auth.tier === 'pro'
-        ? 'Pro tools are registered and callable in this session.'
-        : 'Local stdio: set PRO_LICENSE_KEY in the server environment. HTTP: send "Authorization: Bearer <license key>" on every request.'
+      visible.length === 0
+        ? 'No Pro tools match that card filter.'
+        : locked.length === 0
+          ? 'Every Pro tool listed here is registered and callable in this session.'
+          : `Not registered in this session: ${locked.map(t => t.tool).join(', ')}. Local stdio: set PRO_LICENSE_KEY in the server environment. HTTP: send "Authorization: Bearer <license key>" on every request. Each card is sold separately; All-Access unlocks both.`
   };
 }

@@ -20,7 +20,7 @@ function openSession(env = {}) {
   const child = spawn(process.execPath, [entry], {
     cwd: serverRoot,
     stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, PRO_LICENSE_KEY: '', ...env }
+    env: { ...process.env, PRO_LICENSE_KEY: '', PRO_CARDS: '', ...env }
   });
 
   let buffer = '';
@@ -164,6 +164,63 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
     check('pro: gateway boilerplate', php.includes('class PaddleBillingGateway') && php.includes("'subscriptions'"));
   } catch (err) {
     check('pro session', false, err.message);
+  } finally {
+    s.close();
+  }
+}
+
+// -------------------------------------------------- per-card entitlement split
+// Cards are sold separately, so one key must not unlock the other card's Pro
+// tools. PRO_CARDS narrows a local key the same way the Lemon Squeezy product
+// mapping narrows an HTTP licence, and lets this probe exercise both halves
+// without a live licence.
+const CARD_PRO = {
+  fluentcart: ['fc_generate_payment_gateway_boilerplate'],
+  lemonsqueezy: ['ls_verify_webhook', 'ls_validate_license']
+};
+const PROBE_KEY = 'verify-probe-key-[PHONE_REDACTED]';
+
+for (const card of Object.keys(CARD_PRO)) {
+  const other = Object.keys(CARD_PRO).find(c => c !== card);
+  const s = openSession({ PRO_LICENSE_KEY: PROBE_KEY, PRO_CARDS: card });
+  try {
+    await s.request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'fastr-verify', version: '0.0.0' } });
+    s.notify('notifications/initialized');
+
+    const tools = await s.request('tools/list');
+    const names = (tools.result?.tools ?? []).map(t => t.name);
+    check(`card ${card}: own pro tools registered`, CARD_PRO[card].every(t => names.includes(t)), CARD_PRO[card].join(', '));
+    check(`card ${card}: ${other} pro tools withheld`, !CARD_PRO[other].some(t => names.includes(t)), CARD_PRO[other].filter(t => names.includes(t)).join(', ') || 'none leaked');
+    check(`card ${card}: core tools still present`, CORE.every(t => names.includes(t)), `${names.length} tools`);
+
+    const info = await s.request('tools/call', { name: 'suite_get_pro_info', arguments: {} });
+    const parsed = JSON.parse(info.result?.content?.[0]?.text ?? '{}');
+    check(`card ${card}: pro info reports one card`, parsed.tier === 'pro' && parsed.cards?.length === 1 && parsed.cards[0] === card, JSON.stringify(parsed.cards));
+    const locked = (parsed.proTools ?? []).filter(t => !t.unlocked);
+    check(`card ${card}: only the other card is locked`, locked.length > 0 && locked.every(t => t.cardId === other), locked.map(t => t.tool).join(', '));
+  } catch (err) {
+    check(`card ${card} session`, false, err.message);
+  } finally {
+    s.close();
+  }
+}
+
+// An unrecognised PRO_CARDS value must fail closed rather than unlock everything.
+{
+  const s = openSession({ PRO_LICENSE_KEY: PROBE_KEY, PRO_CARDS: 'notacard' });
+  try {
+    await s.request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'fastr-verify', version: '0.0.0' } });
+    s.notify('notifications/initialized');
+
+    const tools = await s.request('tools/list');
+    const names = (tools.result?.tools ?? []).map(t => t.name);
+    check('card unknown: pro tools withheld', !PRO.some(t => names.includes(t)), PRO.filter(t => names.includes(t)).join(', ') || 'none leaked');
+
+    const info = await s.request('tools/call', { name: 'suite_get_pro_info', arguments: {} });
+    const infoText = info.result?.content?.[0]?.text ?? '';
+    check('card unknown: reported as core', infoText.includes('"tier": "core"') && infoText.includes('names no known card'));
+  } catch (err) {
+    check('card unknown session', false, err.message);
   } finally {
     s.close();
   }
