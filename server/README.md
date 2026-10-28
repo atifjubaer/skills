@@ -86,23 +86,34 @@ docker build -f server/Dockerfile -t fastr-mcp-suite .
 docker run -p 8080:8080 --env-file server/.env fastr-mcp-suite
 ```
 
-Works as-is on Railway / Render / Fly.io / MCPize: the image serves `POST /mcp` and answers `GET /health` for the platform healthcheck.
+Works as-is on Railway / Render / Fly.io: the image serves `POST /mcp` and answers `GET /health` for the platform healthcheck. MCPize does not take this image — see below.
 
 ### MCPize
 
-[`mcpize.yaml`](../mcpize.yaml) is the deploy manifest: `runtime: container`, `build.dockerfile: server/Dockerfile` with the repository root as build context (the image copies `skills/` in), `startCommand.type: http`. It validates against MCPize's published JSON schema.
+Live at **<https://fastr-mcp-suite.mcpize.run>**; the marketplace listing is <https://mcpize.com/mcp/fastr-mcp-suite>.
 
-Check the manifest locally, then deploy — `mcpize doctor` reports `mcpize.yaml: Found and valid`, and the only remaining failure it flags is the login:
+[`mcpize.yaml`](../mcpize.yaml) uses `runtime: typescript`, so MCPize builds and runs the server itself and never sees `server/Dockerfile`. That runtime is single-package: its generated image copies `/app/dist` and `/app/node_modules` out of a builder that runs the build command from the repository root, and its runtime stage falls back to the root `package.json`. [`scripts/build-for-mcpize.mjs`](../scripts/build-for-mcpize.mjs) bridges the monorepo to that layout — it installs and builds `server/`, then copies `dist/` and `node_modules/` to the image root and replaces the root manifest with the server's, which is the one carrying `"type": "module"`.
+
+Three things about the generated Dockerfile are worth knowing before editing the manifest:
+
+- `build.install` runs with only the **root** package manifests copied in, so it cannot see `server/package-lock.json`. Dependencies are installed by `build.command`, which runs after the full source copy.
+- `build.command` is executed through `cmd.exe` by the local pre-deploy check and `/bin/sh` in the image, so it is a plain `node` invocation — no shell operators.
+- On Windows the tarball filter compares `/`-separated patterns against `\`-separated paths, so `server/node_modules` is uploaded. The build script discards it inside the image and reinstalls from the lockfile; the uploaded modules have no execute bit there.
 
 ```bash
 npx -y mcpize doctor    # local pre-deploy validation
 npx -y mcpize login     # opens the browser
 npx -y mcpize deploy    # build + ship from this directory
+npx -y mcpize status    # state, deployment history, the real backend error
+npx -y mcpize logs --type build -d <deployment-id>   # build log; `logs` alone finds nothing
 ```
 
-Connecting the GitHub repository in the MCPize dashboard deploys on every push to `main` instead.
+Publisher secrets are entered in the dashboard — `ALLOWED_HOSTS`, `LS_STORE_ID`, the three `LS_PRODUCT_*` ids, `VALID_LICENSE_KEYS`, `MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`. Every one is optional, so a deploy on an empty dashboard still serves the core tools.
 
-Publisher secrets are entered in the dashboard — `ALLOWED_HOSTS`, `LS_STORE_ID`, the three `LS_PRODUCT_*` ids, `VALID_LICENSE_KEYS`, `MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`. Every one is optional, so a deploy on an empty dashboard still serves the core tools; set `ALLOWED_HOSTS` to the assigned `*.mcpize.run` host once the service exists.
+Two MCPize-specific notes:
+
+- **`ALLOWED_HOSTS` is left unset.** The gateway's own `/health` shadows the server's, and it is not documented which `Host` the proxy forwards, so an allowlist naming `*.mcpize.run` risks 403-ing every request. Unset means no host restriction (`server/src/http.ts` treats an empty value as "no allowlist"); the gateway enforces MCPize sign-in before anything reaches the service.
+- **MCPize's gateway wants its own sign-in** and returns `401 Authentication required for hosted servers` on a bare `POST /mcp`. Use `npx mcpize run fastr-mcp-suite --list` to see the deployed catalog.
 
 Subscribers can paste a Lemon Squeezy licence key as the `LICENSE_KEY` credential. MCPize forwards it as the `Authorization` header, which the HTTP transport already reads, so the per-card entitlement logic runs unchanged.
 

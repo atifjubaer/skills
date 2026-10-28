@@ -36,11 +36,12 @@ against each platform's own docs on 2026-10-28:
 Two consequences for the build:
 
 - **MCPize is both the host and the only channel with real billing.** Railway
-  sign-up is closed, so the suite deploys to MCPize directly
-  (`runtime: container`, `build.dockerfile: server/Dockerfile` in
-  `mcpize.yaml`). MCPize revenue bypasses the Lemon Squeezy checkout — Lemon
-  Squeezy stays the direct-sales and licence-issuing channel, and direct buyers
-  paste their key as the `LICENSE_KEY` credential on MCPize.
+  sign-up is closed, so the suite deploys to MCPize directly (`runtime:
+  typescript` in `mcpize.yaml`; MCPize builds and runs the server itself, so
+  `server/Dockerfile` is only for local runs and image-based hosts). MCPize
+  revenue bypasses the Lemon Squeezy checkout — Lemon Squeezy stays the
+  direct-sales and licence-issuing channel, and direct buyers paste their key as
+  the `LICENSE_KEY` credential on MCPize.
 - **Apify needs a code change before it can host this image**: the server listens
   on `PORT || 8080`, Apify requires `ACTOR_WEB_SERVER_PORT` (default 4321) and a
   readiness probe on `GET /`. Railway injects `PORT`, so it needs nothing.
