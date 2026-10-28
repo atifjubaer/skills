@@ -88,7 +88,29 @@ docker run -p 8080:8080 --env-file server/.env fastr-mcp-suite
 
 Works as-is on Railway / Render / Fly.io / MCPize: the image serves `POST /mcp` and answers `GET /health` for the platform healthcheck.
 
+### Railway
+
+[`.railway/railway.ts`](../.railway/railway.ts) is Infrastructure as Code for this service. Config as Code (`railway.json` / `railway.toml`) is deprecated and new services cannot opt into it, so the project is defined in one file: GitHub source `atifjubaer/skills@main`, `build.dockerfilePath: server/Dockerfile` with the repository root as build context, healthcheck `/health`.
+
+```bash
+npm install                        # root: the railway IaC SDK is a devDependency
+npx @railway/cli login
+npx @railway/cli link              # select or create the fastr-mcp-suite project
+npx @railway/cli config plan       # review the change set
+npx @railway/cli config apply      # apply; destructive lines are marked first
+```
+
+The file lists every runtime variable with `preserve()`, which keeps the value already set in Railway — a variable **omitted** from that map is deleted on the next apply, so keep it in step with [`.env.example`](./.env.example). Set the values in the dashboard after the first deploy:
+
+| Variable | Where the value comes from |
+| --- | --- |
+| `ALLOWED_HOSTS` | the generated `*.up.railway.app` host (generated domains are not part of IaC) |
+| `LS_STORE_ID`, `LS_PRODUCT_ALL_ACCESS`, `LS_PRODUCT_FLUENTCART`, `LS_PRODUCT_LEMONSQUEEZY` | Lemon Squeezy |
+| `VALID_LICENSE_KEYS`, `MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET` | ops / each marketplace |
+
 ### Smithery
+
+> **Retiring 31 October 2026.** Smithery's MCP proxy, managed identity, API, CLI and accounts shut down on that date; smithery.ai continues only as a public, non-proxied registry. The command below stops working then. List for free discovery if the listing already exists; do not build anything on this channel.
 
 Smithery publishes a **URL**, not a repo manifest — the old `smithery.yaml`/`smithery.json` format is gone. Deploy the image, then register the endpoint:
 

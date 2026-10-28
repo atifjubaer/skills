@@ -45,5 +45,8 @@
     "copilot"
   ],
   "author": "Fastrsoft",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "railway": "^3.16.0"
+  }
 }
