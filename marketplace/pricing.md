@@ -22,16 +22,27 @@ the current key does not unlock).
 
 ## Channel parity
 
-Gross price is identical everywhere; what differs is the platform's cut. Fill this
-in per channel before publishing, so the listed price is never mistaken for net:
+Gross price is identical everywhere; what differs is the platform's cut. Verified
+against each platform's own docs on 2026-10-28:
 
 | Channel | Gross | Platform fee | Net before tax | Notes |
 | --- | --- | --- | --- | --- |
-| Lemon Squeezy (direct) | $19 | merchant of record fee | | also issues the licence keys |
-| MCPize | $19 | _unverified_ | | paid listings route through their gateway (`MCPIZE_GATEWAY_SECRET`) |
-| Smithery | $19 | _unverified_ | | publishes a hosted URL |
-| Apify | $19 | _unverified_ | | pricing model may be per-event rather than subscription |
-| Agensi | skills, not the server | _unverified_ | | different product — see below |
+| Lemon Squeezy (direct) | $19 | merchant-of-record fee | _unverified_ | also issues the licence keys |
+| MCPize | $19 | 20% (80/20 split) | $15.20 | paid traffic is proxied through their gateway (`MCPIZE_GATEWAY_SECRET`); hosting Free / $9 / $29 / $79 |
+| Smithery | — | none — no monetization program | $0 | proxy, API, CLI and accounts shut down **2026-10-31**; free discovery only |
+| Apify | $19 | 20% + platform usage costs | _varies_ | pay-per-event only; needs `ACTOR_WEB_SERVER_PORT` (4321) and Standby `webServerMcpPath: /mcp` |
+| Agensi | per skill pack, not the $19 server | 30% (70/30 split) | depends on pack price | skills only; Stripe Connect pays in 2–7 days |
+
+Two consequences for the build:
+
+- **MCPize is the only channel with real billing.** Either deploy there
+  (`runtime: container`, `build.dockerfile: server/Dockerfile`) or keep Railway
+  and use MCPize's "Connect Existing URL" — paid traffic still goes through their
+  gateway, so MCPize revenue bypasses the Lemon Squeezy checkout. Lemon Squeezy
+  stays the direct-sales and licence-issuing channel.
+- **Apify needs a code change before it can host this image**: the server listens
+  on `PORT || 8080`, Apify requires `ACTOR_WEB_SERVER_PORT` (default 4321) and a
+  readiness probe on `GET /`. Railway injects `PORT`, so it needs nothing.
 
 Do not publish a number in this table from memory. Each one gets filled from the
 platform's own docs before the listing goes live.
