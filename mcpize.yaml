@@ -1,0 +1,60 @@
+# MCPize deployment manifest.
+#
+# Hosting: runtime `container` builds server/Dockerfile with the repository root
+# as build context, exactly like the local `docker build -f server/Dockerfile .`
+# — the image copies skills/ in, so the context cannot be narrowed to server/.
+#
+# Deploy: connect https://github.com/atifjubaer/skills in the MCPize dashboard,
+# or run `npx mcpize deploy` from this directory. Secrets below are entered in
+# the MCPize dashboard, never committed.
+version: 1
+name: fastr-mcp-suite
+description: FluentCart Pro Agent and Lemon Squeezy Developer Agent — hooks, DB schemas, API docs, webhook and licence verification for AI coding clients.
+runtime: container
+
+build:
+  dockerfile: server/Dockerfile
+
+startCommand:
+  type: http
+
+# Publisher secrets: infrastructure config only. All optional, so a deploy
+# succeeds on an empty dashboard and the server falls back to core behaviour.
+secrets:
+  - name: ALLOWED_HOSTS
+    required: false
+    description: Comma-separated Host allowlist for DNS-rebinding protection. Set it to the assigned *.mcpize.run domain.
+    placeholder: your-server.mcpize.run
+  - name: LS_STORE_ID
+    required: false
+    description: Lemon Squeezy store id. When set, licence keys from any other store are rejected.
+  - name: LS_PRODUCT_ALL_ACCESS
+    required: false
+    description: Lemon Squeezy product id for All-Access. Licences for it unlock every card.
+  - name: LS_PRODUCT_FLUENTCART
+    required: false
+    description: Lemon Squeezy product id for Card 1 (FluentCart Pro Agent).
+  - name: LS_PRODUCT_LEMONSQUEEZY
+    required: false
+    description: Lemon Squeezy product id for Card 2 (Lemon Squeezy Developer Agent).
+  - name: VALID_LICENSE_KEYS
+    required: false
+    description: Comma-separated ops tokens that are always All-Access (internal seats, CI).
+  - name: MCPIZE_GATEWAY_SECRET
+    required: false
+    description: Fixed token the MCPize gateway can present to mark a request as marketplace-billed. Compared in constant time.
+  - name: AGENSI_GATEWAY_SECRET
+    required: false
+    description: Same mechanism for the Agensi gateway.
+
+# Subscriber credentials: the buyer's own Lemon Squeezy licence key, forwarded to
+# the server as the Authorization header it already reads. Optional — without it
+# the session runs the free core tools.
+credentials_mode: per_user
+credentials:
+  - name: LICENSE_KEY
+    required: false
+    description: Your Lemon Squeezy licence key. Unlocks the Pro tools for the cards you own; leave empty to use the free tools.
+    placeholder: 00000000-0000-0000-0000-000000000000
+    mapping:
+      header: Authorization
