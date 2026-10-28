@@ -59,7 +59,16 @@ docker run -p 8080:8080 --env-file server/.env fastr-mcp-suite
 
 Works as-is on Railway / Render / Fly.io / MCPize: the image serves `POST /mcp` and answers `GET /health` for the platform healthcheck.
 
-> Before publishing to Smithery, re-check `smithery.json` against the live manifest schema — the field names have changed between CLI versions.
+### Smithery
+
+Smithery publishes a **URL**, not a repo manifest — the old `smithery.yaml`/`smithery.json` format is gone. Deploy the image, then register the endpoint:
+
+```bash
+npx -y smithery mcp publish "https://<your-host>/mcp" -n <namespace>/fastr-mcp-suite \
+  --config-schema "$(cat server/smithery.config.json)"
+```
+
+[`smithery.config.json`](./smithery.config.json) maps the user's licence key from the `ls-license-key` header onto upstream `Authorization`, which is exactly what the HTTP transport already reads. The field is optional, so a free user connects straight into the core tier.
 
 ## Layout
 

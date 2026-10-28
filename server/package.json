@@ -10,7 +10,7 @@
   },
   "files": [
     "dist",
-    "smithery.json",
+    "smithery.config.json",
     "README.md"
   ],
   "scripts": {
