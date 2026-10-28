@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name: FluentCart Custom Shipping Carrier Example
- * Plugin URI: https://github.com/atifjubaer/skills
  * Description: Example plugin demonstrating how to register custom dynamic shipping calculation methods in FluentCart.
  * Version: 1.0.0
  * Author: Fastrsoft

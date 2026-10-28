@@ -220,8 +220,8 @@ add_action('fluent_cart_enqueue_block_editor_assets', function () {
 ```php
 // Hook inside head tag of custom block editor page
 add_action('fluent_cart_block_editor/head', function () {
-    // Inject a custom Google font stylesheet link into the editor head
-    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">';
+    // Print a self-hosted editor stylesheet tag (point the href at your own asset path)
+    echo '<link rel="stylesheet" href="/wp-content/uploads/editor-fonts.css">';
 }, 20);
 ```
 

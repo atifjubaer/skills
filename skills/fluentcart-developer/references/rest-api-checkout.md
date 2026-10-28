@@ -77,7 +77,7 @@ Validates cart, registers/matches customer, creates draft order, and dispatches 
 ```json
 {
   "status": "success",
-  "redirect_url": "https://checkout.stripe.com/pay/cs_...",
+  "redirect_url": "https://checkout.example.com/pay/cs_...",
   "message": "Order placed successfully"
 }
 ```
@@ -108,11 +108,12 @@ Validates cart, registers/matches customer, creates draft order, and dispatches 
 
 #### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/checkout/place-order" \
-  -H "Content-Type: application/json" \
-  -H "X-WP-Nonce: your_nonce_here" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/checkout/place-order
+Content-Type: application/json
+X-WP-Nonce: your_nonce_here
+
+{
     "billing_email": "john@example.com",
     "billing_full_name": "John Doe",
     "billing_country": "US",
@@ -122,7 +123,7 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/checkout/place-order" \
     "billing_postcode": "10001",
     "payment_method": "stripe",
     "user_tz": "America/New_York"
-  }'
+}
 ```
 
 ---
@@ -274,13 +275,14 @@ Authenticates WordPress user during checkout and sets authentication cookies.
 
 #### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/user/login" \
-  -H "Content-Type: application/json" \
-  -H "X-WP-Nonce: your_nonce_here" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/user/login
+Content-Type: application/json
+X-WP-Nonce: your_nonce_here
+
+{
     "user_login": "john@example.com",
     "password": "securepassword123",
     "remember_me": "on"
-  }'
+}
 ```

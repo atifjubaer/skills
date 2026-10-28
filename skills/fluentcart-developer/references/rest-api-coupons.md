@@ -53,9 +53,9 @@ Retrieve a simple array of active coupon codes. This lightweight endpoint is des
 
 ### Example
 
-```bash
-curl -X GET "https://example.com/wp-json/fluent-cart/v2/coupons/listCoupons" \
-  -u "username:app_password"
+```http
+GET https://example.com/wp-json/fluent-cart/v2/coupons/listCoupons
+Authorization: Basic <base64 of username:app_password>
 ```
 
 ---
@@ -143,9 +143,9 @@ Retrieve a paginated list of coupons with optional filtering, sorting, and searc
 
 ### Example
 
-```bash
-curl -X GET "https://example.com/wp-json/fluent-cart/v2/coupons?page=1&per_page=20&search=SAVE&active_view=active" \
-  -u "username:app_password"
+```http
+GET https://example.com/wp-json/fluent-cart/v2/coupons?page=1&per_page=20&search=SAVE&active_view=active
+Authorization: Basic <base64 of username:app_password>
 ```
 
 ---
@@ -168,9 +168,9 @@ Retrieve the global coupon settings (currently, whether coupon input is shown on
 
 ### Example
 
-```bash
-curl -X GET "https://example.com/wp-json/fluent-cart/v2/coupons/getSettings" \
-  -u "username:app_password"
+```http
+GET https://example.com/wp-json/fluent-cart/v2/coupons/getSettings
+Authorization: Basic <base64 of username:app_password>
 ```
 
 ---
@@ -245,9 +245,9 @@ Retrieve detailed information about a specific coupon, including its activity lo
 
 ### Example
 
-```bash
-curl -X GET "https://example.com/wp-json/fluent-cart/v2/coupons/1" \
-  -u "username:app_password"
+```http
+GET https://example.com/wp-json/fluent-cart/v2/coupons/1
+Authorization: Basic <base64 of username:app_password>
 ```
 
 ---
@@ -340,11 +340,12 @@ Create a new discount coupon.
 
 ### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/coupons
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "title": "Summer Sale 20%",
     "code": "SUMMER20",
     "type": "percentage",
@@ -362,8 +363,8 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons" \
       "max_per_customer": 2,
       "apply_to_whole_cart": "yes",
       "is_recurring": "no"
-    }
-  }'
+}
+}
 ```
 
 ---
@@ -410,11 +411,12 @@ Update an existing coupon. Accepts the same fields as Create Coupon.
 
 ### Example
 
-```bash
-curl -X PUT "https://example.com/wp-json/fluent-cart/v2/coupons/5" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+PUT https://example.com/wp-json/fluent-cart/v2/coupons/5
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "title": "Summer Sale 25%",
     "code": "SUMMER25",
     "type": "percentage",
@@ -422,7 +424,7 @@ curl -X PUT "https://example.com/wp-json/fluent-cart/v2/coupons/5" \
     "status": "active",
     "stackable": "yes",
     "show_on_checkout": "yes"
-  }'
+}
 ```
 
 ---
@@ -452,9 +454,9 @@ Permanently delete a coupon.
 
 ### Example
 
-```bash
-curl -X DELETE "https://example.com/wp-json/fluent-cart/v2/coupons/5" \
-  -u "username:app_password"
+```http
+DELETE https://example.com/wp-json/fluent-cart/v2/coupons/5
+Authorization: Basic <base64 of username:app_password>
 ```
 
 ---
@@ -507,11 +509,12 @@ Apply a coupon code to a set of order line items and return recalculated discoun
 
 ### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/apply" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/coupons/apply
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "coupon_code": "SAVE10",
     "order_items": [
       {
@@ -523,11 +526,11 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/apply" \
         "line_total": 5000,
         "other_info": {
           "payment_type": "onetime"
-        }
-      }
+}
+}
     ],
     "applied_coupons": []
-  }'
+}
 ```
 
 ---
@@ -581,11 +584,12 @@ Remove a coupon from an order and recalculate remaining discounts.
 
 ### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/cancel" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/coupons/cancel
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "coupon_code": "SAVE10",
     "id": 15,
     "order_uuid": "abc123-def456",
@@ -597,10 +601,10 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/cancel" \
         "unit_price": 2500,
         "item_total": 5000,
         "line_total": 5000
-      }
+}
     ],
     "applied_coupons": [2]
-  }'
+}
 ```
 
 ---
@@ -651,11 +655,12 @@ Recalculate all previously applied coupons against current order items.
 
 ### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/re-apply" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/coupons/re-apply
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "order_uuid": "abc123-def456",
     "order_items": [
       {
@@ -665,10 +670,10 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/re-apply" \
         "unit_price": 2500,
         "item_total": 2500,
         "line_total": 2500
-      }
+}
     ],
     "applied_coupons": [1]
-  }'
+}
 ```
 
 ---
@@ -708,15 +713,16 @@ Not Eligible:
 
 ### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/checkProductEligibility" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/coupons/checkProductEligibility
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "productId": 42,
     "appliedCoupons": ["SAVE10", "WELCOME5"],
     "origin": "admin_order"
-  }'
+}
 ```
 
 ---
@@ -743,13 +749,14 @@ true
 
 ### Example
 
-```bash
-curl -X POST "https://example.com/wp-json/fluent-cart/v2/coupons/storeCouponSettings" \
-  -u "username:app_password" \
-  -H "Content-Type: application/json" \
-  -d '{
+```http
+POST https://example.com/wp-json/fluent-cart/v2/coupons/storeCouponSettings
+Authorization: Basic <base64 of username:app_password>
+Content-Type: application/json
+
+{
     "show_on_checkout": true
-  }'
+}
 ```
 
 ---

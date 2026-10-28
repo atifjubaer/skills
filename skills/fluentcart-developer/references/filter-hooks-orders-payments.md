@@ -711,7 +711,7 @@ add_filter('fluent_cart/transaction/url_stripe', function ($url, $context) {
     $mode = $context['payment_mode'] === 'test' ? 'test/' : '';
 
     // Construct Stripe dashboard transaction URL
-    return "https://dashboard.stripe.com/{$mode}payments/{$chargeId}";
+    return "https://dashboard.example.com/{$mode}payments/{$chargeId}";
 }, 10, 2);
 ```
 
