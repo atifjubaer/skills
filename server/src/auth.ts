@@ -51,29 +51,40 @@ function cacheResolution(token: string, cards: CardId[], ttlMs: number): void {
 }
 
 /**
+ * Default Lemon Squeezy IDs for the FastrSoft store (store 428520).
+ * Overridable via environment variables (e.g. LS_STORE_ID, LS_PRODUCT_*).
+ */
+export const DEFAULT_LS_STORE_ID = '428520';
+export const DEFAULT_LS_PRODUCTS = {
+  ALL_ACCESS: '1479567',
+  FLUENTCART: '1479582',
+  LEMONSQUEEZY: '1479604'
+} as const;
+
+/**
  * Which cards a Lemon Squeezy product grants.
  *
  * Each card is its own product, so a licence has to be resolved to the card it
  * paid for — otherwise a $12 Card 1 key would unlock Card 2's Pro tools too.
- * With no `LS_PRODUCT_*` variables configured the suite behaves as it did when
- * there was a single product: any valid licence unlocks everything.
+ * If no custom LS_PRODUCT_* variables are configured, defaults to the canonical
+ * FastrSoft product IDs.
  */
 function cardsForProduct(productId: string | number | undefined): { cards: CardId[]; reason: string } {
-  const mapping: Array<{ env: string; cards: CardId[] }> = [
-    { env: 'LS_PRODUCT_ALL_ACCESS', cards: [...ALL_CARDS] },
-    { env: 'LS_PRODUCT_FLUENTCART', cards: ['fluentcart'] },
-    { env: 'LS_PRODUCT_LEMONSQUEEZY', cards: ['lemonsqueezy'] }
-  ];
-  const configured = mapping.filter((entry) => process.env[entry.env]?.trim());
-  if (configured.length === 0) {
-    return { cards: [...ALL_CARDS], reason: 'no LS_PRODUCT_* mapping configured: licence unlocks every card' };
-  }
+  const allAccessId = (process.env.LS_PRODUCT_ALL_ACCESS || DEFAULT_LS_PRODUCTS.ALL_ACCESS).trim();
+  const fluentCartId = (process.env.LS_PRODUCT_FLUENTCART || DEFAULT_LS_PRODUCTS.FLUENTCART).trim();
+  const lemonSqueezyId = (process.env.LS_PRODUCT_LEMONSQUEEZY || DEFAULT_LS_PRODUCTS.LEMONSQUEEZY).trim();
+
   const id = String(productId ?? '');
-  for (const entry of configured) {
-    if (id && id === process.env[entry.env]!.trim()) {
-      return { cards: [...entry.cards], reason: `licence product ${id} maps to ${entry.cards.join('+')}` };
-    }
+  if (allAccessId && id === allAccessId) {
+    return { cards: [...ALL_CARDS], reason: `licence product ${id} maps to ${ALL_CARDS.join('+')}` };
   }
+  if (fluentCartId && id === fluentCartId) {
+    return { cards: ['fluentcart'], reason: `licence product ${id} maps to fluentcart` };
+  }
+  if (lemonSqueezyId && id === lemonSqueezyId) {
+    return { cards: ['lemonsqueezy'], reason: `licence product ${id} maps to lemonsqueezy` };
+  }
+
   return { cards: [], reason: `licence product ${id || 'unknown'} is not mapped to a card` };
 }
 
@@ -172,11 +183,12 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
     const data = (await res.json()) as {
       valid?: boolean;
       license_key?: { status?: string; store_id?: number };
-      meta?: { product_id?: number };
+      meta?: { product_id?: number; store_id?: number };
     };
 
-    const expectedStore = process.env.LS_STORE_ID;
-    const storeMatches = !expectedStore || String(data.license_key?.store_id ?? '') === String(expectedStore);
+    const expectedStore = (process.env.LS_STORE_ID || DEFAULT_LS_STORE_ID).trim();
+    const actualStore = data.meta?.store_id ?? data.license_key?.store_id;
+    const storeMatches = !expectedStore || String(actualStore ?? '') === String(expectedStore);
     const active = data.valid === true && data.license_key?.status === 'active' && storeMatches;
 
     if (!active) {
