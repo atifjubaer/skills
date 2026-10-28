@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  skills:
+    name: Skill folders and registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate skill frontmatter and skills.sh registry
+        run: node scripts/validate-skills.mjs
+
+      - name: Check the published package contents
+        run: node scripts/check-package.mjs
+
+  server:
+    name: MCP server build and protocol probe
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck and build
+        run: npm run build
+
+      - name: Protocol, tier-gating and skills catalog probe
+        run: npm run verify
+
+  docker:
+    name: Docker image and healthcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image from repo root
+        run: docker build -f server/Dockerfile -t fastr-mcp-suite .
+
+      - name: Boot container and hit /health
+        run: |
+          docker run -d --name suite -p 8080:8080 \
+            -e ALLOWED_HOSTS=localhost,127.0.0.1 fastr-mcp-suite
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8080/health; then exit 0; fi
+            sleep 1
+          done
+          echo "healthcheck never came up"
+          docker logs suite
+          exit 1
+
+      - name: Container logs
+        if: always()
+        run: docker logs suite || true
