@@ -16,6 +16,24 @@ const LICENSE_CACHE_TTL_MS = 10 * 60 * 1000;
 /** token -> resolution, so a busy client does not hit Lemon Squeezy on every request. */
 const licenseCache = new Map<string, { tier: Tier; expiresAt: number }>();
 
+/** Unauthenticated callers can send arbitrary tokens, so the cache is bounded. */
+const LICENSE_CACHE_MAX = 5000;
+/** A failed validation is cached briefly: it bounds upstream load during an outage. */
+const NEGATIVE_CACHE_TTL_MS = 30 * 1000;
+/** Beyond this many concurrent validations the answer is "core" without calling out. */
+const MAX_INFLIGHT_VALIDATIONS = 64;
+
+let inFlightValidations = 0;
+
+function cacheResolution(token: string, tier: Tier, ttlMs: number): void {
+  if (licenseCache.size >= LICENSE_CACHE_MAX) {
+    // Map iteration is insertion-ordered, so the first key is the oldest entry.
+    const oldest = licenseCache.keys().next().value;
+    if (oldest !== undefined) licenseCache.delete(oldest);
+  }
+  licenseCache.set(token, { tier, expiresAt: Date.now() + ttlMs });
+}
+
 function timingSafeEqualStrings(a: string, b: string): boolean {
   const left = Buffer.from(a, 'utf8');
   const right = Buffer.from(b, 'utf8');
@@ -58,6 +76,17 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
     };
   }
 
+  // Any caller can present an unknown token. Without this cap, a burst of junk
+  // tokens becomes a burst of 5-second outbound requests.
+  if (inFlightValidations >= MAX_INFLIGHT_VALIDATIONS) {
+    return {
+      tier: 'core',
+      source: 'lemonsqueezy',
+      reason: 'license validation concurrency limit reached'
+    };
+  }
+
+  inFlightValidations += 1;
   try {
     const res = await fetch(LS_VALIDATE_URL, {
       method: 'POST',
@@ -76,18 +105,23 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
     const active = data.valid === true && data.license_key?.status === 'active' && storeMatches;
     const tier: Tier = active ? 'pro' : 'core';
 
-    licenseCache.set(licenseKey, { tier, expiresAt: Date.now() + LICENSE_CACHE_TTL_MS });
+    cacheResolution(licenseKey, tier, LICENSE_CACHE_TTL_MS);
     return {
       tier,
       source: 'lemonsqueezy',
       reason: active ? 'active Lemon Squeezy license' : 'license inactive, unknown, or wrong store'
     };
   } catch (err: any) {
+    // Fail closed, but remember the failure for a moment: an outage must not
+    // turn every request from every client into another outbound attempt.
+    cacheResolution(licenseKey, 'core', NEGATIVE_CACHE_TTL_MS);
     return {
       tier: 'core',
       source: 'lemonsqueezy',
       reason: `license validation unavailable: ${err.message}`
     };
+  } finally {
+    inFlightValidations -= 1;
   }
 }
 
@@ -113,7 +147,13 @@ export async function authenticateRequest(request?: Request): Promise<AuthContex
     .split(',')
     .map(k => k.trim())
     .filter(Boolean);
-  if (allowlist.includes(token)) {
+  // Compared in constant time like the gateway secrets, and without stopping at
+  // the first match so the loop's duration does not reveal an entry's position.
+  let allowlisted = false;
+  for (const candidate of allowlist) {
+    allowlisted = timingSafeEqualStrings(token, candidate) || allowlisted;
+  }
+  if (allowlisted) {
     return { tier: 'pro', source: 'lemonsqueezy', reason: 'token in VALID_LICENSE_KEYS allowlist' };
   }
 

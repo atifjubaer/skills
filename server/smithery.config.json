@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "licenseKey": {
+      "type": "string",
+      "title": "Licence key (optional)",
+      "description": "Your Fastr MCP Suite licence key. Leave empty to use the free core tools; a valid key unlocks webhook verification, licence validation and the payment gateway generator.",
+      "x-from": { "header": "ls-license-key" },
+      "x-to": { "header": "Authorization" }
+    }
+  }
+}

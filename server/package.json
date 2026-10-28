@@ -1,7 +1,7 @@
 {
-  "name": "@fastr/mcp-suite",
+  "name": "fastr-mcp-suite",
   "version": "1.0.0",
-  "description": "Universal MCP v2 Server Suite for FluentCart, Lemon Squeezy, and Developer Skills",
+  "description": "MCP server for FluentCart and Lemon Squeezy developer knowledge: documentation search, schema lookup, webhook signature verification and licence validation",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,7 @@
   },
   "files": [
     "dist",
-    "smithery.json",
+    "smithery.config.json",
     "README.md"
   ],
   "scripts": {
@@ -35,6 +35,21 @@
   ],
   "author": "Atif Jubaer",
   "license": "BSL-1.1",
+  "homepage": "https://github.com/atifjubaer/skills/tree/main/server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atifjubaer/skills.git",
+    "directory": "server"
+  },
+  "bugs": {
+    "url": "https://github.com/atifjubaer/skills/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/express": "^2.0.2",
     "@modelcontextprotocol/node": "^2.1.2",
