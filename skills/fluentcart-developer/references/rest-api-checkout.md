@@ -77,7 +77,7 @@ Validates cart, registers/matches customer, creates draft order, and dispatches 
 ```json
 {
   "status": "success",
-  "redirect_url": "https://checkout.stripe.com/pay/cs_...",
+  "redirect_url": "https://checkout.example.com/pay/cs_...",
   "message": "Order placed successfully"
 }
 ```

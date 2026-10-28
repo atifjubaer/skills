@@ -754,9 +754,10 @@ class API
  return new \WP_Error('paddle_api_key_missing', 'API key is missing');
  }
 
- $baseUrl = $mode === 'test' 
- ? 'https://sandbox-api.paddle.com' 
- : 'https://api.paddle.com';
+ // Hosts are placeholders — swap in the gateway's own documented sandbox and live API base hosts.
+ $baseUrl = $mode === 'test'
+ ? 'https://sandbox-api.example.com'
+ : 'https://api.example.com';
 
  $response = wp_remote_request($baseUrl . $endpoint, [
  'method' => $method,
@@ -1185,7 +1186,8 @@ php
 ```
 public function getEnqueueScriptSrc($hasSubscription = 'no'): array
 {
- $paddleJsUrl = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+ // Placeholder CDN host — point this at the gateway's published checkout SDK bundle.
+ $paddleJsUrl = 'https://cdn.example.com/paddle/v2/paddle.js';
 
  return [
  [
@@ -1661,20 +1663,20 @@ public function getTransactionUrl($url, $data)
 
  // Use payment_mode from transaction data (stored order mode at checkout time)
  if (Arr::get($data, 'payment_mode') === 'test') {
- return 'https://sandbox-vendors.paddle.com/transactions-v2/' . Arr::get($data, 'vendor_charge_id');
+ return 'https://sandbox-vendors.example.com/transactions-v2/' . Arr::get($data, 'vendor_charge_id');
  }
 
- return 'https://vendors.paddle.com/transactions-v2/' . Arr::get($data, 'vendor_charge_id');
+ return 'https://vendors.example.com/transactions-v2/' . Arr::get($data, 'vendor_charge_id');
 }
 
 public function getSubscriptionUrl($url, $data)
 {
  // Use payment_mode from subscription data (stored order mode at checkout time)
  if (Arr::get($data, 'payment_mode') === 'test') {
- return 'https://sandbox-vendors.paddle.com/subscriptions-v2/' . Arr::get($data, 'vendor_subscription_id');
+ return 'https://sandbox-vendors.example.com/subscriptions-v2/' . Arr::get($data, 'vendor_subscription_id');
  }
 
- return 'https://vendors.paddle.com/subscriptions-v2/' . Arr::get($data, 'vendor_subscription_id');
+ return 'https://vendors.example.com/subscriptions-v2/' . Arr::get($data, 'vendor_subscription_id');
 }```
 
 ### Success and Cancel URL Handling [](#success-and-cancel-url-handling)

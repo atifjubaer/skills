@@ -14,7 +14,7 @@
 //   - Compatibility notes, tags, permissions
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -59,6 +59,54 @@ function createZip(outputPath, spec) {
     stdio: 'inherit'
   });
 }
+
+// Agensi rejects any listing whose files link to an outside checkout vendor
+// (anti-disintermediation filter). Scan the source folders first so a violating
+// ZIP is never built, instead of being rejected after upload.
+const BANNED_VENDOR_HOSTS = [
+  'gumroad.com', 'gum.co', 'whop.com', 'lemonsqueezy.com', 'payhip.com',
+  'ko-fi.com', 'buymeacoffee.com', 'patreon.com', 'buy.stripe.com',
+  'checkout.stripe.com', 'paypal.me', 'sellfy.com', 'podia.com',
+  'teachable.com', 'thinkific.com', 'kajabi.com', 'stan.store', 'polar.sh',
+  'paddle.com'
+];
+
+function scanForBannedHosts(label, entries) {
+  const hits = [];
+  const checkFile = file => {
+    const lines = readFileSync(file, 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      for (const host of BANNED_VENDOR_HOSTS) {
+        if (line.toLowerCase().includes(host)) hits.push(`${file}:${i + 1}  ${host}`);
+      }
+    });
+  };
+  const walk = dir => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (/\.(md|php|js|mjs|ts|json|txt)$/i.test(entry.name)) checkFile(full);
+    }
+  };
+  for (const entry of entries) {
+    const full = join(root, entry);
+    if (existsSync(full) && statSync(full).isDirectory()) walk(full);
+    else if (existsSync(full)) checkFile(full);
+  }
+  if (hits.length) {
+    console.error(`[agensi] Outside-checkout vendor hosts found in ${label} — resolve before packaging:`);
+    for (const hit of hits) console.error(`  ${hit}`);
+    process.exit(1);
+  }
+  console.log(`[agensi] Clean: no outside-checkout vendor hosts in ${label}.`);
+}
+
+console.log('--- 0. Checking Vendor Links ---');
+scanForBannedHosts('skill folders', ['skills/fluentcart-developer', 'skills/lemonsqueezy-developer']);
 
 console.log('--- 1. Packaging Individual Skills ---');
 
@@ -294,5 +342,12 @@ export async function handleWebhook(req, res) {
 `;
 
 writeFileSync(join(outDir, 'lemonsqueezy-developer-submission.md'), lsSubmission);
+
+console.log('--- 5. Re-checking Submission Copy ---');
+scanForBannedHosts('submission sheets', [
+  'marketplace/agensi/fluentcart-developer-submission.md',
+  'marketplace/agensi/lemonsqueezy-developer-submission.md',
+  'marketplace/agensi/fastr-ecommerce-suite-submission.md'
+]);
 
 console.log('Packaging and submission sheets complete in marketplace/agensi/');
