@@ -1,6 +1,25 @@
 ---
 name: fluentcart-developer
 description: Comprehensive developer knowledge base for FluentCart e-commerce plugin development. Covers theme compatibility, template system, classic & block themes, action & filter hooks, Facebook Meta Pixel & GA4 tracking, Elementor, Gutenberg & Bricks integration, custom payment gateways, dynamic shipping carriers, database models, REST API, fee surcharges, ghost products, subscriptions, and WP-CLI.
+summary: Developer knowledge base and architecture manual for FluentCart WordPress e-commerce: hooks, database schemas, REST APIs, custom payment gateways, and shipping integrations.
+version: "1.0.0"
+license: "MIT"
+tags:
+  - wordpress
+  - ecommerce
+  - fluentcart
+  - payments
+  - php
+keywords:
+  - fluentcart
+  - wordpress e-commerce
+  - payment gateways
+  - custom shipping
+  - hook listener
+use_cases:
+  - Building custom FluentCart payment gateways
+  - Developing FluentCart shipping carriers and fee surcharges
+  - Querying FluentCart database tables and REST endpoints
 ---
 
 # FluentCart Developer Skill

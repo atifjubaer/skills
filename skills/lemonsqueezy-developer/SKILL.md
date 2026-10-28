@@ -1,6 +1,7 @@
 ---
 name: "lemonsqueezy-developer"
 description: "Comprehensive developer knowledge base and architectural manual for integrating Lemon Squeezy e-commerce, subscriptions, checkouts, and licensing into any web or mobile stack. Covers JSON:API conventions, checkout sessions, Lemon.js overlays, HMAC-SHA256 webhook security, subscription lifecycles, and software license keys."
+summary: "Developer reference for Lemon Squeezy e-commerce: checkout overlays, HMAC-SHA256 webhooks, subscription lifecycles, and software license key validation."
 version: "1.0.0"
 license: "MIT"
 tags:
@@ -9,7 +10,17 @@ tags:
   - lemonsqueezy
   - billing
   - licensing
-  - e-commerce
+  - ecommerce
+keywords:
+  - lemonsqueezy
+  - payment checkout
+  - webhook verification
+  - license activation
+  - subscription billing
+use_cases:
+  - Integrating Lemon Squeezy checkout overlays and hosted checkouts
+  - Securing and handling Lemon Squeezy webhooks with HMAC-SHA256
+  - Validating and managing software license keys
 ---
 
 # Lemon Squeezy Developer Skill
