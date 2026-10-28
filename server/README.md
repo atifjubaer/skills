@@ -88,25 +88,23 @@ docker run -p 8080:8080 --env-file server/.env fastr-mcp-suite
 
 Works as-is on Railway / Render / Fly.io / MCPize: the image serves `POST /mcp` and answers `GET /health` for the platform healthcheck.
 
-### Railway
+### MCPize
 
-[`.railway/railway.ts`](../.railway/railway.ts) is Infrastructure as Code for this service. Config as Code (`railway.json` / `railway.toml`) is deprecated and new services cannot opt into it, so the project is defined in one file: GitHub source `atifjubaer/skills@main`, `build.dockerfilePath: server/Dockerfile` with the repository root as build context, healthcheck `/health`.
+[`mcpize.yaml`](../mcpize.yaml) is the deploy manifest: `runtime: container`, `build.dockerfile: server/Dockerfile` with the repository root as build context (the image copies `skills/` in), `startCommand.type: http`. It validates against MCPize's published JSON schema.
+
+Check the manifest locally, then deploy — `mcpize doctor` reports `mcpize.yaml: Found and valid`, and the only remaining failure it flags is the login:
 
 ```bash
-npm install                        # root: the railway IaC SDK is a devDependency
-npx @railway/cli login
-npx @railway/cli link              # select or create the fastr-mcp-suite project
-npx @railway/cli config plan       # review the change set
-npx @railway/cli config apply      # apply; destructive lines are marked first
+npx -y mcpize doctor    # local pre-deploy validation
+npx -y mcpize login     # opens the browser
+npx -y mcpize deploy    # build + ship from this directory
 ```
 
-The file lists every runtime variable with `preserve()`, which keeps the value already set in Railway — a variable **omitted** from that map is deleted on the next apply, so keep it in step with [`.env.example`](./.env.example). Set the values in the dashboard after the first deploy:
+Connecting the GitHub repository in the MCPize dashboard deploys on every push to `main` instead.
 
-| Variable | Where the value comes from |
-| --- | --- |
-| `ALLOWED_HOSTS` | the generated `*.up.railway.app` host (generated domains are not part of IaC) |
-| `LS_STORE_ID`, `LS_PRODUCT_ALL_ACCESS`, `LS_PRODUCT_FLUENTCART`, `LS_PRODUCT_LEMONSQUEEZY` | Lemon Squeezy |
-| `VALID_LICENSE_KEYS`, `MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET` | ops / each marketplace |
+Publisher secrets are entered in the dashboard — `ALLOWED_HOSTS`, `LS_STORE_ID`, the three `LS_PRODUCT_*` ids, `VALID_LICENSE_KEYS`, `MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`. Every one is optional, so a deploy on an empty dashboard still serves the core tools; set `ALLOWED_HOSTS` to the assigned `*.mcpize.run` host once the service exists.
+
+Subscribers can paste a Lemon Squeezy licence key as the `LICENSE_KEY` credential. MCPize forwards it as the `Authorization` header, which the HTTP transport already reads, so the per-card entitlement logic runs unchanged.
 
 ### Smithery
 
