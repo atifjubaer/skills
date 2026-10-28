@@ -40,7 +40,7 @@ A resource object may also contain optional properties such as relationships, li
 Example
 Request
 
-curl "<https://api.lemonsqueezy.com/v1/stores>" \
+curl "<https://api.example.com/v1/stores>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -62,8 +62,8 @@ Response
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>",
-    "last": "<https://api.lemonsqueezy.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>"
+    "first": "<https://api.example.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>",
+    "last": "<https://api.example.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>"
   },
   "data": [
     {
@@ -72,9 +72,9 @@ Response
       "attributes": {
         "name": "My Store",
         "slug": "my-store",
-        "domain": "my-store.lemonsqueezy.com",
-        "url": "https://my-store.lemonsqueezy.com",
-        "avatar_url": "https://app.lemonsqueezy.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png",
+        "domain": "my-store.example.com",
+        "url": "https://my-store.example.com",
+        "avatar_url": "https://app.example.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png",
         "plan": "fresh",
         "country": "US",
         "country_nicename": "United States",
@@ -89,43 +89,43 @@ Response
       "relationships": {
         "products": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/products",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/products"
+            "related": "https://api.example.com/v1/stores/1/products",
+            "self": "https://api.example.com/v1/stores/1/relationships/products"
           }
         },
         "orders": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/orders",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/orders"
+            "related": "https://api.example.com/v1/stores/1/orders",
+            "self": "https://api.example.com/v1/stores/1/relationships/orders"
           }
         },
         "subscriptions": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/subscriptions",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/subscriptions"
+            "related": "https://api.example.com/v1/stores/1/subscriptions",
+            "self": "https://api.example.com/v1/stores/1/relationships/subscriptions"
           }
         },
         "discounts": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/discounts",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/discounts"
+            "related": "https://api.example.com/v1/stores/1/discounts",
+            "self": "https://api.example.com/v1/stores/1/relationships/discounts"
           }
         },
         "license-keys": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/license-keys",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/license-keys"
+            "related": "https://api.example.com/v1/stores/1/license-keys",
+            "self": "https://api.example.com/v1/stores/1/relationships/license-keys"
           }
         },
         "webhooks": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/webhooks",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/webhooks"
+            "related": "https://api.example.com/v1/stores/1/webhooks",
+            "self": "https://api.example.com/v1/stores/1/relationships/webhooks"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/stores/1"
+        "self": "https://api.example.com/v1/stores/1"
       }
     },
     {...}
@@ -246,7 +246,7 @@ April 17th, 2023
 You can now filter the Subscription invoice list endpoint by subscription_id.
 March 30th, 2023
 We added receipt URLs to Order objects (in the API and webhooks) in urls.receipt.
-Update payment method URLs have been moved to your store subdomain rather than app.lemonsqueezy.com
+Update payment method URLs have been moved to your store subdomain rather than the dashboard app
 March 17th, 2023
 We added a new subscription_updated webhook event to make it easier to keep your local subscription data up-to-date (make sure you subscribe to this event from your existing webhooks). There is also a new “Subscription updated” trigger in our Zapier integration.
 Custom data added to checkouts is now saved permanently and is available in all Order, Subscription and License key related webhooks.
@@ -287,7 +287,7 @@ GET
 /v1/users/me
 Retrieves the currently authenticated user.
 
-curl "<https://api.lemonsqueezy.com/v1/users/me>" \
+curl "<https://api.example.com/v1/users/me>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -303,7 +303,7 @@ Returns a User object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/users/1>"
+    "self": "<https://api.example.com/v1/users/1>"
   },
   "data": {
     "type": "users",
@@ -318,7 +318,7 @@ Returns a User object.
       "updatedAt": "2024-08-26T13:24:54.000000Z"
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/users/1>"
+      "self": "<https://api.example.com/v1/users/1>"
     }
   }
 }
@@ -341,10 +341,10 @@ slug
 The slug used to identify the store.
 
 domain
-The domain of the store, either in the format {slug}.lemonsqueezy.com or a custom domain.
+The domain of the store, either in the format {slug}.example.com or a custom domain.
 
 url
-The fully-qualified URL for the store (e.g. https://{slug}.lemonsqueezy.com or <https://customdomain.com> when a custom domain is set up).
+The fully-qualified URL for the store (e.g. https://{slug}.example.com or <https://customdomain.com> when a custom domain is set up).
 
 avatar_url
 The URL for the store avatar.
@@ -385,9 +385,9 @@ An ISO 8601 formatted date-time string indicating when the object was last updat
   "attributes": {
     "name": "My Store",
     "slug": "my-store",
-    "domain": "my-store.lemonsqueezy.com",
-    "url": "<https://my-store.lemonsqueezy.com>",
-    "avatar_url": "<https://app.lemonsqueezy.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png>",
+    "domain": "my-store.example.com",
+    "url": "<https://my-store.example.com>",
+    "avatar_url": "<https://app.example.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png>",
     "plan": "fresh",
     "country": "US",
     "country_nicename": "United States",
@@ -411,7 +411,7 @@ GET
 /v1/stores/:id
 Retrieves the store with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/stores/1>" \
+curl "<https://api.example.com/v1/stores/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -424,7 +424,7 @@ Returns a Store object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/stores/1>"
+    "self": "<https://api.example.com/v1/stores/1>"
   },
   "data": {
     "type": "stores",
@@ -432,9 +432,9 @@ Returns a Store object.
     "attributes": {
       "name": "My Store",
       "slug": "my-store",
-      "domain": "my-store.lemonsqueezy.com",
-      "url": "<https://my-store.lemonsqueezy.com>",
-      "avatar_url": "<https://app.lemonsqueezy.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png>",
+      "domain": "my-store.example.com",
+      "url": "<https://my-store.example.com>",
+      "avatar_url": "<https://app.example.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png>",
       "plan": "fresh",
       "country": "US",
       "country_nicename": "United States",
@@ -449,43 +449,43 @@ Returns a Store object.
     "relationships": {
       "products": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/stores/1/products>",
-          "self": "<https://api.lemonsqueezy.com/v1/stores/1/relationships/products>"
+          "related": "<https://api.example.com/v1/stores/1/products>",
+          "self": "<https://api.example.com/v1/stores/1/relationships/products>"
         }
       },
       "orders": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/stores/1/orders>",
-          "self": "<https://api.lemonsqueezy.com/v1/stores/1/relationships/orders>"
+          "related": "<https://api.example.com/v1/stores/1/orders>",
+          "self": "<https://api.example.com/v1/stores/1/relationships/orders>"
         }
       },
       "subscriptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/stores/1/subscriptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/stores/1/relationships/subscriptions>"
+          "related": "<https://api.example.com/v1/stores/1/subscriptions>",
+          "self": "<https://api.example.com/v1/stores/1/relationships/subscriptions>"
         }
       },
       "discounts": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/stores/1/discounts>",
-          "self": "<https://api.lemonsqueezy.com/v1/stores/1/relationships/discounts>"
+          "related": "<https://api.example.com/v1/stores/1/discounts>",
+          "self": "<https://api.example.com/v1/stores/1/relationships/discounts>"
         }
       },
       "license-keys": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/stores/1/license-keys>",
-          "self": "<https://api.lemonsqueezy.com/v1/stores/1/relationships/license-keys>"
+          "related": "<https://api.example.com/v1/stores/1/license-keys>",
+          "self": "<https://api.example.com/v1/stores/1/relationships/license-keys>"
         }
       },
       "webhooks": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/stores/1/webhooks>",
-          "self": "<https://api.lemonsqueezy.com/v1/stores/1/relationships/webhooks>"
+          "related": "<https://api.example.com/v1/stores/1/webhooks>",
+          "self": "<https://api.example.com/v1/stores/1/relationships/webhooks>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/stores/1>"
+      "self": "<https://api.example.com/v1/stores/1>"
     }
   }
 }
@@ -500,7 +500,7 @@ GET
 /v1/stores
 Retrieves a paginated list of all stores.
 
-curl "<https://api.lemonsqueezy.com/v1/stores>" \
+curl "<https://api.example.com/v1/stores>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -523,8 +523,8 @@ Returns a paginated list of Store objects ordered by name field in ascending ord
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>",
-    "last": "<https://api.lemonsqueezy.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>"
+    "first": "<https://api.example.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>",
+    "last": "<https://api.example.com/v1/stores?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>"
   },
   "data": [
     {
@@ -533,9 +533,9 @@ Returns a paginated list of Store objects ordered by name field in ascending ord
       "attributes": {
         "name": "My Store",
         "slug": "my-store",
-        "domain": "my-store.lemonsqueezy.com",
-        "url": "https://my-store.lemonsqueezy.com",
-        "avatar_url": "https://app.lemonsqueezy.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png",
+        "domain": "my-store.example.com",
+        "url": "https://my-store.example.com",
+        "avatar_url": "https://app.example.com/storage/avatars/stores/1/czTkMkDm4Vfb8PZehb5c29XFCm9JZyJx0AjEZP7s.png",
         "plan": "fresh",
         "country": "US",
         "country_nicename": "United States",
@@ -550,43 +550,43 @@ Returns a paginated list of Store objects ordered by name field in ascending ord
       "relationships": {
         "products": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/products",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/products"
+            "related": "https://api.example.com/v1/stores/1/products",
+            "self": "https://api.example.com/v1/stores/1/relationships/products"
           }
         },
         "orders": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/orders",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/orders"
+            "related": "https://api.example.com/v1/stores/1/orders",
+            "self": "https://api.example.com/v1/stores/1/relationships/orders"
           }
         },
         "subscriptions": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/subscriptions",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/subscriptions"
+            "related": "https://api.example.com/v1/stores/1/subscriptions",
+            "self": "https://api.example.com/v1/stores/1/relationships/subscriptions"
           }
         },
         "discounts": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/discounts",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/discounts"
+            "related": "https://api.example.com/v1/stores/1/discounts",
+            "self": "https://api.example.com/v1/stores/1/relationships/discounts"
           }
         },
         "license-keys": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/license-keys",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/license-keys"
+            "related": "https://api.example.com/v1/stores/1/license-keys",
+            "self": "https://api.example.com/v1/stores/1/relationships/license-keys"
           }
         },
         "webhooks": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/stores/1/webhooks",
-            "self": "https://api.lemonsqueezy.com/v1/stores/1/relationships/webhooks"
+            "related": "https://api.example.com/v1/stores/1/webhooks",
+            "self": "https://api.example.com/v1/stores/1/relationships/webhooks"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/stores/1"
+        "self": "https://api.example.com/v1/stores/1"
       }
     },
     {...}
@@ -681,7 +681,7 @@ A boolean indicating if the object was created within test mode.
     "total_revenue_currency_formatted": "$843.32",
     "mrr_formatted": "$19.99",
     "urls": {
-      "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
+      "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
     },
     "created_at": "2022-12-01T13:01:07.000000Z",
     "updated_at": "2022-12-09T09:05:21.000000Z",
@@ -722,7 +722,7 @@ Relationships
 store
 The store this customer belongs to.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/customers>" \
+curl -X "POST" "<https://api.example.com/v1/customers>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -755,7 +755,7 @@ Returns the created customer object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/customers/1>"
+    "self": "<https://api.example.com/v1/customers/1>"
   },
   "data": {
     "type": "customers",
@@ -784,31 +784,31 @@ Returns the created customer object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/store>"
+          "related": "<https://api.example.com/v1/customers/1/store>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/store>"
         }
       },
       "orders": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/orders>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/orders>"
+          "related": "<https://api.example.com/v1/customers/1/orders>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/orders>"
         }
       },
       "subscriptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/subscriptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/subscriptions>"
+          "related": "<https://api.example.com/v1/customers/1/subscriptions>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/subscriptions>"
         }
       },
       "license-keys": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/license-keys>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/license-keys>"
+          "related": "<https://api.example.com/v1/customers/1/license-keys>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/license-keys>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/customers/1>"
+      "self": "<https://api.example.com/v1/customers/1>"
     }
   }
 }
@@ -823,7 +823,7 @@ GET
 /v1/customers/:id
 Retrieves the customer with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/customers/1>" \
+curl "<https://api.example.com/v1/customers/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -836,7 +836,7 @@ Returns a Customer object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/customers/1>"
+    "self": "<https://api.example.com/v1/customers/1>"
   },
   "data": {
     "type": "customers",
@@ -856,7 +856,7 @@ Returns a Customer object.
       "total_revenue_currency_formatted": "$843.32",
       "mrr_formatted": "$19.99",
       "urls": {
-        "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
+        "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
       },
       "created_at": "2022-12-01T13:01:07.000000Z",
       "updated_at": "2022-12-09T09:05:21.000000Z",
@@ -865,31 +865,31 @@ Returns a Customer object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/store>"
+          "related": "<https://api.example.com/v1/customers/1/store>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/store>"
         }
       },
       "orders": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/orders>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/orders>"
+          "related": "<https://api.example.com/v1/customers/1/orders>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/orders>"
         }
       },
       "subscriptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/subscriptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/subscriptions>"
+          "related": "<https://api.example.com/v1/customers/1/subscriptions>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/subscriptions>"
         }
       },
       "license-keys": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/license-keys>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/license-keys>"
+          "related": "<https://api.example.com/v1/customers/1/license-keys>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/license-keys>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/customers/1>"
+      "self": "<https://api.example.com/v1/customers/1>"
     }
   }
 }Docs
@@ -924,7 +924,7 @@ Optional
 The email marketing status of the customer. One of:
 
 archived - This customer has been archived and will no longer receive marketing emails.
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/customers/1>" \
+curl -X "PATCH" "<https://api.example.com/v1/customers/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -948,7 +948,7 @@ Returns the updated customer object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/customers/1>"
+    "self": "<https://api.example.com/v1/customers/1>"
   },
   "data": {
     "type": "customers",
@@ -977,31 +977,31 @@ Returns the updated customer object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/store>"
+          "related": "<https://api.example.com/v1/customers/1/store>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/store>"
         }
       },
       "orders": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/orders>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/orders>"
+          "related": "<https://api.example.com/v1/customers/1/orders>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/orders>"
         }
       },
       "subscriptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/subscriptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/subscriptions>"
+          "related": "<https://api.example.com/v1/customers/1/subscriptions>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/subscriptions>"
         }
       },
       "license-keys": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/customers/1/license-keys>",
-          "self": "<https://api.lemonsqueezy.com/v1/customers/1/relationships/license-keys>"
+          "related": "<https://api.example.com/v1/customers/1/license-keys>",
+          "self": "<https://api.example.com/v1/customers/1/relationships/license-keys>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/customers/1>"
+      "self": "<https://api.example.com/v1/customers/1>"
     }
   }
 }
@@ -1023,11 +1023,11 @@ Filter customers by the ID of the store they belong to.
 email
 Filter customers by email field.
 
-curl "<https://api.lemonsqueezy.com/v1/customers>" \
+curl "<https://api.example.com/v1/customers>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/customers?filter[store_id]=1>" \
+curl "<https://api.example.com/v1/customers?filter[store_id]=1>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1049,8 +1049,8 @@ Returns a paginated list of Customer objects ordered by created_at field in desc
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/customers?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/customers?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/customers?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/customers?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -1071,7 +1071,7 @@ Returns a paginated list of Customer objects ordered by created_at field in desc
         "total_revenue_currency_formatted": "$843.32",
         "mrr_formatted": "$19.99",
         "urls": {
-          "customer_portal": "https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5"
+          "customer_portal": "https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5"
         },
         "created_at": "2024-12-01T13:01:07.000000Z",
         "updated_at": "2024-12-09T09:05:21.000000Z",
@@ -1080,31 +1080,31 @@ Returns a paginated list of Customer objects ordered by created_at field in desc
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/customers/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/customers/1/relationships/store"
+            "related": "https://api.example.com/v1/customers/1/store",
+            "self": "https://api.example.com/v1/customers/1/relationships/store"
           }
         },
         "orders": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/customers/1/orders",
-            "self": "https://api.lemonsqueezy.com/v1/customers/1/relationships/orders"
+            "related": "https://api.example.com/v1/customers/1/orders",
+            "self": "https://api.example.com/v1/customers/1/relationships/orders"
           }
         },
         "subscriptions": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/customers/1/subscriptions",
-            "self": "https://api.lemonsqueezy.com/v1/customers/1/relationships/subscriptions"
+            "related": "https://api.example.com/v1/customers/1/subscriptions",
+            "self": "https://api.example.com/v1/customers/1/relationships/subscriptions"
           }
         },
         "license-keys": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/customers/1/license-keys",
-            "self": "https://api.lemonsqueezy.com/v1/customers/1/relationships/license-keys"
+            "related": "https://api.example.com/v1/customers/1/license-keys",
+            "self": "https://api.example.com/v1/customers/1/relationships/license-keys"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/customers/1"
+        "self": "https://api.example.com/v1/customers/1"
       }
     },
     {...},
@@ -1190,14 +1190,14 @@ A boolean indicating if the object was created within test mode.
     "description": "<p>Lorem ipsum...</p>",
     "status": "published",
     "status_formatted": "Published",
-    "thumb_url": "<https://app.lemonsqueezy.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
-    "large_thumb_url": "<https://app.lemonsqueezy.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
+    "thumb_url": "<https://app.example.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
+    "large_thumb_url": "<https://app.example.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
     "price": 999,
     "price_formatted": "$9.99",
     "from_price": null,
     "to_price": null,
     "pay_what_you_want": false,
-    "buy_now_url": "<https://my-store.lemonsqueezy.com/checkout/buy/0a841cf5-4cc2-4bbb-ae5d-9529d97deec6>",
+    "buy_now_url": "<https://my-store.example.com/checkout/buy/0a841cf5-4cc2-4bbb-ae5d-9529d97deec6>",
     "from_price_formatted": null,
     "to_price_formatted": null,
     "created_at": "2021-05-27T12:54:47.000000Z",
@@ -1216,7 +1216,7 @@ GET
 /v1/products/:id
 Retrieves the product with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/products/1>" \
+curl "<https://api.example.com/v1/products/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1228,7 +1228,7 @@ Returns a Product object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/products/1>"
+    "self": "<https://api.example.com/v1/products/1>"
   },
   "data": {
     "type": "products",
@@ -1240,14 +1240,14 @@ Returns a Product object.
       "description": "<p>Lorem ipsum...</p>",
       "status": "published",
       "status_formatted": "Published",
-      "thumb_url": "<https://app.lemonsqueezy.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
-      "large_thumb_url": "<https://app.lemonsqueezy.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
+      "thumb_url": "<https://app.example.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
+      "large_thumb_url": "<https://app.example.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg>",
       "price": 999,
       "price_formatted": "$9.99",
       "from_price": null,
       "to_price": null,
       "pay_what_you_want": false,
-      "buy_now_url": "<https://my-store.lemonsqueezy.com/checkout/buy/0a841cf5-4cc2-4bbb-ae5d-9529d97deec6>",
+      "buy_now_url": "<https://my-store.example.com/checkout/buy/0a841cf5-4cc2-4bbb-ae5d-9529d97deec6>",
       "from_price_formatted": null,
       "to_price_formatted": null,
       "created_at": "2021-05-27T12:54:47.000000Z",
@@ -1257,19 +1257,19 @@ Returns a Product object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/products/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/products/1/relationships/store>"
+          "related": "<https://api.example.com/v1/products/1/store>",
+          "self": "<https://api.example.com/v1/products/1/relationships/store>"
         }
       },
       "variants": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/products/1/variants>",
-          "self": "<https://api.lemonsqueezy.com/v1/products/1/relationships/variants>"
+          "related": "<https://api.example.com/v1/products/1/variants>",
+          "self": "<https://api.example.com/v1/products/1/relationships/variants>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/products/1>"
+      "self": "<https://api.example.com/v1/products/1>"
     }
   }
 }
@@ -1288,11 +1288,11 @@ Filter parameters
 store_id
 Filter products by the ID of the store they belong to.
 
-curl "<https://api.lemonsqueezy.com/v1/products>" \
+curl "<https://api.example.com/v1/products>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/products?filter[store_id]=1>" \
+curl "<https://api.example.com/v1/products?filter[store_id]=1>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1314,8 +1314,8 @@ Returns a paginated list of Product objects ordered by name field in ascending o
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/products?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>",
-    "last": "<https://api.lemonsqueezy.com/v1/products?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>"
+    "first": "<https://api.example.com/v1/products?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>",
+    "last": "<https://api.example.com/v1/products?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=name>"
   },
   "data": [
     {
@@ -1328,14 +1328,14 @@ Returns a paginated list of Product objects ordered by name field in ascending o
         "description": "<p>Lorem ipsum...</p>",
         "status": "published",
         "status_formatted": "Published",
-        "thumb_url": "https://app.lemonsqueezy.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg",
-        "large_thumb_url": "https://app.lemonsqueezy.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg",
+        "thumb_url": "https://app.example.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg",
+        "large_thumb_url": "https://app.example.com/storage/media/1/1c40f227-aed5-4321-9ffc-62f37a06c9a0.jpg",
         "price": 999,
         "price_formatted": "$9.99",
         "from_price": null,
         "to_price": null,
         "pay_what_you_want": false,
-        "buy_now_url": "https://my-store.lemonsqueezy.com/checkout/buy/0a841cf5-4cc2-4bbb-ae5d-9529d97deec6",
+        "buy_now_url": "https://my-store.example.com/checkout/buy/0a841cf5-4cc2-4bbb-ae5d-9529d97deec6",
         "created_at": "2024-05-27T12:54:47.000000Z",
         "updated_at": "2024-07-14T11:25:24.000000Z",
         "test_mode": false
@@ -1343,19 +1343,19 @@ Returns a paginated list of Product objects ordered by name field in ascending o
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/products/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/products/1/relationships/store"
+            "related": "https://api.example.com/v1/products/1/store",
+            "self": "https://api.example.com/v1/products/1/relationships/store"
           }
         },
         "variants": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/products/1/variants",
-            "self": "https://api.lemonsqueezy.com/v1/products/1/relationships/variants"
+            "related": "https://api.example.com/v1/products/1/variants",
+            "self": "https://api.example.com/v1/products/1/relationships/variants"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/products/1"
+        "self": "https://api.example.com/v1/products/1"
       }
     },
     {...},
@@ -1536,7 +1536,7 @@ GET
 /v1/variants/:id
 Retrieves the variant with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/variants/1>" \
+curl "<https://api.example.com/v1/variants/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1548,7 +1548,7 @@ Returns a Variant object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/variants/1>"
+    "self": "<https://api.example.com/v1/variants/1>"
   },
   "data": {
     "type": "variants",
@@ -1585,25 +1585,25 @@ Returns a Variant object.
     "relationships": {
       "product": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/variants/1/product>",
-          "self": "<https://api.lemonsqueezy.com/v1/variants/1/relationships/product>"
+          "related": "<https://api.example.com/v1/variants/1/product>",
+          "self": "<https://api.example.com/v1/variants/1/relationships/product>"
         }
       },
       "files": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/variants/1/files>",
-          "self": "<https://api.lemonsqueezy.com/v1/variants/1/relationships/files>"
+          "related": "<https://api.example.com/v1/variants/1/files>",
+          "self": "<https://api.example.com/v1/variants/1/relationships/files>"
         }
       },
       "price-model": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/variants/1/price-model>",
-          "self": "<https://api.lemonsqueezy.com/v1/variants/1/relationships/price-model>"
+          "related": "<https://api.example.com/v1/variants/1/price-model>",
+          "self": "<https://api.example.com/v1/variants/1/relationships/price-model>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/variants/1>"
+      "self": "<https://api.example.com/v1/variants/1>"
     }
   }
 }
@@ -1625,11 +1625,11 @@ Filter variants by the ID of their associated product.
 status
 Filter variants by status field.
 
-curl "<https://api.lemonsqueezy.com/v1/variants>" \
+curl "<https://api.example.com/v1/variants>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/variants?filter[product_id]=19>" \
+curl "<https://api.example.com/v1/variants?filter[product_id]=19>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1651,8 +1651,8 @@ Returns a paginated list of Variant objects ordered by the sort field.
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/variants?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>",
-    "last": "<https://api.lemonsqueezy.com/v1/variants?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>"
+    "first": "<https://api.example.com/v1/variants?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>",
+    "last": "<https://api.example.com/v1/variants?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>"
   },
   "data": [
     {
@@ -1690,13 +1690,13 @@ Returns a paginated list of Variant objects ordered by the sort field.
       "relationships": {
         "product": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/variants/1/product",
-            "self": "https://api.lemonsqueezy.com/v1/variants/1/relationships/product"
+            "related": "https://api.example.com/v1/variants/1/product",
+            "self": "https://api.example.com/v1/variants/1/relationships/product"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/variants/1"
+        "self": "https://api.example.com/v1/variants/1"
       }
     },
  {...},
@@ -1884,7 +1884,7 @@ GET
 /v1/prices/:id
 Retrieves the price with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/prices/1>" \
+curl "<https://api.example.com/v1/prices/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1897,7 +1897,7 @@ Returns a Price object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/prices/1>"
+    "self": "<https://api.example.com/v1/prices/1>"
   },
   "data": {
     "type": "prices",
@@ -1939,13 +1939,13 @@ Returns a Price object.
     "relationships": {
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/prices/1/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/prices/1/relationships/variant>"
+          "related": "<https://api.example.com/v1/prices/1/variant>",
+          "self": "<https://api.example.com/v1/prices/1/relationships/variant>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/prices/1>"
+      "self": "<https://api.example.com/v1/prices/1>"
     }
   }
 }
@@ -1964,11 +1964,11 @@ Filter parameters
 variant_id
 Return only prices associated with the variant with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/prices>" \
+curl "<https://api.example.com/v1/prices>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/prices?filter[variant_id]=11>" \
+curl "<https://api.example.com/v1/prices?filter[variant_id]=11>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -1990,8 +1990,8 @@ Returns a paginated list of Price objects ordered by created_at in descending or
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/prices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>",
-    "last": "<https://api.lemonsqueezy.com/v1/prices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>"
+    "first": "<https://api.example.com/v1/prices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>",
+    "last": "<https://api.example.com/v1/prices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>"
   },
   "data": [
     {
@@ -2034,13 +2034,13 @@ Returns a paginated list of Price objects ordered by created_at in descending or
       "relationships": {
         "variant": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/prices/1/variant",
-            "self": "https://api.lemonsqueezy.com/v1/prices/1/relationships/variant"
+            "related": "https://api.example.com/v1/prices/1/variant",
+            "self": "https://api.example.com/v1/prices/1/relationships/variant"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/prices/1"
+        "self": "https://api.example.com/v1/prices/1"
       }
     },
     {...},
@@ -2109,7 +2109,7 @@ A boolean indicating if the object was created within test mode.
     "identifier": "6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2",
     "name": "my_product.zip",
     "extension": "zip",
-    "download_url": "<https://app.lemonsqueezy.com/download/6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2?expires=1636383388&signature=886a63faf7215c54011accfa08578b1b687def66f767092629f263061b3a253a>",
+    "download_url": "<https://app.example.com/download/6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2?expires=1636383388&signature=886a63faf7215c54011accfa08578b1b687def66f767092629f263061b3a253a>",
     "size": 874694,
     "size_formatted": "854 KB",
     "version": "1.0.0",
@@ -2131,7 +2131,7 @@ GET
 /v1/files/:id
 Retrieves the file with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/files/1>" \
+curl "<https://api.example.com/v1/files/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -2143,7 +2143,7 @@ Returns a File object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/files/1>"
+    "self": "<https://api.example.com/v1/files/1>"
   },
   "data": {
     "type": "files",
@@ -2153,7 +2153,7 @@ Returns a File object.
       "identifier": "6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2",
       "name": "lemonade.zip",
       "extension": "zip",
-      "download_url": "<https://app.lemonsqueezy.com/download/6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2?expires=1636384018&signature=f0a9bdec44ffabf143d4689594491f42a76d773d3cc88ec23ef84d6e903e8f11>",
+      "download_url": "<https://app.example.com/download/6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2?expires=1636384018&signature=f0a9bdec44ffabf143d4689594491f42a76d773d3cc88ec23ef84d6e903e8f11>",
       "size": 874694,
       "size_formatted": "854 KB",
       "version": "1.0.0",
@@ -2166,13 +2166,13 @@ Returns a File object.
     "relationships": {
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/files/1/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/files/1/relationships/variant>"
+          "related": "<https://api.example.com/v1/files/1/variant>",
+          "self": "<https://api.example.com/v1/files/1/relationships/variant>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/files/1>"
+      "self": "<https://api.example.com/v1/files/1>"
     }
   }
 }
@@ -2191,11 +2191,11 @@ Filter parameters
 variant_id
 Return only files associated with the variant with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/files>" \
+curl "<https://api.example.com/v1/files>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/files?filter[variant_id]=8>" \
+curl "<https://api.example.com/v1/files?filter[variant_id]=8>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -2217,8 +2217,8 @@ Returns a paginated list of File objects.
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/files?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>",
-    "last": "<https://api.lemonsqueezy.com/v1/files?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>"
+    "first": "<https://api.example.com/v1/files?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>",
+    "last": "<https://api.example.com/v1/files?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=sort>"
   },
   "data": [
     {
@@ -2229,7 +2229,7 @@ Returns a paginated list of File objects.
         "identifier": "6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2",
         "name": "lemonade.zip",
         "extension": "zip",
-        "download_url": "https://app.lemonsqueezy.com/download/6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2?expires=1636383388&signature=886a63faf7215c54011accfa08578b1b687def66f767092629f263061b3a253a",
+        "download_url": "https://app.example.com/download/6dce5ba7-76f2-481f-ad1e-9c2bec6eb0e2?expires=1636383388&signature=886a63faf7215c54011accfa08578b1b687def66f767092629f263061b3a253a",
         "size": 874694,
         "size_formatted": "854 KB",
         "version": "1.0.0",
@@ -2242,13 +2242,13 @@ Returns a paginated list of File objects.
       "relationships": {
         "variant": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/files/1/variant",
-            "self": "https://api.lemonsqueezy.com/v1/files/1/relationships/variant"
+            "related": "https://api.example.com/v1/files/1/variant",
+            "self": "https://api.example.com/v1/files/1/relationships/variant"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/files/1"
+        "self": "https://api.example.com/v1/files/1"
       }
     },
     {...},
@@ -2445,7 +2445,7 @@ A boolean indicating if the object was created within test mode.
       "test_mode": false
     },
     "urls": {
-      "receipt": "<https://app.lemonsqueezy.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
+      "receipt": "<https://app.example.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
     },
     "created_at": "2021-08-17T09:45:53.000000Z",
     "updated_at": "2021-08-17T09:45:53.000000Z",
@@ -2463,7 +2463,7 @@ GET
 /v1/orders/:id
 Retrieves the order with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/orders/1>" \
+curl "<https://api.example.com/v1/orders/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -2475,7 +2475,7 @@ Returns an Order object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/orders/1>"
+    "self": "<https://api.example.com/v1/orders/1>"
   },
   "data": {
     "type": "orders",
@@ -2525,7 +2525,7 @@ Returns an Order object.
         "test_mode": false
       },
       "urls": {
-        "receipt": "<https://app.lemonsqueezy.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
+        "receipt": "<https://app.example.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
       },
       "created_at": "2024-08-17T09:45:53.000000Z",
       "updated_at": "2024-08-17T09:45:53.000000Z",
@@ -2534,43 +2534,43 @@ Returns an Order object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/store>"
+          "related": "<https://api.example.com/v1/orders/1/store>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/store>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/orders/1/customer>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/customer>"
         }
       },
       "order-items": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/order-items>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/order-items>"
+          "related": "<https://api.example.com/v1/orders/1/order-items>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/order-items>"
         }
       },
       "subscriptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/subscriptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/subscriptions>"
+          "related": "<https://api.example.com/v1/orders/1/subscriptions>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/subscriptions>"
         }
       },
       "license-keys": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/license-keys>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/license-keys>"
+          "related": "<https://api.example.com/v1/orders/1/license-keys>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/license-keys>"
         }
       },
       "discount-redemptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/orders/1/discount-redemptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/orders/1/relationships/discount-redemptions>"
+          "related": "<https://api.example.com/v1/orders/1/discount-redemptions>",
+          "self": "<https://api.example.com/v1/orders/1/relationships/discount-redemptions>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/orders/1>"
+      "self": "<https://api.example.com/v1/orders/1>"
     }
   }
 }
@@ -2595,11 +2595,11 @@ Return only orders where the user_email field is equal to this email address.
 order_number
 Return only the order with this order number.
 
-curl "<https://api.lemonsqueezy.com/v1/orders>" \
+curl "<https://api.example.com/v1/orders>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/orders?filter[user_email]=johndoe@example.com>" \
+curl "<https://api.example.com/v1/orders?filter[user_email]=johndoe@example.com>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -2622,8 +2622,8 @@ Returns a paginated list of Order objects ordered by created_at in descending.
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/orders?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/orders?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/orders?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/orders?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -2674,7 +2674,7 @@ Returns a paginated list of Order objects ordered by created_at in descending.
           "test_mode": false
         },
         "urls": {
-          "receipt": "https://app.lemonsqueezy.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42"
+          "receipt": "https://app.example.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42"
         },
         "created_at": "2021-08-17T09:45:53.000000Z",
         "updated_at": "2021-08-17T09:45:53.000000Z",
@@ -2683,43 +2683,43 @@ Returns a paginated list of Order objects ordered by created_at in descending.
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/orders/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/orders/1/relationships/store"
+            "related": "https://api.example.com/v1/orders/1/store",
+            "self": "https://api.example.com/v1/orders/1/relationships/store"
           }
         },
         "customer": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/orders/1/customer",
-            "self": "https://api.lemonsqueezy.com/v1/orders/1/relationships/customer"
+            "related": "https://api.example.com/v1/orders/1/customer",
+            "self": "https://api.example.com/v1/orders/1/relationships/customer"
           }
         },
         "order-items": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/orders/1/order-items",
-            "self": "https://api.lemonsqueezy.com/v1/orders/1/relationships/order-items"
+            "related": "https://api.example.com/v1/orders/1/order-items",
+            "self": "https://api.example.com/v1/orders/1/relationships/order-items"
           }
         },
         "subscriptions": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/orders/1/subscriptions",
-            "self": "https://api.lemonsqueezy.com/v1/orders/1/relationships/subscriptions"
+            "related": "https://api.example.com/v1/orders/1/subscriptions",
+            "self": "https://api.example.com/v1/orders/1/relationships/subscriptions"
           }
         },
         "license-keys": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/orders/1/license-keys",
-            "self": "https://api.lemonsqueezy.com/v1/orders/1/relationships/license-keys"
+            "related": "https://api.example.com/v1/orders/1/license-keys",
+            "self": "https://api.example.com/v1/orders/1/relationships/license-keys"
           }
         },
         "discount-redemptions": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/orders/1/discount-redemptions",
-            "self": "https://api.lemonsqueezy.com/v1/orders/1/relationships/discount-redemptions"
+            "related": "https://api.example.com/v1/orders/1/discount-redemptions",
+            "self": "https://api.example.com/v1/orders/1/relationships/discount-redemptions"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/orders/1"
+        "self": "https://api.example.com/v1/orders/1"
       }
     },
  {...},
@@ -2772,7 +2772,7 @@ Any additional notes to include on the invoice.
 locale
 ISO 639 language code, e.g., ‘en’ for English language.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/orders/1/generate-invoice?name=John%20Doe&address=123%20Main%20St&city=Anytown&state=CA&zip_code=12345&country=US&notes=Thank%20you%20for%20your%20business>" \
+curl -X "POST" "<https://api.example.com/v1/orders/1/generate-invoice?name=John%20Doe&address=123%20Main%20St&city=Anytown&state=CA&zip_code=12345&country=US&notes=Thank%20you%20for%20your%20business>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -2785,7 +2785,7 @@ Returns a link to download the generated invoice.
   },
   "meta": {
     "urls": {
-      "download_invoice": "<https://app.lemonsqueezy.com/my-orders/c1e4de31-b4cf-4668-a6fe-019d071d41ab/invoice/download?address=123%20Main%20St&city=Anytown&country=US&name=John%20Doe&notes=Thank%20you%20for%20your%20business&state=CA&zip_code=12345&signature=c21a17a13d9deeacc99ff52144a06b49df141af37dd668cc70a76bcc8022888e>"
+      "download_invoice": "<https://app.example.com/my-orders/c1e4de31-b4cf-4668-a6fe-019d071d41ab/invoice/download?address=123%20Main%20St&city=Anytown&country=US&name=John%20Doe&notes=Thank%20you%20for%20your%20business&state=CA&zip_code=12345&signature=c21a17a13d9deeacc99ff52144a06b49df141af37dd668cc70a76bcc8022888e>"
     }
   }
 }
@@ -2805,7 +2805,7 @@ amount
 Optional
 Optional. The amount that you want to refund for an order. If not included full refund will be issued.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/orders/1/refund>" \
+curl -X "POST" "<https://api.example.com/v1/orders/1/refund>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -2871,7 +2871,7 @@ Returns an Order object with updated refunded attributes.
       "test_mode": false
     },
     "urls": {
-      "receipt": "<https://app.lemonsqueezy.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
+      "receipt": "<https://app.example.com/my-orders/104e18a2-d755-4d4b-80c4-a6c1dcbe1c10?signature=8847fff02e1bfb0c7c43ff1cdf1b1657a8eed2029413692663b86859208c9f42>"
     },
     "created_at": "2021-08-17T09:45:53.000000Z",
     "updated_at": "2021-08-17T09:45:53.000000Z",
@@ -2945,7 +2945,7 @@ GET
 /v1/order-items/:id
 Retrieves the order item with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/order-items/1>" \
+curl "<https://api.example.com/v1/order-items/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -2957,7 +2957,7 @@ Returns an Order Item object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/order-items/1>"
+    "self": "<https://api.example.com/v1/order-items/1>"
   },
   "data": {
     "type": "order-items",
@@ -2976,25 +2976,25 @@ Returns an Order Item object.
     "relationships": {
       "order": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/order-items/1/order>",
-          "self": "<https://api.lemonsqueezy.com/v1/order-items/1/relationships/order>"
+          "related": "<https://api.example.com/v1/order-items/1/order>",
+          "self": "<https://api.example.com/v1/order-items/1/relationships/order>"
         }
       },
       "product": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/order-items/1/product>",
-          "self": "<https://api.lemonsqueezy.com/v1/order-items/1/relationships/product>"
+          "related": "<https://api.example.com/v1/order-items/1/product>",
+          "self": "<https://api.example.com/v1/order-items/1/relationships/product>"
         }
       },
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/order-items/1/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/order-items/1/relationships/variant>"
+          "related": "<https://api.example.com/v1/order-items/1/variant>",
+          "self": "<https://api.example.com/v1/order-items/1/relationships/variant>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/order-items/1>"
+      "self": "<https://api.example.com/v1/order-items/1>"
     }
   }
 }
@@ -3019,11 +3019,11 @@ Return only order items belonging to the product with this ID.
 variant_id
 Return only order items belonging to the variant with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/order-items>" \
+curl "<https://api.example.com/v1/order-items>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/order-items?filter[order_id]=1>" \
+curl "<https://api.example.com/v1/order-items?filter[order_id]=1>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -3045,8 +3045,8 @@ Returns a paginated list of Order Items.
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/order-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>",
-    "last": "<https://api.lemonsqueezy.com/v1/order-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>"
+    "first": "<https://api.example.com/v1/order-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>",
+    "last": "<https://api.example.com/v1/order-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>"
   },
   "data": [
     {
@@ -3066,25 +3066,25 @@ Returns a paginated list of Order Items.
       "relationships": {
         "order": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/order-items/1/order",
-            "self": "https://api.lemonsqueezy.com/v1/order-items/1/relationships/order"
+            "related": "https://api.example.com/v1/order-items/1/order",
+            "self": "https://api.example.com/v1/order-items/1/relationships/order"
           }
         },
         "product": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/order-items/1/product",
-            "self": "https://api.lemonsqueezy.com/v1/order-items/1/relationships/product"
+            "related": "https://api.example.com/v1/order-items/1/product",
+            "self": "https://api.example.com/v1/order-items/1/relationships/product"
           }
         },
         "variant": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/order-items/1/variant",
-            "self": "https://api.lemonsqueezy.com/v1/order-items/1/relationships/variant"
+            "related": "https://api.example.com/v1/order-items/1/variant",
+            "self": "https://api.example.com/v1/order-items/1/relationships/variant"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/order-items/1"
+        "self": "https://api.example.com/v1/order-items/1"
       }
     },
     {...},
@@ -3254,9 +3254,9 @@ A boolean indicating if the object was created within test mode.
       "updated_at": "2021-08-11T13:47:28.000000Z"
     },
     "urls": {
-      "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
-      "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>",
-      "customer_portal_update_subscription": "<https://my-store.lemonsqueezy.com/billing/1/update?expires=1666869343&signature=e4fabc7ee703664d644bba9e79a9cd3dd00622308b335f3c166787f0b18999f2>"
+      "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
+      "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>",
+      "customer_portal_update_subscription": "<https://my-store.example.com/billing/1/update?expires=1666869343&signature=e4fabc7ee703664d644bba9e79a9cd3dd00622308b335f3c166787f0b18999f2>"
     },
     "renews_at": "2022-11-12T00:00:00.000000Z",
     "ends_at": null,
@@ -3336,7 +3336,7 @@ If true, no proration will be charged and the customer will simply be charged th
 
 Read about proration in the Developer Guide
 
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscriptions/1>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscriptions/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -3383,8 +3383,8 @@ Returns the updated Subscription object.
       "updated_at": "2021-08-11T13:47:28.000000Z"
     },
     "urls": {
-      "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
-      "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
+      "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
+      "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
     },
     "renews_at": "2022-11-12T00:00:00.000000Z",
     "ends_at": null,
@@ -3404,7 +3404,7 @@ GET
 /v1/subscriptions/:id
 Retrieves the subscription with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/subscriptions/1>" \
+curl "<https://api.example.com/v1/subscriptions/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -3416,7 +3416,7 @@ Returns a Subscription object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1>"
+    "self": "<https://api.example.com/v1/subscriptions/1>"
   },
   "data": {
     "type": "subscriptions",
@@ -3450,8 +3450,8 @@ Returns a Subscription object.
         "updated_at": "2021-08-11T13:47:28.000000Z"
       },
       "urls": {
-        "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
-        "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
+        "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
+        "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
       },
       "renews_at": "2022-11-12T00:00:00.000000Z",
       "ends_at": null,
@@ -3462,55 +3462,55 @@ Returns a Subscription object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/store>"
+          "related": "<https://api.example.com/v1/subscriptions/1/store>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/store>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/subscriptions/1/customer>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/customer>"
         }
       },
       "order": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/order>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/order>"
+          "related": "<https://api.example.com/v1/subscriptions/1/order>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/order>"
         }
       },
       "order-item": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/order-item>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/order-item>"
+          "related": "<https://api.example.com/v1/subscriptions/1/order-item>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/order-item>"
         }
       },
       "product": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/product>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/product>"
+          "related": "<https://api.example.com/v1/subscriptions/1/product>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/product>"
         }
       },
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/variant>"
+          "related": "<https://api.example.com/v1/subscriptions/1/variant>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/variant>"
         }
       },
       "subscription-items": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/subscription-items>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/subscription-items>"
+          "related": "<https://api.example.com/v1/subscriptions/1/subscription-items>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/subscription-items>"
         }
       },
       "subscription-invoices": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/subscription-invoices>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/subscription-invoices>"
+          "related": "<https://api.example.com/v1/subscriptions/1/subscription-invoices>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/subscription-invoices>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1>"
+      "self": "<https://api.example.com/v1/subscriptions/1>"
     }
   }
 }
@@ -3547,11 +3547,11 @@ Only return subscriptions where the user_email field is equal to this email addr
 status
 Only return subscriptions with this status.
 
-curl "<https://api.lemonsqueezy.com/v1/subscriptions>" \
+curl "<https://api.example.com/v1/subscriptions>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/subscriptions?filter[product_id]=19>" \
+curl "<https://api.example.com/v1/subscriptions?filter[product_id]=19>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -3573,8 +3573,8 @@ Returns a paginated list of Subscription objects ordered by created_at in descen
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/subscriptions?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/subscriptions?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/subscriptions?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/subscriptions?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -3606,8 +3606,8 @@ Returns a paginated list of Subscription objects ordered by created_at in descen
           "updated_at": "2021-08-11T13:47:28.000000Z"
         },
         "urls": {
-          "update_payment_method": "https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413",
-          "customer_portal": "https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5"
+          "update_payment_method": "https://my-store.example.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413",
+          "customer_portal": "https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5"
         },
         "renews_at": "2022-11-12T00:00:00.000000Z",
         "ends_at": null,
@@ -3618,55 +3618,55 @@ Returns a paginated list of Subscription objects ordered by created_at in descen
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/store"
+            "related": "https://api.example.com/v1/subscriptions/1/store",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/store"
           }
         },
         "customer": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/customer",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/customer"
+            "related": "https://api.example.com/v1/subscriptions/1/customer",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/customer"
           }
         },
         "order": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/order",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/order"
+            "related": "https://api.example.com/v1/subscriptions/1/order",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/order"
           }
         },
         "order-item": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/order-item",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/order-item"
+            "related": "https://api.example.com/v1/subscriptions/1/order-item",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/order-item"
           }
         },
         "product": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/product",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/product"
+            "related": "https://api.example.com/v1/subscriptions/1/product",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/product"
           }
         },
         "variant": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/variant",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/variant"
+            "related": "https://api.example.com/v1/subscriptions/1/variant",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/variant"
           }
         },
         "subscription-items": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/subscription-items",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/subscription-items"
+            "related": "https://api.example.com/v1/subscriptions/1/subscription-items",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/subscription-items"
           }
         },
         "subscription-invoices": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscriptions/1/subscription-invoices",
-            "self": "https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/subscription-invoices"
+            "related": "https://api.example.com/v1/subscriptions/1/subscription-invoices",
+            "self": "https://api.example.com/v1/subscriptions/1/relationships/subscription-invoices"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/subscriptions/1"
+        "self": "https://api.example.com/v1/subscriptions/1"
       }
     },
     {...},
@@ -3684,7 +3684,7 @@ DELETE
 /v1/subscriptions/:id
 Cancels an active subscription.
 
-curl -X "DELETE" "<https://api.lemonsqueezy.com/v1/subscriptions/1>" \
+curl -X "DELETE" "<https://api.example.com/v1/subscriptions/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -3696,7 +3696,7 @@ Returns a Subscription item object in cancelled state.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1>"
+    "self": "<https://api.example.com/v1/subscriptions/1>"
   },
   "data": {
     "type": "subscriptions",
@@ -3727,8 +3727,8 @@ Returns a Subscription item object in cancelled state.
         "updated_at": "2021-08-11T13:47:28.000000Z"
       },
       "urls": {
-        "update_payment_method": "<https://my-store.lemonsqueezy.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
-        "customer_portal": "<https://my-store.lemonsqueezy.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
+        "update_payment_method": "<https://my-store.example.com/subscription/1/payment-details?expires=1666869343&signature=9985e3bf9007840aeb3951412be475abc17439c449c1af3e56e08e45e1345413>",
+        "customer_portal": "<https://my-store.example.com/billing?expires=1666869343&signature=82ae290ceac8edd4190c82825dd73a8743346d894a8ddbc4898b97eb96d105a5>"
       },
       "renews_at": "2022-11-12T00:00:00.000000Z",
       "ends_at": "2022-11-12T00:00:00.000000Z",
@@ -3739,55 +3739,55 @@ Returns a Subscription item object in cancelled state.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/store>"
+          "related": "<https://api.example.com/v1/subscriptions/1/store>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/store>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/subscriptions/1/customer>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/customer>"
         }
       },
       "order": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/order>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/order>"
+          "related": "<https://api.example.com/v1/subscriptions/1/order>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/order>"
         }
       },
       "order-item": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/order-item>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/order-item>"
+          "related": "<https://api.example.com/v1/subscriptions/1/order-item>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/order-item>"
         }
       },
       "product": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/product>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/product>"
+          "related": "<https://api.example.com/v1/subscriptions/1/product>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/product>"
         }
       },
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/variant>"
+          "related": "<https://api.example.com/v1/subscriptions/1/variant>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/variant>"
         }
       },
       "subscription-items": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/subscription-items>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/subscription-items>"
+          "related": "<https://api.example.com/v1/subscriptions/1/subscription-items>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/subscription-items>"
         }
       },
       "subscription-invoices": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscriptions/1/subscription-invoices>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1/relationships/subscription-invoices>"
+          "related": "<https://api.example.com/v1/subscriptions/1/subscription-invoices>",
+          "self": "<https://api.example.com/v1/subscriptions/1/relationships/subscription-invoices>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscriptions/1>"
+      "self": "<https://api.example.com/v1/subscriptions/1>"
     }
   }
 }
@@ -3958,7 +3958,7 @@ A boolean indicating if the object was created within test mode.
     "total_formatted": "$9.99",
     "refunded_amount_formatted": "$1.00",
     "urls": {
-      "invoice_url": "<https://app.lemonsqueezy.com/my-orders/.../subscription-invoice/>..."
+      "invoice_url": "<https://app.example.com/my-orders/.../subscription-invoice/>..."
     },
     "created_at": "2023-01-18T12:16:24.000000Z",
     "updated_at": "2023-01-18T12:16:24.000000Z",
@@ -3967,25 +3967,25 @@ A boolean indicating if the object was created within test mode.
   "relationships": {
     "store": {
       "links": {
-        "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/store>",
-        "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/store>"
+        "related": "<https://api.example.com/v1/subscription-invoices/1/store>",
+        "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/store>"
       }
     },
     "subscription": {
       "links": {
-        "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/subscription>",
-        "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/subscription>"
+        "related": "<https://api.example.com/v1/subscription-invoices/1/subscription>",
+        "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/subscription>"
       }
     },
     "customer": {
       "links": {
-        "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/customer>",
-        "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/customer>"
+        "related": "<https://api.example.com/v1/subscription-invoices/1/customer>",
+        "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/customer>"
       }
     }
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1>"
+    "self": "<https://api.example.com/v1/subscription-invoices/1>"
   }
 }
 
@@ -3999,7 +3999,7 @@ GET
 /v1/subscription-invoices/:id
 Retrieves the subscription invoice with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/subscription-invoices/1>" \
+curl "<https://api.example.com/v1/subscription-invoices/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4011,7 +4011,7 @@ Returns a Subscription Invoice object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1>"
+    "self": "<https://api.example.com/v1/subscription-invoices/1>"
   },
   "data": {
     "type": "subscription-invoices",
@@ -4045,7 +4045,7 @@ Returns a Subscription Invoice object.
       "tax_formatted": "$0.00",
       "total_formatted": "$9.99",
       "urls": {
-        "invoice_url": "<https://app.lemonsqueezy.com/my-orders/.../subscription-invoice/>..."
+        "invoice_url": "<https://app.example.com/my-orders/.../subscription-invoice/>..."
       },
       "created_at": "2023-01-18T12:16:24.000000Z",
       "updated_at": "2023-01-18T12:16:24.000000Z",
@@ -4054,25 +4054,25 @@ Returns a Subscription Invoice object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/store>"
+          "related": "<https://api.example.com/v1/subscription-invoices/1/store>",
+          "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/store>"
         }
       },
       "subscription": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/subscription>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/subscription>"
+          "related": "<https://api.example.com/v1/subscription-invoices/1/subscription>",
+          "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/subscription>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/subscription-invoices/1/customer>",
+          "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/customer>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1>"
+      "self": "<https://api.example.com/v1/subscription-invoices/1>"
     }
   }
 }
@@ -4102,15 +4102,15 @@ Only return subscription invoices that are refunded (the value should be true or
 subscription_id
 Only return subscription invoices belonging to a subscription with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/subscription-invoices>" \
+curl "<https://api.example.com/v1/subscription-invoices>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/subscription-invoices?filter[status]=past_due>" \
+curl "<https://api.example.com/v1/subscription-invoices?filter[status]=past_due>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/subscription-invoices?filter[subscription_id]=6>" \
+curl "<https://api.example.com/v1/subscription-invoices?filter[subscription_id]=6>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4132,8 +4132,8 @@ Returns a paginated list of Subscription Invoice objects ordered by created_at i
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/subscription-invoices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/subscription-invoices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/subscription-invoices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/subscription-invoices?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -4171,7 +4171,7 @@ Returns a paginated list of Subscription Invoice objects ordered by created_at i
         "total_formatted": "$9.99",
         "refunded_amount_formatted": "$0.00",
         "urls": {
-          "invoice_url": "https://app.lemonsqueezy.com/my-orders/.../subscription-invoice/..."
+          "invoice_url": "https://app.example.com/my-orders/.../subscription-invoice/..."
         },
         "created_at": "2023-01-18T12:16:24.000000Z",
         "updated_at": "2023-01-18T12:16:24.000000Z",
@@ -4180,25 +4180,25 @@ Returns a paginated list of Subscription Invoice objects ordered by created_at i
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscription-invoices/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/store"
+            "related": "https://api.example.com/v1/subscription-invoices/1/store",
+            "self": "https://api.example.com/v1/subscription-invoices/1/relationships/store"
           }
         },
         "subscription": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscription-invoices/1/subscription",
-            "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/subscription"
+            "related": "https://api.example.com/v1/subscription-invoices/1/subscription",
+            "self": "https://api.example.com/v1/subscription-invoices/1/relationships/subscription"
           }
         },
         "customer": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscription-invoices/1/customer",
-            "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/customer"
+            "related": "https://api.example.com/v1/subscription-invoices/1/customer",
+            "self": "https://api.example.com/v1/subscription-invoices/1/relationships/customer"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/1"
+        "self": "https://api.example.com/v1/subscription-invoices/1"
       }
     },
     {...},
@@ -4251,7 +4251,7 @@ Any additional notes to include on the invoice.
 locale
 ISO 639 language code, e.g., ‘en’ for English language.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/generate-invoice?name=John%20Doe&address=123%20Main%20St&city=Anytown&state=CA&zip_code=12345&country=US&notes=Thank%20you%20for%20your%20business>" \
+curl -X "POST" "<https://api.example.com/v1/subscription-invoices/1/generate-invoice?name=John%20Doe&address=123%20Main%20St&city=Anytown&state=CA&zip_code=12345&country=US&notes=Thank%20you%20for%20your%20business>" \
   -H "Accept: application/vnd.api+json" \
   -H "Content-Type: application/vnd.api+json" \
   -H "Authorization: Bearer {api_key}"
@@ -4264,7 +4264,7 @@ Returns a link to download the generated invoice.
   },
   "meta": {
     "urls": {
-      "download_invoice": "<https://app.lemonsqueezy.com/my-orders/c1e4de31-b4cf-4668-a6fe-019d071d41ab/invoice/download?address=123%20Main%20St&city=Anytown&country=US&name=John%20Doe&notes=Thank%20you%20for%20your%20business&state=CA&zip_code=12345&signature=c21a17a13d9deeacc99ff52144a06b49df141af37dd668cc70a76bcc8022888e>"
+      "download_invoice": "<https://app.example.com/my-orders/c1e4de31-b4cf-4668-a6fe-019d071d41ab/invoice/download?address=123%20Main%20St&city=Anytown&country=US&name=John%20Doe&notes=Thank%20you%20for%20your%20business&state=CA&zip_code=12345&signature=c21a17a13d9deeacc99ff52144a06b49df141af37dd668cc70a76bcc8022888e>"
     }
   }
 }
@@ -4284,7 +4284,7 @@ amount
 Optional
 Optional. The amount that you want to refund for an order. If not included full refund will be issued.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/refund>" \
+curl -X "POST" "<https://api.example.com/v1/subscription-invoices/1/refund>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -4305,7 +4305,7 @@ Returns a Subscription Invoice object with updated refunded attributes.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1>"
+    "self": "<https://api.example.com/v1/subscription-invoices/1>"
   },
   "data": {
     "type": "subscription-invoices",
@@ -4342,7 +4342,7 @@ Returns a Subscription Invoice object with updated refunded attributes.
       "total_formatted": "$9.99",
       "refunded_amount_formatted": "$1.00",
       "urls": {
-        "invoice_url": "<https://app.lemonsqueezy.com/my-orders/.../subscription-invoice/>..."
+        "invoice_url": "<https://app.example.com/my-orders/.../subscription-invoice/>..."
       },
       "created_at": "2023-01-18T12:16:24.000000Z",
       "updated_at": "2023-01-18T12:16:24.000000Z",
@@ -4351,25 +4351,25 @@ Returns a Subscription Invoice object with updated refunded attributes.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/store>"
+          "related": "<https://api.example.com/v1/subscription-invoices/1/store>",
+          "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/store>"
         }
       },
       "subscription": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/subscription>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/subscription>"
+          "related": "<https://api.example.com/v1/subscription-invoices/1/subscription>",
+          "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/subscription>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/subscription-invoices/1/customer>",
+          "self": "<https://api.example.com/v1/subscription-invoices/1/relationships/customer>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscription-invoices/1>"
+      "self": "<https://api.example.com/v1/subscription-invoices/1>"
     }
   }
 }
@@ -4419,25 +4419,25 @@ An ISO 8601 formatted date-time string indicating when the subscription item was
   "relationships": {
     "subscription": {
       "links": {
-        "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/subscription>",
-        "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/subscription>"
+        "related": "<https://api.example.com/v1/subscription-items/1/subscription>",
+        "self": "<https://api.example.com/v1/subscription-items/1/relationships/subscription>"
       }
     },
     "price": {
       "links": {
-        "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/price>",
-        "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/price>"
+        "related": "<https://api.example.com/v1/subscription-items/1/price>",
+        "self": "<https://api.example.com/v1/subscription-items/1/relationships/price>"
       }
     },
     "usage-records": {
       "links": {
-        "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/usage-records>",
-        "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/usage-records>"
+        "related": "<https://api.example.com/v1/subscription-items/1/usage-records>",
+        "self": "<https://api.example.com/v1/subscription-items/1/relationships/usage-records>"
       }
     }
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1>"
+    "self": "<https://api.example.com/v1/subscription-items/1>"
   }
 }
 
@@ -4451,7 +4451,7 @@ GET
 /v1/subscription-items/:id
 Retrieves the subscription item with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/subscription-items/1>" \
+curl "<https://api.example.com/v1/subscription-items/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4463,7 +4463,7 @@ Returns a Subscription Item object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-item/1>"
+    "self": "<https://api.example.com/v1/subscription-item/1>"
   },
   "data": {
     "type": "subscription-items",
@@ -4479,25 +4479,25 @@ Returns a Subscription Item object.
     "relationships": {
       "subscription": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/subscription>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/subscription>"
+          "related": "<https://api.example.com/v1/subscription-items/1/subscription>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/subscription>"
         }
       },
       "price": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/price>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/price>"
+          "related": "<https://api.example.com/v1/subscription-items/1/price>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/price>"
         }
       },
       "usage-records": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/usage-records>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/usage-records>"
+          "related": "<https://api.example.com/v1/subscription-items/1/usage-records>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/usage-records>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1>"
+      "self": "<https://api.example.com/v1/subscription-items/1>"
     }
   }
 }
@@ -4516,7 +4516,7 @@ Note
 
 This endpoint is only for subscriptions with usage-based billing enabled. It will return a 404 Not Found response if the related subscription product/variant does not have usage-based billing enabled.
 
-curl "<https://api.lemonsqueezy.com/v1/subscription-items/1/current-usage>" \
+curl "<https://api.example.com/v1/subscription-items/1/current-usage>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4578,7 +4578,7 @@ If true, no proration will be charged and the customer will simply be charged th
 
 Read about proration in the Developer Guide.
 
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/subscription-items/1>" \
+curl -X "PATCH" "<https://api.example.com/v1/subscription-items/1>" \
   -H "Accept: application/vnd.api+json" \
   -H "Content-Type: application/vnd.api+json" \
   -H "Authorization: Bearer {api_key}" \
@@ -4599,7 +4599,7 @@ Returns the updated Subscription Item object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-item/1>"
+    "self": "<https://api.example.com/v1/subscription-item/1>"
   },
   "data": {
     "type": "subscription-items",
@@ -4615,25 +4615,25 @@ Returns the updated Subscription Item object.
     "relationships": {
       "subscription": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/subscription>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/subscription>"
+          "related": "<https://api.example.com/v1/subscription-items/1/subscription>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/subscription>"
         }
       },
       "price": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/price>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/price>"
+          "related": "<https://api.example.com/v1/subscription-items/1/price>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/price>"
         }
       },
       "usage-records": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/usage-records>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/usage-records>"
+          "related": "<https://api.example.com/v1/subscription-items/1/usage-records>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/usage-records>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1>"
+      "self": "<https://api.example.com/v1/subscription-items/1>"
     }
   }
 }
@@ -4655,11 +4655,11 @@ Only return subscription items belonging to a subscription with this ID.
 price_id
 Only return subscription items belonging to a price with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/subscription-items>" \
+curl "<https://api.example.com/v1/subscription-items>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/subscription-items?filter[subscription_id]=1>" \
+curl "<https://api.example.com/v1/subscription-items?filter[subscription_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4681,8 +4681,8 @@ Returns a paginated list of Subscription objects ordered by created_at in descen
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/subscription-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>",
-    "last": "<https://api.lemonsqueezy.com/v1/subscription-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>"
+    "first": "<https://api.example.com/v1/subscription-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>",
+    "last": "<https://api.example.com/v1/subscription-items?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>"
   },
   "data": [
     {
@@ -4699,25 +4699,25 @@ Returns a paginated list of Subscription objects ordered by created_at in descen
       "relationships": {
         "subscription": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscription-items/1/subscription",
-            "self": "https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/subscription"
+            "related": "https://api.example.com/v1/subscription-items/1/subscription",
+            "self": "https://api.example.com/v1/subscription-items/1/relationships/subscription"
           }
         },
         "price": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscription-items/1/price",
-            "self": "https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/price"
+            "related": "https://api.example.com/v1/subscription-items/1/price",
+            "self": "https://api.example.com/v1/subscription-items/1/relationships/price"
           }
         },
         "usage-records": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/subscription-items/1/usage-records",
-            "self": "https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/usage-records"
+            "related": "https://api.example.com/v1/subscription-items/1/usage-records",
+            "self": "https://api.example.com/v1/subscription-items/1/relationships/usage-records"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/subscription-items/1"
+        "self": "https://api.example.com/v1/subscription-items/1"
       }
     },
     {...},
@@ -4794,7 +4794,7 @@ Relationships
 subscription_item
 The subscription item this usage record belongs to.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/usage-records>" \
+curl -X "POST" "<https://api.example.com/v1/usage-records>" \
   -H "Accept: application/vnd.api+json" \
   -H "Content-Type: application/vnd.api+json" \
   -H "Authorization: Bearer {api_key}" \
@@ -4822,7 +4822,7 @@ Returns s Usage Record object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/usage-records/1>"
+    "self": "<https://api.example.com/v1/usage-records/1>"
   },
   "data": {
     "type": "usage-records",
@@ -4837,13 +4837,13 @@ Returns s Usage Record object.
     "relationships": {
       "subscription-item": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/usage-records/1/subscription-item>",
-          "self": "<https://api.lemonsqueezy.com/v1/usage-records/1/relationships/subscription-item>"
+          "related": "<https://api.example.com/v1/usage-records/1/subscription-item>",
+          "self": "<https://api.example.com/v1/usage-records/1/relationships/subscription-item>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/usage-records/1>"
+      "self": "<https://api.example.com/v1/usage-records/1>"
     }
   }
 }
@@ -4862,7 +4862,7 @@ Note
 
 To retrieve the current total usage for a subscription, use the subscription item current usage endpoint.
 
-curl "<https://api.lemonsqueezy.com/v1/usage-records/1>" \
+curl "<https://api.example.com/v1/usage-records/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4874,7 +4874,7 @@ Returns a Usage Record object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/usage-records/1>"
+    "self": "<https://api.example.com/v1/usage-records/1>"
   },
   "data": {
     "type": "usage-records",
@@ -4889,13 +4889,13 @@ Returns a Usage Record object.
     "relationships": {
       "subscription-item": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/usage-records/1/subscription-item>",
-          "self": "<https://api.lemonsqueezy.com/v1/usage-records/1/relationships/subscription-item>"
+          "related": "<https://api.example.com/v1/usage-records/1/subscription-item>",
+          "self": "<https://api.example.com/v1/usage-records/1/relationships/subscription-item>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/usage-records/1>"
+      "self": "<https://api.example.com/v1/usage-records/1>"
     }
   }
 }
@@ -4914,11 +4914,11 @@ Filter parameters
 subscription_item_id
 Only return usage records belonging to the subscription item with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/usage-records>" \
+curl "<https://api.example.com/v1/usage-records>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/usage-records?filter[subscription_item_id]=1>" \
+curl "<https://api.example.com/v1/usage-records?filter[subscription_item_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -4940,8 +4940,8 @@ Returns a paginated list of Usage Records objects ordered by created_at in desce
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/usage-records?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>",
-    "last": "<https://api.lemonsqueezy.com/v1/usage-records?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>"
+    "first": "<https://api.example.com/v1/usage-records?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>",
+    "last": "<https://api.example.com/v1/usage-records?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-created_at>"
   },
   "data": [
     {
@@ -4957,13 +4957,13 @@ Returns a paginated list of Usage Records objects ordered by created_at in desce
       "relationships": {
         "subscription-item": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/usage-records/1/subscription-item",
-            "self": "https://api.lemonsqueezy.com/v1/usage-records/1/relationships/subscription-item"
+            "related": "https://api.example.com/v1/usage-records/1/subscription-item",
+            "self": "https://api.example.com/v1/usage-records/1/relationships/subscription-item"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/usage-records/1"
+        "self": "https://api.example.com/v1/usage-records/1"
       }
     },
     {...},
@@ -5125,7 +5125,7 @@ The store this discount belongs to.
 variants
 If is_limited_to_products is true, the variant(s) the discount belongs to (this is not required otherwise).
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/discounts>" \
+curl -X "POST" "<https://api.example.com/v1/discounts>" \
   -H "Accept: application/vnd.api+json" \
   -H "Content-Type: application/vnd.api+json" \
   -H "Authorization: Bearer {api_key}" \
@@ -5150,7 +5150,7 @@ curl -X "POST" "<https://api.lemonsqueezy.com/v1/discounts>" \
   }'
 An example limiting the discount to certain variants:
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/discounts>" \
+curl -X "POST" "<https://api.example.com/v1/discounts>" \
   -H "Accept: application/vnd.api+json" \
   -H "Content-Type: application/vnd.api+json" \
   -H "Authorization: Bearer {api_key}" \
@@ -5194,7 +5194,7 @@ Returns a Discount object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/discounts/1>"
+    "self": "<https://api.example.com/v1/discounts/1>"
   },
   "data": {
     "type": "discounts",
@@ -5221,25 +5221,25 @@ Returns a Discount object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discounts/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/discounts/1/relationships/store>"
+          "related": "<https://api.example.com/v1/discounts/1/store>",
+          "self": "<https://api.example.com/v1/discounts/1/relationships/store>"
         }
       },
       "variants": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discounts/1/variants>",
-          "self": "<https://api.lemonsqueezy.com/v1/discounts/1/relationships/variants>"
+          "related": "<https://api.example.com/v1/discounts/1/variants>",
+          "self": "<https://api.example.com/v1/discounts/1/relationships/variants>"
         }
       },
       "discount-redemptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discounts/1/discount-redemptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/discounts/1/relationships/discount-redemptions>"
+          "related": "<https://api.example.com/v1/discounts/1/discount-redemptions>",
+          "self": "<https://api.example.com/v1/discounts/1/relationships/discount-redemptions>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/discounts/1>"
+      "self": "<https://api.example.com/v1/discounts/1>"
     }
   }
 }
@@ -5254,7 +5254,7 @@ GET
 /v1/discounts/:id
 Retrieves the discount with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/discounts/1>" \
+curl "<https://api.example.com/v1/discounts/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5266,7 +5266,7 @@ Returns a Discount object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/discounts/1>"
+    "self": "<https://api.example.com/v1/discounts/1>"
   },
   "data": {
     "type": "discounts",
@@ -5293,25 +5293,25 @@ Returns a Discount object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discounts/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/discounts/1/relationships/store>"
+          "related": "<https://api.example.com/v1/discounts/1/store>",
+          "self": "<https://api.example.com/v1/discounts/1/relationships/store>"
         }
       },
       "variants": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discounts/1/variants>",
-          "self": "<https://api.lemonsqueezy.com/v1/discounts/1/relationships/variants>"
+          "related": "<https://api.example.com/v1/discounts/1/variants>",
+          "self": "<https://api.example.com/v1/discounts/1/relationships/variants>"
         }
       },
       "discount-redemptions": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discounts/1/discount-redemptions>",
-          "self": "<https://api.lemonsqueezy.com/v1/discounts/1/relationships/discount-redemptions>"
+          "related": "<https://api.example.com/v1/discounts/1/discount-redemptions>",
+          "self": "<https://api.example.com/v1/discounts/1/relationships/discount-redemptions>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/discounts/1>"
+      "self": "<https://api.example.com/v1/discounts/1>"
     }
   }
 }
@@ -5326,7 +5326,7 @@ DELETE
 /v1/discounts/:id
 Delete a discount with the given ID.
 
-curl -X "DELETE" "<https://api.lemonsqueezy.com/v1/discounts/1>" \
+curl -X "DELETE" "<https://api.example.com/v1/discounts/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5347,11 +5347,11 @@ Filter parameters
 store_id
 Return only discounts belonging to the store with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/discounts>" \
+curl "<https://api.example.com/v1/discounts>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/discounts?filter[store_id]=1>" \
+curl "<https://api.example.com/v1/discounts?filter[store_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5373,8 +5373,8 @@ Returns a paginated list of Discounts objects ordered by created_at in descendin
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/discounts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/discounts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=createdAt>"
+    "first": "<https://api.example.com/v1/discounts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=createdAt>",
+    "last": "<https://api.example.com/v1/discounts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=createdAt>"
   },
   "data": [
     {
@@ -5402,25 +5402,25 @@ Returns a paginated list of Discounts objects ordered by created_at in descendin
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/discounts/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/discounts/1/relationships/store"
+            "related": "https://api.example.com/v1/discounts/1/store",
+            "self": "https://api.example.com/v1/discounts/1/relationships/store"
           }
         },
         "variants": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/discounts/1/variants",
-            "self": "https://api.lemonsqueezy.com/v1/discounts/1/relationships/variants"
+            "related": "https://api.example.com/v1/discounts/1/variants",
+            "self": "https://api.example.com/v1/discounts/1/relationships/variants"
           }
         },
         "discount-redemptions": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/discounts/1/discount-redemptions",
-            "self": "https://api.lemonsqueezy.com/v1/discounts/1/relationships/discount-redemptions"
+            "related": "https://api.example.com/v1/discounts/1/discount-redemptions",
+            "self": "https://api.example.com/v1/discounts/1/relationships/discount-redemptions"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/discounts/1"
+        "self": "https://api.example.com/v1/discounts/1"
       }
     },
     {...},
@@ -5494,7 +5494,7 @@ Retrieves the discount redemption with the given ID.
 
 To retrieve a discount code for a certain order, you can include related resources or use a nested query.
 
-curl "<https://api.lemonsqueezy.com/v1/discount-redemptions/1>" \
+curl "<https://api.example.com/v1/discount-redemptions/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5506,7 +5506,7 @@ Returns a Discount Redemption object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/discount-redemptions/1>"
+    "self": "<https://api.example.com/v1/discount-redemptions/1>"
   },
   "data": {
     "type": "discount-redemptions",
@@ -5525,19 +5525,19 @@ Returns a Discount Redemption object.
     "relationships": {
       "discount": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discount-redemptions/1/discount>",
-          "self": "<https://api.lemonsqueezy.com/v1/discount-redemptions/1/relationships/discount>"
+          "related": "<https://api.example.com/v1/discount-redemptions/1/discount>",
+          "self": "<https://api.example.com/v1/discount-redemptions/1/relationships/discount>"
         }
       },
       "order": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/discount-redemptions/1/order>",
-          "self": "<https://api.lemonsqueezy.com/v1/discount-redemptions/1/relationships/order>"
+          "related": "<https://api.example.com/v1/discount-redemptions/1/order>",
+          "self": "<https://api.example.com/v1/discount-redemptions/1/relationships/order>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/discount-redemptions/1>"
+      "self": "<https://api.example.com/v1/discount-redemptions/1>"
     }
   }
 }
@@ -5559,11 +5559,11 @@ Return discount redemptions that belong to the discount with this ID.
 order_id
 Return discount redemptions that belong to the order with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/discount-redemptions>" \
+curl "<https://api.example.com/v1/discount-redemptions>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/discount-redemptions?filter[discount_id]=1>" \
+curl "<https://api.example.com/v1/discount-redemptions?filter[discount_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5585,9 +5585,9 @@ Returns a paginated list of Discount Redemption objects ordered by created_at in
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/discount-redemptions?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/discount-redemptions?page%5Bnumber%5D=1339&page%5Bsize%5D=10&sort=-createdAt>",
-    "next": "<https://api.lemonsqueezy.com/v1/discount-redemptions?page%5Bnumber%5D=2&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/discount-redemptions?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/discount-redemptions?page%5Bnumber%5D=1339&page%5Bsize%5D=10&sort=-createdAt>",
+    "next": "<https://api.example.com/v1/discount-redemptions?page%5Bnumber%5D=2&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -5607,19 +5607,19 @@ Returns a paginated list of Discount Redemption objects ordered by created_at in
       "relationships": {
         "discount": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/discount-redemptions/1/discount",
-            "self": "https://api.lemonsqueezy.com/v1/discount-redemptions/1/relationships/discount"
+            "related": "https://api.example.com/v1/discount-redemptions/1/discount",
+            "self": "https://api.example.com/v1/discount-redemptions/1/relationships/discount"
           }
         },
         "order": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/discount-redemptions/1/order",
-            "self": "https://api.lemonsqueezy.com/v1/discount-redemptions/1/relationships/order"
+            "related": "https://api.example.com/v1/discount-redemptions/1/order",
+            "self": "https://api.example.com/v1/discount-redemptions/1/relationships/order"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/discount-redemptions/1"
+        "self": "https://api.example.com/v1/discount-redemptions/1"
       }
     },
     {...},
@@ -5727,7 +5727,7 @@ GET
 /v1/license-keys/:id
 Retrieves the license key with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/license-keys/1>" \
+curl "<https://api.example.com/v1/license-keys/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5739,7 +5739,7 @@ Returns a License Key object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/license-keys/1>"
+    "self": "<https://api.example.com/v1/license-keys/1>"
   },
   "data": {
     "type": "license-keys",
@@ -5766,43 +5766,43 @@ Returns a License Key object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-keys/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-keys/1/relationships/store>"
+          "related": "<https://api.example.com/v1/license-keys/1/store>",
+          "self": "<https://api.example.com/v1/license-keys/1/relationships/store>"
         }
       },
       "customer": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-keys/1/customer>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-keys/1/relationships/customer>"
+          "related": "<https://api.example.com/v1/license-keys/1/customer>",
+          "self": "<https://api.example.com/v1/license-keys/1/relationships/customer>"
         }
       },
       "order": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-keys/1/order>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-keys/1/relationships/order>"
+          "related": "<https://api.example.com/v1/license-keys/1/order>",
+          "self": "<https://api.example.com/v1/license-keys/1/relationships/order>"
         }
       },
       "order-item": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-keys/1/order-item>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-keys/1/relationships/order-item>"
+          "related": "<https://api.example.com/v1/license-keys/1/order-item>",
+          "self": "<https://api.example.com/v1/license-keys/1/relationships/order-item>"
         }
       },
       "product": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-keys/1/product>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-keys/1/relationships/product>"
+          "related": "<https://api.example.com/v1/license-keys/1/product>",
+          "self": "<https://api.example.com/v1/license-keys/1/relationships/product>"
         }
       },
       "license-key-instances": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-keys/1/license-key-instances>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-keys/1/relationships/license-key-instances>"
+          "related": "<https://api.example.com/v1/license-keys/1/license-key-instances>",
+          "self": "<https://api.example.com/v1/license-keys/1/relationships/license-key-instances>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/license-keys/1>"
+      "self": "<https://api.example.com/v1/license-keys/1>"
     }
   }
 }
@@ -5827,7 +5827,7 @@ An ISO 8601 formatted date-time string indicating when the license key expires. 
 disabled
 If true, the license key will have “disabled” status.
 
-curl "<https://api.lemonsqueezy.com/v1/license-keys/1>" \
+curl "<https://api.example.com/v1/license-keys/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -5850,7 +5850,7 @@ Returns updated License Key object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/subscription-item/1>"
+    "self": "<https://api.example.com/v1/subscription-item/1>"
   },
   "data": {
     "type": "subscription-items",
@@ -5866,25 +5866,25 @@ Returns updated License Key object.
     "relationships": {
       "subscription": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/subscription>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/subscription>"
+          "related": "<https://api.example.com/v1/subscription-items/1/subscription>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/subscription>"
         }
       },
       "price": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/price>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/price>"
+          "related": "<https://api.example.com/v1/subscription-items/1/price>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/price>"
         }
       },
       "usage-records": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/subscription-items/1/usage-records>",
-          "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1/relationships/usage-records>"
+          "related": "<https://api.example.com/v1/subscription-items/1/usage-records>",
+          "self": "<https://api.example.com/v1/subscription-items/1/relationships/usage-records>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/subscription-items/1>"
+      "self": "<https://api.example.com/v1/subscription-items/1>"
     }
   }
 }
@@ -5915,11 +5915,11 @@ Only return license keys belonging to the product with this ID.
 status
 Only return license keys with this status.
 
-curl "<https://api.lemonsqueezy.com/v1/license-keys>" \
+curl "<https://api.example.com/v1/license-keys>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/license-keys?filter[order_id]=1>" \
+curl "<https://api.example.com/v1/license-keys?filter[order_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -5941,8 +5941,8 @@ Returns a paginated list of License Key objects ordered by id in descending orde
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/license-keys?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>",
-    "last": "<https://api.lemonsqueezy.com/v1/license-keys?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>"
+    "first": "<https://api.example.com/v1/license-keys?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>",
+    "last": "<https://api.example.com/v1/license-keys?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>"
   },
   "data": [
     {
@@ -5970,43 +5970,43 @@ Returns a paginated list of License Key objects ordered by id in descending orde
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-keys/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/license-keys/1/relationships/store"
+            "related": "https://api.example.com/v1/license-keys/1/store",
+            "self": "https://api.example.com/v1/license-keys/1/relationships/store"
           }
         },
         "customer": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-keys/1/customer",
-            "self": "https://api.lemonsqueezy.com/v1/license-keys/1/relationships/customer"
+            "related": "https://api.example.com/v1/license-keys/1/customer",
+            "self": "https://api.example.com/v1/license-keys/1/relationships/customer"
           }
         },
         "order": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-keys/1/order",
-            "self": "https://api.lemonsqueezy.com/v1/license-keys/1/relationships/order"
+            "related": "https://api.example.com/v1/license-keys/1/order",
+            "self": "https://api.example.com/v1/license-keys/1/relationships/order"
           }
         },
         "order-item": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-keys/1/order-item",
-            "self": "https://api.lemonsqueezy.com/v1/license-keys/1/relationships/order-item"
+            "related": "https://api.example.com/v1/license-keys/1/order-item",
+            "self": "https://api.example.com/v1/license-keys/1/relationships/order-item"
           }
         },
         "product": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-keys/1/product",
-            "self": "https://api.lemonsqueezy.com/v1/license-keys/1/relationships/product"
+            "related": "https://api.example.com/v1/license-keys/1/product",
+            "self": "https://api.example.com/v1/license-keys/1/relationships/product"
           }
         },
         "license-key-instances": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-keys/1/license-key-instances",
-            "self": "https://api.lemonsqueezy.com/v1/license-keys/1/relationships/license-key-instances"
+            "related": "https://api.example.com/v1/license-keys/1/license-key-instances",
+            "self": "https://api.example.com/v1/license-keys/1/relationships/license-key-instances"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/license-keys/1"
+        "self": "https://api.example.com/v1/license-keys/1"
       }
     },
     {...},
@@ -6062,7 +6062,7 @@ GET
 /v1/license-key-instances/:id
 Retrieves the license key instance with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/license-key-instances/1>" \
+curl "<https://api.example.com/v1/license-key-instances/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -6074,7 +6074,7 @@ Returns a License Key Instance object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/license-key-instances/1>"
+    "self": "<https://api.example.com/v1/license-key-instances/1>"
   },
   "data": {
     "type": "license-key-instances",
@@ -6089,13 +6089,13 @@ Returns a License Key Instance object.
     "relationships": {
       "license-key": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/license-key-instances/1/license-key>",
-          "self": "<https://api.lemonsqueezy.com/v1/license-key-instances/1/relationships/license-key>"
+          "related": "<https://api.example.com/v1/license-key-instances/1/license-key>",
+          "self": "<https://api.example.com/v1/license-key-instances/1/relationships/license-key>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/license-key-instances/1>"
+      "self": "<https://api.example.com/v1/license-key-instances/1>"
     }
   }
 }
@@ -6114,11 +6114,11 @@ Filter parameters
 license_key_id
 Only return instances belonging to the license key with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/license-key-instances>"
+curl "<https://api.example.com/v1/license-key-instances>"
   -H 'Accept: application/vnd.api+json'
   -H 'Content-Type: application/vnd.api+json'
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/license-key-instances?filter[license_key_id]=1>"
+curl "<https://api.example.com/v1/license-key-instances?filter[license_key_id]=1>"
   -H 'Accept: application/vnd.api+json'
   -H 'Content-Type: application/vnd.api+json'
   -H 'Authorization: Bearer {api_key}'
@@ -6140,8 +6140,8 @@ Returns a paginated list of License Key objects ordered by id in descending orde
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/license-key-instances?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>",
-    "last": "<https://api.lemonsqueezy.com/v1/license-key-instances?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>"
+    "first": "<https://api.example.com/v1/license-key-instances?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>",
+    "last": "<https://api.example.com/v1/license-key-instances?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=id>"
   },
   "data": [
     {
@@ -6157,13 +6157,13 @@ Returns a paginated list of License Key objects ordered by id in descending orde
       "relationships": {
         "license-key": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/license-key-instances/1/license-key",
-            "self": "https://api.lemonsqueezy.com/v1/license-key-instances/1/relationships/license-key"
+            "related": "https://api.example.com/v1/license-key-instances/1/license-key",
+            "self": "https://api.example.com/v1/license-key-instances/1/relationships/license-key"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/license-key-instances/1"
+        "self": "https://api.example.com/v1/license-key-instances/1"
       }
     },
     {...},
@@ -6316,24 +6316,24 @@ The unique URL to access the checkout. Note: for security reasons, download URLs
       "created_at": "2024-10-14T12:36:27.000000Z",
       "updated_at": "2024-10-14T12:36:27.000000Z",
       "test_mode": false,
-      "url": "<https://my-store.lemonsqueezy.com/checkout/custom/ac470bd4-7c41-474d-b6cd-0f296f5be02a?signature=ee3fd20c5bac48fe5e976cb106e743bc3f6f330540f8003ab331d638e2ce3b8b>"
+      "url": "<https://my-store.example.com/checkout/custom/ac470bd4-7c41-474d-b6cd-0f296f5be02a?signature=ee3fd20c5bac48fe5e976cb106e743bc3f6f330540f8003ab331d638e2ce3b8b>"
     },
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/store>"
+          "related": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/store>",
+          "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/store>"
         }
       },
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/variant>"
+          "related": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/variant>",
+          "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/variant>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>"
+      "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>"
     }
   }
 }
@@ -6433,7 +6433,7 @@ The variant associated with this checkout.
 
 By default, all variants of the related product will be shown in the checkout, with your selected variant highlighted. If you want hide to other variants, you can utilise the product_options.enabled_variants option to determine which variant(s) are displayed in the checkout.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/checkouts>" \
+curl -X "POST" "<https://api.example.com/v1/checkouts>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -6481,7 +6481,7 @@ Returns a Checkout object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195>"
+    "self": "<https://api.example.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195>"
   },
   "data": {
     "type": "checkouts",
@@ -6539,24 +6539,24 @@ Returns a Checkout object.
       "created_at": "2022-10-14T13:03:37.000000Z",
       "updated_at": "2022-10-14T13:03:37.000000Z",
       "test_mode": false,
-      "url": "<https://my-store.lemonsqueezy.com/checkout/custom/5e8b546c-c561-4a2c-a586-40c18bb2a195?expires=1667143206&signature=8f7248ad2022ef1d4111752ae02d14f8d04332274861ca5c3589eb22b5086a5b>"
+      "url": "<https://my-store.example.com/checkout/custom/5e8b546c-c561-4a2c-a586-40c18bb2a195?expires=1667143206&signature=8f7248ad2022ef1d4111752ae02d14f8d04332274861ca5c3589eb22b5086a5b>"
     },
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/relationships/store>"
+          "related": "<https://api.example.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/store>",
+          "self": "<https://api.example.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/relationships/store>"
         }
       },
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/relationships/variant>"
+          "related": "<https://api.example.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/variant>",
+          "self": "<https://api.example.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195/relationships/variant>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195>"
+      "self": "<https://api.example.com/v1/checkouts/5e8b546c-c561-4a2c-a586-40c18bb2a195>"
     }
   }
 }
@@ -6571,7 +6571,7 @@ GET
 /v1/checkouts/:id
 Retrieves the checkout with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>" \
+curl "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -6583,7 +6583,7 @@ Returns a Checkout object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>"
+    "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>"
   },
   "data": {
     "type": "checkouts",
@@ -6625,24 +6625,24 @@ Returns a Checkout object.
       "created_at": "2024-10-14T12:36:27.000000Z",
       "updated_at": "2024-10-14T12:36:27.000000Z",
       "test_mode": false,
-      "url": "<https://my-store.lemonsqueezy.com/checkout/custom/ac470bd4-7c41-474d-b6cd-0f296f5be02a?signature=ee3fd20c5bac48fe5e976cb106e743bc3f6f330540f8003ab331d638e2ce3b8b>"
+      "url": "<https://my-store.example.com/checkout/custom/ac470bd4-7c41-474d-b6cd-0f296f5be02a?signature=ee3fd20c5bac48fe5e976cb106e743bc3f6f330540f8003ab331d638e2ce3b8b>"
     },
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/store>"
+          "related": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/store>",
+          "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/store>"
         }
       },
       "variant": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/variant>",
-          "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/variant>"
+          "related": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/variant>",
+          "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/variant>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>"
+      "self": "<https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a>"
     }
   }
 }
@@ -6664,11 +6664,11 @@ Only return checkouts belonging to the store with this ID.
 variant_id
 Only return checkouts belonging to the variant with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/license-keys>" \
+curl "<https://api.example.com/v1/license-keys>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/license-keys?filter[order_id]=1>" \
+curl "<https://api.example.com/v1/license-keys?filter[order_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -6690,8 +6690,8 @@ Returns a paginated list of Checkout objects ordered by created_at in descending
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/checkouts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/checkouts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/checkouts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/checkouts?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -6735,24 +6735,24 @@ Returns a paginated list of Checkout objects ordered by created_at in descending
         "created_at": "2022-10-14T12:36:27.000000Z",
         "updated_at": "2022-10-14T12:36:27.000000Z",
         "test_mode": false,
-        "url": "https://my-store.lemonsqueezy.com/checkout/custom/ac470bd4-7c41-474d-b6cd-0f296f5be02a?signature=ee3fd20c5bac48fe5e976cb106e743bc3f6f330540f8003ab331d638e2ce3b8b"
+        "url": "https://my-store.example.com/checkout/custom/ac470bd4-7c41-474d-b6cd-0f296f5be02a?signature=ee3fd20c5bac48fe5e976cb106e743bc3f6f330540f8003ab331d638e2ce3b8b"
       },
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/store",
-            "self": "https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/store"
+            "related": "https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/store",
+            "self": "https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/store"
           }
         },
         "variant": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/variant",
-            "self": "https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/variant"
+            "related": "https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/variant",
+            "self": "https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a/relationships/variant"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a"
+        "self": "https://api.example.com/v1/checkouts/ac470bd4-7c41-474d-b6cd-0f296f5be02a"
       }
     },
     {...},
@@ -6842,7 +6842,7 @@ The secret is never returned in the API. To view the secret of a webhook, open t
 test_mode
 Set this to true if the webhook should be created in test mode.
 
-curl -X "POST" "<https://api.lemonsqueezy.com/v1/webhooks>" \
+curl -X "POST" "<https://api.example.com/v1/webhooks>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -6877,7 +6877,7 @@ Returns a Webhook object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+    "self": "<https://api.example.com/v1/webhooks/1>"
   },
   "data": {
     "type": "webhooks",
@@ -6899,13 +6899,13 @@ Returns a Webhook object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/webhooks/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/webhooks/1/relationships/store>"
+          "related": "<https://api.example.com/v1/webhooks/1/store>",
+          "self": "<https://api.example.com/v1/webhooks/1/relationships/store>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+      "self": "<https://api.example.com/v1/webhooks/1>"
     }
   }
 }
@@ -6920,7 +6920,7 @@ GET
 /v1/webhooks/:id
 Retrieves the webhook with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/webhooks/1>" \
+curl "<https://api.example.com/v1/webhooks/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -6932,7 +6932,7 @@ Returns a Webhook object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+    "self": "<https://api.example.com/v1/webhooks/1>"
   },
   "data": {
     "type": "webhooks",
@@ -6954,13 +6954,13 @@ Returns a Webhook object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/webhooks/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/webhooks/1/relationships/store>"
+          "related": "<https://api.example.com/v1/webhooks/1/store>",
+          "self": "<https://api.example.com/v1/webhooks/1/relationships/store>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+      "self": "<https://api.example.com/v1/webhooks/1>"
     }
   }
 }
@@ -6991,7 +6991,7 @@ Learn about receiving signed requests.
 
 The secret is never returned in the API. To view the secret of a webhook, open the webhook in your dashboard.
 
-curl -X "PATCH" "<https://api.lemonsqueezy.com/v1/webhooks/1>" \
+curl -X "PATCH" "<https://api.example.com/v1/webhooks/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}' \
@@ -7020,7 +7020,7 @@ Returns the updated Webhook object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+    "self": "<https://api.example.com/v1/webhooks/1>"
   },
   "data": {
     "type": "webhooks",
@@ -7043,13 +7043,13 @@ Returns the updated Webhook object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/webhooks/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/webhooks/1/relationships/store>"
+          "related": "<https://api.example.com/v1/webhooks/1/store>",
+          "self": "<https://api.example.com/v1/webhooks/1/relationships/store>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+      "self": "<https://api.example.com/v1/webhooks/1>"
     }
   }
 }
@@ -7059,7 +7059,7 @@ DELETE
 /v1/webhooks/:id
 Delete a webhook with the given ID.
 
-curl -X "DELETE" "<https://api.lemonsqueezy.com/v1/webhooks/1>" \
+curl -X "DELETE" "<https://api.example.com/v1/webhooks/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -7080,11 +7080,11 @@ Filter parameters
 store_id
 Only return webhooks belonging to the store with this ID.
 
-curl "<https://api.lemonsqueezy.com/v1/webhooks>" \
+curl "<https://api.example.com/v1/webhooks>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/webhooks?filter[store_id]=1>" \
+curl "<https://api.example.com/v1/webhooks?filter[store_id]=1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -7106,8 +7106,8 @@ Returns a paginated list of Webhook objects ordered by created_at in descending 
     "version": "1.0"
   },
   "links": {
-    "first": "<https://api.lemonsqueezy.com/v1/webhooks?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<https://api.lemonsqueezy.com/v1/webhooks?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/webhooks?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/webhooks?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": {
     "type": "webhooks",
@@ -7129,13 +7129,13 @@ Returns a paginated list of Webhook objects ordered by created_at in descending 
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/webhooks/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/webhooks/1/relationships/store>"
+          "related": "<https://api.example.com/v1/webhooks/1/store>",
+          "self": "<https://api.example.com/v1/webhooks/1/relationships/store>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/webhooks/1>"
+      "self": "<https://api.example.com/v1/webhooks/1>"
     }
   }
 }
@@ -7153,7 +7153,7 @@ You can use the License API to activate, validate or deactivate a license key ge
 The License API is a separate API from the Lemon Squeezy API and has different requirements.
 
 Requests
-All API requests must be made over HTTPS to <https://api.lemonsqueezy.com>.
+All API requests must be made over HTTPS to <https://api.example.com>.
 All requests must include the Accept: application/json header.
 POST requests should be sent with the Content-Type: application/x-www-form-urlencoded header.
 Responses
@@ -7196,7 +7196,7 @@ instance_name
 Required
 A label for the new instance to identify it in Lemon Squeezy.
 
-curl -X POST <https://api.lemonsqueezy.com/v1/licenses/activate> \
+curl -X POST <https://api.example.com/v1/licenses/activate> \
   -H "Accept: application/json" \
   -d "license_key=38b1460a-5104-4067-a91d-77b872934d51" \
   -d "instance_name=Test"
@@ -7297,7 +7297,7 @@ instance_id
 Required
 The instance ID returned when activating a license key.
 
-curl -X POST <https://api.lemonsqueezy.com/v1/licenses/deactivate> \
+curl -X POST <https://api.example.com/v1/licenses/deactivate> \
   -H "Accept: application/json" \
   -d "license_key=38b1460a-5104-4067-a91d-77b872934d51" \
   -d "instance_id=f90ec370-fd83-46a5-8bbd-44a241e78665"
@@ -7360,7 +7360,7 @@ The license key to validate.
 instance_id
 If included, validate a license key instance, otherwise validate a license key. If no instance_id is provided, the response will contain "instance": null.
 
-curl -X POST <https://api.lemonsqueezy.com/v1/licenses/validate> \
+curl -X POST <https://api.example.com/v1/licenses/validate> \
   -H "Accept: application/json" \
   -d "license_key=38b1460a-5104-4067-a91d-77b872934d51" \
   -d "instance_id=f90ec370-fd83-46a5-8bbd-44a241e78665"
@@ -7489,7 +7489,7 @@ GET
 /v1/affiliates/:id
 Retrieves the affiliate with the given ID.
 
-curl "<https://api.lemonsqueezy.com/v1/affiliates/1>" \
+curl "<https://api.example.com/v1/affiliates/1>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -7501,7 +7501,7 @@ Returns an Affiliate object.
     "version": "1.0"
   },
   "links": {
-    "self": "<https://api.lemonsqueezy.com/v1/affiliates/1>"
+    "self": "<https://api.example.com/v1/affiliates/1>"
   },
   "data": {
     "type": "affiliates",
@@ -7523,19 +7523,19 @@ Returns an Affiliate object.
     "relationships": {
       "store": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/affiliates/1/store>",
-          "self": "<https://api.lemonsqueezy.com/v1/affiliates/1/relationships/store>"
+          "related": "<https://api.example.com/v1/affiliates/1/store>",
+          "self": "<https://api.example.com/v1/affiliates/1/relationships/store>"
         }
       },
       "user": {
         "links": {
-          "related": "<https://api.lemonsqueezy.com/v1/affiliates/1/user>",
-          "self": "<https://api.lemonsqueezy.com/v1/affiliates/1/relationships/user>"
+          "related": "<https://api.example.com/v1/affiliates/1/user>",
+          "self": "<https://api.example.com/v1/affiliates/1/relationships/user>"
         }
       }
     },
     "links": {
-      "self": "<https://api.lemonsqueezy.com/v1/affiliates/1>"
+      "self": "<https://api.example.com/v1/affiliates/1>"
     }
   }
 }
@@ -7557,11 +7557,11 @@ Filter affiliates by the ID of the store they belong to.
 user_email
 Filter affiliates by user_email field.
 
-curl "<https://api.lemonsqueezy.com/v1/affiliates>" \
+curl "<https://api.example.com/v1/affiliates>" \
   -H 'Accept: application/vnd.api+json' \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
-curl "<https://api.lemonsqueezy.com/v1/affiliates?filter[user_email]=johndoe@example.com>" \
+curl "<https://api.example.com/v1/affiliates?filter[user_email]=johndoe@example.com>" \
   -H 'Accept: application/vnd.api+json'  \
   -H 'Content-Type: application/vnd.api+json' \
   -H 'Authorization: Bearer {api_key}'
@@ -7583,8 +7583,8 @@ Returns a paginated list of Affiliate objects ordered by created_at field in des
     "version": "1.0"
   },
   "links": {
-    "first": "<http://api.lemonsqueezy.com/v1/affiliates?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
-    "last": "<http://api.lemonsqueezy.com/v1/affiliates?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
+    "first": "<https://api.example.com/v1/affiliates?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>",
+    "last": "<https://api.example.com/v1/affiliates?page%5Bnumber%5D=1&page%5Bsize%5D=10&sort=-createdAt>"
   },
   "data": [
     {
@@ -7607,19 +7607,19 @@ Returns a paginated list of Affiliate objects ordered by created_at field in des
       "relationships": {
         "store": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/affiliates/1/store",
-            "self": "https://api.lemonsqueezy.com/v1/affiliates/1/relationships/store"
+            "related": "https://api.example.com/v1/affiliates/1/store",
+            "self": "https://api.example.com/v1/affiliates/1/relationships/store"
           }
         },
         "user": {
           "links": {
-            "related": "https://api.lemonsqueezy.com/v1/affiliates/1/user",
-            "self": "https://api.lemonsqueezy.com/v1/affiliates/1/relationships/user"
+            "related": "https://api.example.com/v1/affiliates/1/user",
+            "self": "https://api.example.com/v1/affiliates/1/relationships/user"
           }
         }
       },
       "links": {
-        "self": "https://api.lemonsqueezy.com/v1/affiliates/1"
+        "self": "https://api.example.com/v1/affiliates/1"
       }
     }
   ]
