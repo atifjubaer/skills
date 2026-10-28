@@ -1,5 +1,5 @@
 ---
-name: "FluentCart Developer"
+name: "fluentcart-developer"
 description: "Comprehensive knowledge base for FluentCart WordPress e-commerce plugin and theme development. Covers theme compatibility, template system, shortcodes, action/filter hooks, Elementor & Bricks integration, custom payment gateways, database models, REST API, fee systems, ghost products, subscriptions, and variations. Use this skill when building themes, plugins, or custom extensions for FluentCart."
 ---
 

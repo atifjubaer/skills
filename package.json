@@ -7,9 +7,20 @@
     "fluentcart-developer": "bin/index.js",
     "fluentcart-ai-skill": "bin/index.js"
   },
+  "files": [
+    "bin/",
+    "SKILL.md",
+    "CLAUDE.md",
+    "skills/fluentcart-developer/"
+  ],
   "scripts": {
     "build": "node copy-skills.js",
-    "prepublishOnly": "npm run build"
+    "build:server": "npm --prefix server run build",
+    "verify:server": "npm --prefix server run verify",
+    "check:skills": "node scripts/validate-skills.mjs",
+    "check:package": "node scripts/check-package.mjs",
+    "ci": "npm run check:skills && npm run check:package",
+    "prepublishOnly": "npm run ci && npm run build"
   },
   "repository": {
     "type": "git",

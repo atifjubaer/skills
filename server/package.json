@@ -1,0 +1,52 @@
+{
+  "name": "@fastr/mcp-suite",
+  "version": "1.0.0",
+  "description": "Universal MCP v2 Server Suite for FluentCart, Lemon Squeezy, and Developer Skills",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "fastr-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "smithery.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/copy-skills.mjs",
+    "verify": "node scripts/verify-stdio.mjs",
+    "start": "node dist/index.js",
+    "start:http": "node dist/http.js",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http.ts",
+    "prepublishOnly": "npm run build && npm run verify"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude-code",
+    "cursor",
+    "lemonsqueezy",
+    "fluentcart",
+    "ai-agent",
+    "smithery",
+    "mcpize"
+  ],
+  "author": "Atif Jubaer",
+  "license": "BSL-1.1",
+  "dependencies": {
+    "@modelcontextprotocol/express": "^2.0.2",
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
