@@ -346,7 +346,7 @@ add_filter('fluent_cart/validable_subscription_statuses', function($statuses, $c
 // Filter single subscription view data structure in admin panel
 add_filter('fluent_cart/subscription/view', function($subscription, $context) {
     // Append external Stripe dashboard link to subscription data payload
-    $subscription['external_url'] = 'https://dashboard.stripe.com/subscriptions/' . $subscription['vendor_subscription_id'];
+    $subscription['external_url'] = 'https://dashboard.example.com/subscriptions/' . $subscription['vendor_subscription_id'];
     return $subscription;
 }, 10, 2);
 ```
@@ -372,8 +372,8 @@ add_filter('fluent_cart/subscription/url_stripe', function($url, $context) {
     $subId = $context['vendor_subscription_id'];
     $mode = $context['payment_mode'];
     $base = ($mode === 'test')
-        ? 'https://dashboard.stripe.com/test'
-        : 'https://dashboard.stripe.com';
+        ? 'https://dashboard.example.com/test'
+        : 'https://dashboard.example.com';
     return $base . '/subscriptions/' . $subId;
 }, 10, 2);
 ```

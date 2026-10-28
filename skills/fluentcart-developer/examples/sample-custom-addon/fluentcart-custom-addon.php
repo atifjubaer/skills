@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name: FluentCart Custom Extension Starter
- * Plugin URI:  https://example.com/fluentcart-extension
  * Description: Starter boilerplate plugin for building custom FluentCart extensions, hooks, and REST endpoints.
  * Version:     1.0.0
  * Author:      Developer Team

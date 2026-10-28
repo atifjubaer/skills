@@ -1466,19 +1466,23 @@ class PaddleCheckout {
 
 // Initialize when FluentCart triggers the event
 window.addEventListener("fluent_cart_load_payments_paddle", function (e) {
- fetch(e.detail.paymentInfoUrl, {
- method: "POST",
- headers: {
- "Content-Type": "application/json",
- "X-WP-Nonce": e.detail.nonce,
- },
- credentials: 'include'
- }).then(async (response) => {
- response = await response.json();
- new PaddleCheckout(e.detail.form, e.detail.orderHandler, response, e.detail.paymentLoader).init();
- }).catch(error => {
- console.error('Failed to load Paddle payment info:', error);
- });
+  // Request the gateway payment session from FluentCart's payment info endpoint
+  var request = new XMLHttpRequest();
+  request.open("POST", e.detail.paymentInfoUrl, true);
+  request.setRequestHeader("Content-Type", "application/json");
+  request.setRequestHeader("X-WP-Nonce", e.detail.nonce);
+  request.withCredentials = true;
+
+  request.onload = function () {
+    var payload = JSON.parse(request.responseText);
+    new PaddleCheckout(e.detail.form, e.detail.orderHandler, payload, e.detail.paymentLoader).init();
+  };
+
+  request.onerror = function () {
+    console.error('Failed to load Paddle payment info:', request.statusText);
+  };
+
+  request.send();
 });```
 
 - **Comprehensive Localization**: All user-facing messages translated

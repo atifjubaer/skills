@@ -14,8 +14,8 @@
 //   - Compatibility notes, tags, permissions
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -108,23 +108,100 @@ function scanForBannedHosts(label, entries) {
 console.log('--- 0. Checking Vendor Links ---');
 scanForBannedHosts('skill folders', ['skills/fluentcart-developer', 'skills/lemonsqueezy-developer']);
 
-console.log('--- 1. Packaging Individual Skills ---');
+// Agensi flags any archive holding more than 50 files, so the marketplace build
+// is trimmed without touching the repo: runnable `examples/` stay in the repo and
+// the npm package, and each hook group ships as one consolidated reference.
+const staging = join(outDir, '.staging');
+
+function copyFolder(src, dest, skip) {
+  mkdirSync(dest, { recursive: true });
+  for (const entry of readdirSync(src, { withFileTypes: true })) {
+    if (skip.includes(entry.name)) continue;
+    const from = join(src, entry.name);
+    const to = join(dest, entry.name);
+    if (entry.isDirectory()) copyFolder(from, to, []);
+    else copyFileSync(from, to);
+  }
+}
+
+function mergeHookFiles(refsDir, pattern, output, title) {
+  const files = readdirSync(refsDir)
+    .filter(f => f.startsWith(pattern) && f.endsWith('.md'))
+    .sort();
+  if (files.length < 2) return;
+  const body = files
+    .map(f => readFileSync(join(refsDir, f), 'utf8').trim())
+    .join('\n\n---\n\n');
+  writeFileSync(join(refsDir, output), `# ${title}\n\n${body}\n`);
+  for (const f of files) rmSync(join(refsDir, f));
+}
+
+function rewriteSkillMd(file, sections) {
+  const lines = readFileSync(file, 'utf8').split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i].trim();
+    const section = sections.find(s => line === s.heading);
+    if (!section) {
+      out.push(lines[i]);
+      continue;
+    }
+    if (section.headingReplacement !== null) out.push(section.headingReplacement ?? lines[i]);
+    i += 1;
+    while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('- ['))) i += 1;
+    i -= 1;
+    if (section.replacement) out.push('', section.replacement, '');
+  }
+  writeFileSync(file, out.join('\n'));
+}
+
+function stageSkill(card) {
+  const dest = join(staging, card);
+  copyFolder(join(root, 'skills', card), dest, ['examples']);
+  const refs = join(dest, 'references');
+  mergeHookFiles(refs, 'action-hooks-', 'action-hooks-reference.md', 'FluentCart Action Hooks — Complete Reference');
+  mergeHookFiles(refs, 'filter-hooks-', 'filter-hooks-reference.md', 'FluentCart Filter Hooks — Complete Reference');
+  rewriteSkillMd(join(dest, 'SKILL.md'), [
+    {
+      heading: '#### Action Hooks (8 Modular Files)',
+      headingReplacement: '#### Action Hooks',
+      replacement:
+        '- [action-hooks-reference.md](references/action-hooks-reference.md) — Complete action hook reference: orders, subscriptions, licenses, cart & checkout, customers, products & coupons, payments & integrations, admin templates.'
+    },
+    {
+      heading: '#### Filter Hooks (6 Modular Files)',
+      headingReplacement: '#### Filter Hooks',
+      replacement:
+        '- [filter-hooks-reference.md](references/filter-hooks-reference.md) — Complete filter hook reference: settings & configuration, orders & payments, products & pricing, cart & checkout, customers & subscriptions, integrations & advanced.'
+    },
+    { heading: '#### Runnable Code Examples & Project Boilerplates (`examples/`)', headingReplacement: null, replacement: null }
+  ]);
+  return dest;
+}
+
+console.log('--- 1. Staging Marketplace Build ---');
+rmSync(staging, { recursive: true, force: true });
+const fcStage = stageSkill('fluentcart-developer');
+const lsStage = stageSkill('lemonsqueezy-developer');
+console.log(`Staged ${fcStage} and ${lsStage}`);
+
+console.log('--- 2. Packaging Individual Skills ---');
 
 // 1. FluentCart Developer (flat at root so SKILL.md is at root of archive)
 const fcZip = join(outDir, 'fluentcart-developer.zip');
-createZip(fcZip, 'flat:skills/fluentcart-developer');
+createZip(fcZip, `flat:${relative(root, fcStage)}`);
 
 // 2. Lemon Squeezy Developer (flat at root)
 const lsZip = join(outDir, 'lemonsqueezy-developer.zip');
-createZip(lsZip, 'flat:skills/lemonsqueezy-developer');
+createZip(lsZip, `flat:${relative(root, lsStage)}`);
 
-console.log('--- 2. Packaging Combined Multi-Skill Suite ---');
+console.log('--- 3. Packaging Combined Multi-Skill Suite ---');
 
 // 3. Fastr E-Commerce Suite (nested by skill name so both skills coexist)
 const suiteZip = join(outDir, 'fastr-ecommerce-suite.zip');
-createZip(suiteZip, 'nested:skills/fluentcart-developer|nested:skills/lemonsqueezy-developer');
+createZip(suiteZip, `nested:${relative(root, fcStage)}|nested:${relative(root, lsStage)}`);
 
-console.log('--- 3. Verifying Archives ---');
+console.log('--- 4. Verifying Archives ---');
 
 const pyVerify = `
 import zipfile, sys
@@ -137,13 +214,14 @@ with zipfile.ZipFile(zip_path, 'r') as z:
     print(f"  Total files : {len(names)}")
     print(f"  SKILL.md    : {skills}")
     assert len(skills) >= 1, "Missing SKILL.md in archive"
+    assert len(names) <= 50, f"Agensi flags archives with more than 50 files (found {len(names)})"
 `;
 
 for (const z of [fcZip, lsZip, suiteZip]) {
   execFileSync('python', ['-I', '-c', pyVerify, z], { cwd: root, stdio: 'inherit' });
 }
 
-console.log('--- 4. Writing Submission Metadata Sheets ---');
+console.log('--- 5. Writing Submission Metadata Sheets ---');
 
 // FluentCart Submission Sheet
 const fcSubmission = `# Agensi Skill Submission: FluentCart Developer
@@ -343,11 +421,13 @@ export async function handleWebhook(req, res) {
 
 writeFileSync(join(outDir, 'lemonsqueezy-developer-submission.md'), lsSubmission);
 
-console.log('--- 5. Re-checking Submission Copy ---');
+console.log('--- 6. Re-checking Submission Copy ---');
 scanForBannedHosts('submission sheets', [
   'marketplace/agensi/fluentcart-developer-submission.md',
   'marketplace/agensi/lemonsqueezy-developer-submission.md',
   'marketplace/agensi/fastr-ecommerce-suite-submission.md'
 ]);
+
+rmSync(staging, { recursive: true, force: true });
 
 console.log('Packaging and submission sheets complete in marketplace/agensi/');

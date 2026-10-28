@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name: FluentCart Custom Payment Gateway Example
- * Plugin URI: https://github.com/atifjubaer/skills
  * Description: Production-ready starter template for creating a custom FluentCart payment gateway extension.
  * Version: 1.0.0
  * Author: Fastrsoft
