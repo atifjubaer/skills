@@ -8,6 +8,13 @@
       "skills": [
         "fluentcart-developer"
       ]
+    },
+    {
+      "title": "SaaS Billing & Payments",
+      "description": "Skills and MCP tools for Lemon Squeezy subscriptions, checkouts, and licensing.",
+      "skills": [
+        "lemonsqueezy-developer"
+      ]
     }
   ]
 }
