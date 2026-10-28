@@ -2,19 +2,35 @@ import crypto from 'node:crypto';
 
 export type Tier = 'core' | 'pro';
 
+/** The two Playing Cards. A licence entitles a session to one or both. */
+export type CardId = 'fluentcart' | 'lemonsqueezy';
+
+const ALL_CARDS: readonly CardId[] = ['fluentcart', 'lemonsqueezy'];
+
 export interface AuthContext {
   tier: Tier;
+  /** Cards whose Pro tools this session may register. Empty on a core session. */
+  cards: CardId[];
   userId?: string;
   source: 'stdio' | 'lemonsqueezy' | 'mcpize' | 'agensi' | 'none';
   /** Human-readable explanation, surfaced by `suite_get_pro_info` and logs. */
   reason: string;
 }
 
+export function hasCard(auth: AuthContext, card: CardId): boolean {
+  return auth.cards.includes(card);
+}
+
+/** One card is enough to be a paid session; `core` means no cards at all. */
+function tierFor(cards: CardId[]): Tier {
+  return cards.length > 0 ? 'pro' : 'core';
+}
+
 const LS_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
 const LICENSE_CACHE_TTL_MS = 10 * 60 * 1000;
 
 /** token -> resolution, so a busy client does not hit Lemon Squeezy on every request. */
-const licenseCache = new Map<string, { tier: Tier; expiresAt: number }>();
+const licenseCache = new Map<string, { cards: CardId[]; expiresAt: number }>();
 
 /** Unauthenticated callers can send arbitrary tokens, so the cache is bounded. */
 const LICENSE_CACHE_MAX = 5000;
@@ -25,13 +41,40 @@ const MAX_INFLIGHT_VALIDATIONS = 64;
 
 let inFlightValidations = 0;
 
-function cacheResolution(token: string, tier: Tier, ttlMs: number): void {
+function cacheResolution(token: string, cards: CardId[], ttlMs: number): void {
   if (licenseCache.size >= LICENSE_CACHE_MAX) {
     // Map iteration is insertion-ordered, so the first key is the oldest entry.
     const oldest = licenseCache.keys().next().value;
     if (oldest !== undefined) licenseCache.delete(oldest);
   }
-  licenseCache.set(token, { tier, expiresAt: Date.now() + ttlMs });
+  licenseCache.set(token, { cards: [...cards], expiresAt: Date.now() + ttlMs });
+}
+
+/**
+ * Which cards a Lemon Squeezy product grants.
+ *
+ * Each card is its own product, so a licence has to be resolved to the card it
+ * paid for — otherwise a $12 Card 1 key would unlock Card 2's Pro tools too.
+ * With no `LS_PRODUCT_*` variables configured the suite behaves as it did when
+ * there was a single product: any valid licence unlocks everything.
+ */
+function cardsForProduct(productId: string | number | undefined): { cards: CardId[]; reason: string } {
+  const mapping: Array<{ env: string; cards: CardId[] }> = [
+    { env: 'LS_PRODUCT_ALL_ACCESS', cards: [...ALL_CARDS] },
+    { env: 'LS_PRODUCT_FLUENTCART', cards: ['fluentcart'] },
+    { env: 'LS_PRODUCT_LEMONSQUEEZY', cards: ['lemonsqueezy'] }
+  ];
+  const configured = mapping.filter((entry) => process.env[entry.env]?.trim());
+  if (configured.length === 0) {
+    return { cards: [...ALL_CARDS], reason: 'no LS_PRODUCT_* mapping configured: licence unlocks every card' };
+  }
+  const id = String(productId ?? '');
+  for (const entry of configured) {
+    if (id && id === process.env[entry.env]!.trim()) {
+      return { cards: [...entry.cards], reason: `licence product ${id} maps to ${entry.cards.join('+')}` };
+    }
+  }
+  return { cards: [], reason: `licence product ${id || 'unknown'} is not mapped to a card` };
 }
 
 function timingSafeEqualStrings(a: string, b: string): boolean {
@@ -56,10 +99,39 @@ function bearerToken(authorization?: string | null): string {
  */
 export function resolveLocalAuth(): AuthContext {
   const key = process.env.PRO_LICENSE_KEY?.trim();
-  if (key && key.length >= 16) {
-    return { tier: 'pro', source: 'stdio', reason: 'PRO_LICENSE_KEY present in environment' };
+  if (!key || key.length < 16) {
+    return { tier: 'core', cards: [], source: 'stdio', reason: 'stdio session without PRO_LICENSE_KEY' };
   }
-  return { tier: 'core', source: 'stdio', reason: 'stdio session without PRO_LICENSE_KEY' };
+
+  // `PRO_CARDS` narrows the local key to specific cards. It exists so a card's
+  // tier can be exercised without talking to Lemon Squeezy; like PRO_LICENSE_KEY
+  // itself it is a convenience, not a boundary. An unrecognised value fails closed.
+  const requested = process.env.PRO_CARDS?.trim();
+  if (requested) {
+    const wanted = requested.split(',').map((entry) => entry.trim().toLowerCase()).filter(Boolean);
+    const cards = ALL_CARDS.filter((card) => wanted.includes(card));
+    if (cards.length === 0) {
+      return {
+        tier: 'core',
+        cards: [],
+        source: 'stdio',
+        reason: `PRO_CARDS "${requested}" names no known card (${ALL_CARDS.join(', ')})`
+      };
+    }
+    return {
+      tier: 'pro',
+      cards,
+      source: 'stdio',
+      reason: `PRO_LICENSE_KEY present; PRO_CARDS narrowed the session to ${cards.join('+')}`
+    };
+  }
+
+  return {
+    tier: 'pro',
+    cards: [...ALL_CARDS],
+    source: 'stdio',
+    reason: 'PRO_LICENSE_KEY present in environment'
+  };
 }
 
 /**
@@ -70,9 +142,10 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
   const cached = licenseCache.get(licenseKey);
   if (cached && cached.expiresAt > Date.now()) {
     return {
-      tier: cached.tier,
+      tier: tierFor(cached.cards),
+      cards: [...cached.cards],
       source: 'lemonsqueezy',
-      reason: cached.tier === 'pro' ? 'license key valid (cached)' : 'license key invalid (cached)'
+      reason: cached.cards.length > 0 ? 'license key valid (cached)' : 'license key invalid (cached)'
     };
   }
 
@@ -81,6 +154,7 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
   if (inFlightValidations >= MAX_INFLIGHT_VALIDATIONS) {
     return {
       tier: 'core',
+      cards: [],
       source: 'lemonsqueezy',
       reason: 'license validation concurrency limit reached'
     };
@@ -98,25 +172,35 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
     const data = (await res.json()) as {
       valid?: boolean;
       license_key?: { status?: string; store_id?: number };
+      meta?: { product_id?: number };
     };
 
     const expectedStore = process.env.LS_STORE_ID;
     const storeMatches = !expectedStore || String(data.license_key?.store_id ?? '') === String(expectedStore);
     const active = data.valid === true && data.license_key?.status === 'active' && storeMatches;
-    const tier: Tier = active ? 'pro' : 'core';
 
-    cacheResolution(licenseKey, tier, LICENSE_CACHE_TTL_MS);
-    return {
-      tier,
-      source: 'lemonsqueezy',
-      reason: active ? 'active Lemon Squeezy license' : 'license inactive, unknown, or wrong store'
-    };
+    if (!active) {
+      cacheResolution(licenseKey, [], LICENSE_CACHE_TTL_MS);
+      return {
+        tier: 'core',
+        cards: [],
+        source: 'lemonsqueezy',
+        reason: 'license inactive, unknown, or wrong store'
+      };
+    }
+
+    // A valid key is not enough: it has to resolve to the card it paid for,
+    // otherwise a Card 1 key would unlock Card 2's Pro tools.
+    const { cards, reason } = cardsForProduct(data.meta?.product_id);
+    cacheResolution(licenseKey, cards, LICENSE_CACHE_TTL_MS);
+    return { tier: tierFor(cards), cards, source: 'lemonsqueezy', reason };
   } catch (err: any) {
     // Fail closed, but remember the failure for a moment: an outage must not
     // turn every request from every client into another outbound attempt.
-    cacheResolution(licenseKey, 'core', NEGATIVE_CACHE_TTL_MS);
+    cacheResolution(licenseKey, [], NEGATIVE_CACHE_TTL_MS);
     return {
       tier: 'core',
+      cards: [],
       source: 'lemonsqueezy',
       reason: `license validation unavailable: ${err.message}`
     };
@@ -140,7 +224,7 @@ export async function authenticateRequest(request?: Request): Promise<AuthContex
   const token = bearerToken(request?.headers.get('authorization'));
 
   if (!token) {
-    return { tier: 'core', source: 'none', reason: 'no Authorization header' };
+    return { tier: 'core', cards: [], source: 'none', reason: 'no Authorization header' };
   }
 
   const allowlist = (process.env.VALID_LICENSE_KEYS || '')
@@ -154,17 +238,20 @@ export async function authenticateRequest(request?: Request): Promise<AuthContex
     allowlisted = timingSafeEqualStrings(token, candidate) || allowlisted;
   }
   if (allowlisted) {
-    return { tier: 'pro', source: 'lemonsqueezy', reason: 'token in VALID_LICENSE_KEYS allowlist' };
+    return { tier: 'pro', cards: [...ALL_CARDS], source: 'lemonsqueezy', reason: 'token in VALID_LICENSE_KEYS allowlist' };
   }
 
   const mcpizeSecret = process.env.MCPIZE_GATEWAY_SECRET?.trim();
   if (mcpizeSecret && timingSafeEqualStrings(token, mcpizeSecret)) {
-    return { tier: 'pro', source: 'mcpize', reason: 'MCPize gateway secret matched' };
+    // One secret per gateway: a marketplace token unlocks the whole suite.
+    // Per-card gateway entitlement would need the marketplace to forward which
+    // product the buyer owns, which none of them do today.
+    return { tier: 'pro', cards: [...ALL_CARDS], source: 'mcpize', reason: 'MCPize gateway secret matched' };
   }
 
   const agensiSecret = process.env.AGENSI_GATEWAY_SECRET?.trim();
   if (agensiSecret && timingSafeEqualStrings(token, agensiSecret)) {
-    return { tier: 'pro', source: 'agensi', reason: 'Agensi gateway secret matched' };
+    return { tier: 'pro', cards: [...ALL_CARDS], source: 'agensi', reason: 'Agensi gateway secret matched' };
   }
 
   return validateLicenseKey(token);

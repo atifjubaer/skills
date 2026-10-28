@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import type { AuthContext } from '../../auth.js';
+import { hasCard, type AuthContext } from '../../auth.js';
 import { skillRefs } from '../../paths.js';
 
 export function registerFluentCartTools(server: McpServer, auth: AuthContext): void {
@@ -106,7 +106,7 @@ export function registerFluentCartTools(server: McpServer, auth: AuthContext): v
   // Registration — not just a description — is what the paywall controls:
   // a core-tier client never sees these schemas, let alone calls them.
   // ==========================================
-  if (auth.tier !== 'pro') return;
+  if (!hasCard(auth, 'fluentcart')) return;
 
   server.registerTool(
     'fc_generate_payment_gateway_boilerplate',
