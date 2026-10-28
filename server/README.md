@@ -6,6 +6,33 @@ Protocol: MCP `2026-07-28` (stateless, per-request `_meta` envelope) with a `202
 
 ## Run it
 
+### From npm
+
+Published as [`fastr-mcp-suite`](https://www.npmjs.com/package/fastr-mcp-suite) — Node 22+, no clone and no build:
+
+```bash
+npx -y fastr-mcp-suite                             # stdio, core tools
+PRO_LICENSE_KEY=your-key npx -y fastr-mcp-suite    # stdio, Pro tools unlocked
+```
+
+Client config (Claude Code / Cursor / Windsurf):
+
+```json
+{
+  "mcpServers": {
+    "fastr-suite": {
+      "command": "npx",
+      "args": ["-y", "fastr-mcp-suite"],
+      "env": { "PRO_LICENSE_KEY": "optional-license-key" }
+    }
+  }
+}
+```
+
+The npm package ships the stdio entry point only. The Streamable HTTP transport needs the source tree or the Docker image.
+
+### From source
+
 ```bash
 npm install
 npm run build        # tsc + bundles both skill folders into dist/skills
@@ -14,7 +41,7 @@ node dist/index.js   # stdio
 node dist/http.js    # Streamable HTTP on :8080 (POST /mcp, GET /health)
 ```
 
-Claude Code / Cursor / Windsurf:
+Point a client at the built file:
 
 ```json
 {

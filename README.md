@@ -38,6 +38,8 @@ Skills tell the model what to do. The MCP server in [`server/`](./server/README.
 Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base.
 
 ```bash
+npx -y fastr-mcp-suite    # stdio: no install, no build — published as fastr-mcp-suite
+
 cd server && npm install && npm run build
 node dist/index.js        # stdio: Claude Code, Cursor, Windsurf, Smithery CLI
 node dist/http.js         # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
