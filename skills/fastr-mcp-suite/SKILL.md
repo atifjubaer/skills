@@ -104,7 +104,7 @@ cd server && npm run build && node dist/http.js   # http://0.0.0.0:8080/mcp
 - `GET /health` — liveness probe
 - `PORT` — override the default `8080`
 
-Send the license key per request: `Authorization: Bearer <license-key>`. A hosted deployment also accepts marketplace gateway secrets (`MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`) and an operator allowlist (`VALID_LICENSE_KEYS`, comma-separated).
+Send the license key per request: `Authorization: Bearer <license-key>`. When the server runs behind a marketplace gateway that authenticates the call itself, the gateway's credential occupies `Authorization` and the license key goes in `X-MCP-License-Key` — the server reads that header first, then falls back to `Authorization`. A hosted deployment also accepts marketplace gateway secrets (`MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`) and an operator allowlist (`VALID_LICENSE_KEYS`, comma-separated).
 
 ---
 
@@ -238,6 +238,17 @@ How the key is presented depends on the transport:
 
 - **stdio** — `PRO_LICENSE_KEY` in the environment.
 - **HTTP** — `Authorization: Bearer <key>` on each request.
+- **Behind MCPize** — MCPize authenticates every hosted call at its edge and forwards its
+  own credential in `Authorization`, so the license key has to ride alongside it in
+  `X-MCP-License-Key`. Both headers are required; with only the MCPize credential the
+  session stays `core` and `suite_get_pro_info` reports
+  `gateway session authenticated, but no X-MCP-License-Key was supplied`.
+
+  ```bash
+  claude mcp add --transport http fastr-mcp-suite https://fastr-mcp-suite.mcpize.run \
+    --header "Authorization: Bearer <mcpize-token>" \
+    --header "X-MCP-License-Key: <lemonsqueezy-key>"
+  ```
 
 Validation results are cached for 10 minutes. A revoked key therefore keeps working for up to 10 minutes, and a newly purchased key is picked up immediately on the next cache miss.
 
@@ -249,7 +260,7 @@ Validation results are cached for 10 minutes. A revoked key therefore keeps work
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| Pro tool "not found" | Pro tools are never registered on a locked session — the schema is not sent to the client | `suite_get_pro_info` to confirm the tier, then check `PRO_LICENSE_KEY` / the Bearer header |
+| Pro tool "not found" | Pro tools are never registered on a locked session — the schema is not sent to the client | `suite_get_pro_info` to confirm the tier, then check `PRO_LICENSE_KEY` / the `X-MCP-License-Key` or Bearer header |
 | Key is valid but only some cards unlock | The key's `meta.product_id` maps to a single card | Expected. Use an All-Access key for both |
 | `license inactive, unknown, or wrong store` | Key revoked, expired, or from a different store | `LS_STORE_ID` overrides the expected store; the default is the FastrSoft store |
 | `license validation unavailable` | Lemon Squeezy API unreachable or timed out (5 s) | Fails closed to core by design; retry, and check outbound network |
