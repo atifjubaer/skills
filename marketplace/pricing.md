@@ -1,8 +1,8 @@
 # Pricing
 
-Three SKUs, sold at the same gross price on every channel. A licence is a Lemon
-Squeezy key; the server resolves it over HTTP (`Authorization: Bearer <key>`) or
-from `PRO_LICENSE_KEY` on stdio.
+Three SKUs, sold through one checkout: Lemon Squeezy. Every other channel is free
+distribution. A licence is a Lemon Squeezy key; the server resolves it over HTTP
+(`Authorization: Bearer <key>`) or from `PRO_LICENSE_KEY` on stdio.
 
 ## Products
 
@@ -32,34 +32,49 @@ Two cards exist to give a single-framework developer a cheaper entry point and t
 make the upsell visible inside the product (`suite_get_pro_info` names the tools
 the current key does not unlock).
 
-## Channel parity
+## One checkout, free distribution everywhere else
 
-Gross price is identical everywhere; what differs is the platform's cut. Verified
-against each platform's own docs on 2026-10-28:
+Lemon Squeezy is the only payment gateway. Every other channel is free
+distribution: the product is identical, and a licence is always a Lemon Squeezy
+key.
 
-| Channel | Gross | Platform fee | Net before tax | Notes |
-| --- | --- | --- | --- | --- |
-| Lemon Squeezy (direct) | $19 | merchant-of-record fee | _unverified_ | also issues the licence keys |
-| MCPize | $19 | 20% (80/20 split) | $15.20 | paid traffic is proxied through their gateway (`MCPIZE_GATEWAY_SECRET`); hosting Free / $9 / $29 / $79 |
-| Smithery | — | none — no monetization program | $0 | proxy, API, CLI and accounts shut down **2026-10-31**; free discovery only |
-| Apify | $19 | 20% + platform usage costs | _varies_ | pay-per-event only; needs `ACTOR_WEB_SERVER_PORT` (4321) and Standby `webServerMcpPath: /mcp` |
-| Agensi | per skill pack, not the $19 server | 30% (70/30 split) | depends on pack price | skills only; Stripe Connect pays in 2–7 days |
+| Channel | Role | Price to buyer | Platform cut |
+| --- | --- | --- | --- |
+| Lemon Squeezy | the only checkout; issues every licence key | $12 / $12 / $19 per month | merchant-of-record fee only |
+| MCPize | hosting and discovery | free | none |
+| Smithery | public registry | free | none (sunset **2026-10-31**) |
+| Apify | discovery | free | none |
+| Agensi | skill-pack discovery | free | none |
+| npm | `fastr-mcp-suite` binary | free | none |
+| GitHub | skills source and issues | free | none |
+
+Why one checkout: a single merchant of record, one place for tax, refunds, dunning
+and cancellation, and one entitlement source. No split payouts, no per-platform
+billing, and `meta.product_id` from one store is the only thing the server has to
+resolve.
+
+The trade-off: a buyer who finds the suite on MCPize leaves the listing, subscribes
+on Lemon Squeezy, then pastes the key back as the `LICENSE_KEY` credential.
+MCPize already forwards that credential as the `Authorization` header, so the flow
+works with no code change. Expect drop-off at that hand-off — that is the cost of
+a single checkout.
 
 Two consequences for the build:
 
-- **MCPize is both the host and the only channel with real billing.** Railway
-  sign-up is closed, so the suite deploys to MCPize directly (`runtime:
-  typescript` in `mcpize.yaml`; MCPize builds and runs the server itself, so
-  `server/Dockerfile` is only for local runs and image-based hosts). MCPize
-  revenue bypasses the Lemon Squeezy checkout — Lemon Squeezy stays the
-  direct-sales and licence-issuing channel, and direct buyers paste their key as
-  the `LICENSE_KEY` credential on MCPize.
-- **Apify needs a code change before it can host this image**: the server listens
-  on `PORT || 8080`, Apify requires `ACTOR_WEB_SERVER_PORT` (default 4321) and a
-  readiness probe on `GET /`. Railway injects `PORT`, so it needs nothing.
+- **MCPize is hosting, not billing.** Railway sign-up is closed, so the suite
+  deploys to MCPize directly (`runtime: typescript` in `mcpize.yaml`; MCPize
+  builds and runs the server itself, so `server/Dockerfile` is only for local runs
+  and image-based hosts). `MCPIZE_GATEWAY_SECRET` stays in `server/src/auth.ts` as
+  a dormant code path: with no paid listing MCPize has no token to forward, so
+  every MCPize request arrives keyless and resolves to core unless the buyer pastes
+  a Lemon Squeezy key.
+- **Apify is discovery, not a checkout.** If it is listed at all it is free, and it
+  still needs the `ACTOR_WEB_SERVER_PORT` (4321) and `webServerMcpPath: /mcp`
+  wiring before the image runs there.
 
-Do not publish a number in this table from memory. Each one gets filled from the
-platform's own docs before the listing goes live.
+Do not publish a fee number in this table from memory. The Lemon Squeezy
+merchant-of-record rate changes by plan and region — read it from the dashboard
+before quoting a net figure anywhere.
 
 ## Per-card entitlements in code
 
@@ -88,19 +103,12 @@ default for a self-hosted or white-label deployment.
 Consequence: a card key unlocks only its own card. `4531…`-style unmapped
 products (e.g. the existing Nexus Radar product) resolve to core.
 
-## Open question — what Agensi sells
+## Agensi is a free listing
+
+Resolved: the skill packs publish at $0.
 
 The skills (`skills/fluentcart-developer`, `skills/lemonsqueezy-developer`) are
-MIT and public on GitHub, and the README says they stay that way for discovery and
-`skills.sh` indexing. Agensi sells skill packs, which means listing MIT content
-someone can clone for free.
-
-Three ways to resolve it, and this needs a decision before the Agensi listing:
-
-- **Free listing** — publish at $0 as discovery, converting to the paid MCP server.
-  Costs nothing and cannot cannibalise anything.
-- **Convenience bundle** — charge a small one-time price for the packaged ZIP. Allowed
-  under MIT, but a buyer can get the same files from the repo.
-- **Paid skills** — move the skills off MIT and behind a licence. Contradicts the
-  current README, the `LICENSE` file and the "MIT stays public" claim, so it is a
-  positioning change, not a pricing tweak.
+MIT and public on GitHub, so charging for the ZIP would sell files a buyer can
+clone. A convenience bundle would also undercut the positioning that the paid
+product is the *tools*, not the documentation. Agensi is discovery for the Lemon
+Squeezy checkout and nothing more.
