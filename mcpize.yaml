@@ -69,9 +69,9 @@ secrets:
     required: false
     description: Same mechanism for the Agensi gateway.
 
-# Subscriber credentials: the buyer's own Lemon Squeezy licence key, forwarded to
-# the server as the Authorization header it already reads. Optional — without it
-# the session runs the free core tools.
+# Subscriber credentials: the buyer's own Lemon Squeezy licence key, forwarded in
+# its own header alongside MCPize's credential. Optional — without it the session
+# runs the free core tools.
 credentials_mode: per_user
 credentials:
   - name: LICENSE_KEY
@@ -79,4 +79,9 @@ credentials:
     description: Your Lemon Squeezy licence key. Unlocks the Pro tools for the cards you own; leave empty to use the free tools.
     placeholder: 00000000-0000-0000-0000-000000000000
     mapping:
-      header: Authorization
+      # Must not be Authorization: MCPize validates that header as its own
+      # credential at the edge and rejects anything else with 401 before the
+      # request reaches the container (measured 2026-10-29). The licence key
+      # rides in its own header, next to the MCPize credential, which is what
+      # authenticateRequest reads first.
+      header: X-MCP-License-Key
