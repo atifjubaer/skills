@@ -36,7 +36,7 @@ for (const file of shipped) {
   }
 }
 
-const required = ['package.json', 'bin/index.js', 'SKILL.md', 'skills/fluentcart-developer/SKILL.md'];
+const required = ['package.json', 'bin/index.js', 'skills/fluentcart-developer/SKILL.md'];
 for (const file of required) {
   if (!shipped.includes(file)) errors.push(`${file}: required file is missing from the package`);
 }

@@ -109,11 +109,12 @@ for (const folder of skillFolders) {
   if (!listed.has(folder.name)) warn(`skills/${folder.name} exists but is not listed in skills.sh.json`);
 }
 
-// ---------------------------------------------------- published package entry
-const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+// ---------------------------------------------------- no root SKILL.md allowed
+// `npx skills add` treats a repository with a root SKILL.md as a single-skill
+// package and never walks `skills/`, which hides every other skill in the repo.
 const rootSkill = path.join(root, 'SKILL.md');
 if (fs.existsSync(rootSkill)) {
-  validateSkillFile(rootSkill, packageJson.name, 'root SKILL.md');
+  fail('root SKILL.md exists; it makes `npx skills add` see only one skill. Delete it so skills/ is scanned.');
 }
 
 // ---------------------------------------------------------------------- report
