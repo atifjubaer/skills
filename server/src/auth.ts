@@ -99,6 +99,34 @@ function bearerToken(authorization?: string | null): string {
   return authorization.replace(/^Bearer\s+/i, '').trim();
 }
 
+/** Three dot-separated segments. Lemon Squeezy keys never look like this. */
+const JWT_SHAPE = /^[\w-]+\.[\w-]+\.[\w-]+$/;
+
+interface Credential {
+  token: string;
+  /** Which header the token came from, for the `reason` string and for logs. */
+  header: 'x-mcp-license-key' | 'authorization' | 'none';
+}
+
+/**
+ * Pick the header that carries a *billing* credential.
+ *
+ * A marketplace gateway authenticates the call at its edge with its own
+ * credential and forwards it in `Authorization`; the buyer's Lemon Squeezy key
+ * rides alongside in `X-MCP-License-Key` — the header MCPize's own install
+ * snippet emits. So the licence header wins when present, and `Authorization`
+ * is the self-hosted / stdio path.
+ */
+function readCredential(request?: Request): Credential {
+  const explicit = request?.headers.get('x-mcp-license-key');
+  if (explicit?.trim()) return { token: bearerToken(explicit), header: 'x-mcp-license-key' };
+
+  const authorization = request?.headers.get('authorization');
+  if (authorization?.trim()) return { token: bearerToken(authorization), header: 'authorization' };
+
+  return { token: '', header: 'none' };
+}
+
 /**
  * Local (stdio) tier resolution.
  *
@@ -229,14 +257,15 @@ async function validateLicenseKey(licenseKey: string): Promise<AuthContext> {
  * 3. Agensi gateway token, checked against `AGENSI_GATEWAY_SECRET`.
  * 4. Everything else is treated as a Lemon Squeezy licence key and validated live.
  *
- * There is deliberately no prefix-based trust: a client cannot mint itself Pro
- * by sending a string that starts with `ls_live_`.
+ * The credential is read from `X-MCP-License-Key` first, then `Authorization`
+ * (see `readCredential`). There is deliberately no prefix-based trust: a client
+ * cannot mint itself Pro by sending a string that starts with `ls_live_`.
  */
 export async function authenticateRequest(request?: Request): Promise<AuthContext> {
-  const token = bearerToken(request?.headers.get('authorization'));
+  const { token, header } = readCredential(request);
 
   if (!token) {
-    return { tier: 'core', cards: [], source: 'none', reason: 'no Authorization header' };
+    return { tier: 'core', cards: [], source: 'none', reason: 'no X-MCP-License-Key or Authorization header' };
   }
 
   const allowlist = (process.env.VALID_LICENSE_KEYS || '')
@@ -266,5 +295,20 @@ export async function authenticateRequest(request?: Request): Promise<AuthContex
     return { tier: 'pro', cards: [...ALL_CARDS], source: 'agensi', reason: 'Agensi gateway secret matched' };
   }
 
-  return validateLicenseKey(token);
+  // A gateway credential is not a billing credential. Validating it upstream
+  // would be a guaranteed miss and one outbound request per client, so report
+  // the missing licence instead of guessing at one.
+  if (header === 'authorization' && JWT_SHAPE.test(token)) {
+    return {
+      tier: 'core',
+      cards: [],
+      source: 'none',
+      reason: 'gateway session authenticated, but no X-MCP-License-Key was supplied'
+    };
+  }
+
+  const resolved = await validateLicenseKey(token);
+  // Name the header in the reason so an operator can tell a self-hosted key
+  // from one forwarded by a marketplace gateway without reading the logs.
+  return header === 'x-mcp-license-key' ? { ...resolved, reason: `${resolved.reason} (via X-MCP-License-Key)` } : resolved;
 }

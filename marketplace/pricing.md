@@ -57,8 +57,9 @@ The trade-off: a buyer who finds the suite on MCPize leaves the listing, subscri
 on Lemon Squeezy, then pastes the key back into their MCPize client config. Expect
 drop-off at that hand-off — that is the cost of a single checkout.
 
-That hand-off does not work today: MCPize rejects a Lemon Squeezy key at its edge
-before the container ever sees it. See "MCPize requires its own credential" below.
+The hand-off needs two headers, not one: MCPize authenticates the call at its own
+edge, so the Lemon Squeezy key rides in `X-MCP-License-Key` alongside MCPize's
+credential. See "MCPize requires its own credential" below.
 
 Two consequences for the build:
 
@@ -81,44 +82,55 @@ Probed against the live endpoint on **2026-10-29**:
 
 | Request | Response |
 | --- | --- |
-| no auth header | `Authentication required for hosted servers. Please sign in to MCPize.` |
-| `Authorization: Bearer <junk>` | `Valid MCPize authentication required for hosted servers.` |
-| `X-MCP-License-Key: <junk>` | `Authentication required for hosted servers. Please sign in to MCPize.` |
+| no auth header | 401 `Authentication required for hosted servers. Please sign in to MCPize.` |
+| `Authorization: Bearer <junk>` | 401 `Valid MCPize authentication required for hosted servers.` |
+| `Authorization: Bearer <MCPize session token>` | 200 — `initialize` reaches the container |
+| `X-MCP-License-Key: <MCPize session token>`, alone | 401, same as no header |
 
-Three things follow.
+Four things follow.
 
 1. **A free listing is free of billing, not of identity.** `mcpize publish --free`
    removed the payment requirement. MCPize still demands an MCPize-issued
    credential before it forwards anything to the container.
-2. **A Lemon Squeezy key sent as `Authorization: Bearer <key>` is parsed by MCPize
-   as an MCPize key.** It fails at the edge and never reaches `server/src/http.ts`,
-   so the "buy on Lemon Squeezy, paste the key back" flow does not work.
-3. **The install snippet MCPize generates does not match the server.** It emits:
+2. **A Lemon Squeezy key cannot be the only credential.** Sent as
+   `Authorization: Bearer <key>` it is parsed by MCPize as an MCPize credential,
+   fails at the edge, and never reaches `server/src/http.ts`.
+3. **MCPize forwards custom headers**, so the licence key can ride alongside
+   MCPize's own credential. Verified against the deployed server by sending both
+   headers and reading `suite_get_pro_info` back:
+
+   | Headers sent | `suite_get_pro_info.reason` |
+   | --- | --- |
+   | `Authorization` only | `gateway session authenticated, but no X-MCP-License-Key was supplied` |
+   | `Authorization` + `X-MCP-License-Key: <junk>` | `license key invalid (cached) (via X-MCP-License-Key)` |
+
+   The second row is the point: the junk key reached `authenticateRequest` and was
+   validated against Lemon Squeezy, which proves the header survives the gateway.
+   A real licence key therefore unlocks its card on the hosted path.
+4. **The snippet MCPize generates is not enough on its own.** It emits:
 
    ```bash
    claude mcp add --transport http fastr-mcp-suite https://fastr-mcp-suite.mcpize.run \
      --header "X-MCP-License-Key: <value>"
    ```
 
-   but `authenticateRequest` reads only `authorization`:
+   With no `Authorization` header the edge answers 401, so that config never
+   connects. The working config is two headers:
 
-   ```ts
-   const token = bearerToken(request?.headers.get('authorization'));
-   if (!token) return { tier: 'core', cards: [], source: 'none', reason: 'no Authorization header' };
+   ```bash
+   claude mcp add --transport http fastr-mcp-suite https://fastr-mcp-suite.mcpize.run \
+     --header "Authorization: Bearer <mcpize-token>" \
+     --header "X-MCP-License-Key: <lemonsqueezy-key>"
    ```
 
-   and never looks at `x-mcp-license-key`.
+`authenticateRequest` reads `X-MCP-License-Key` first and falls back to
+`Authorization`. A JWT-shaped token in `Authorization` is treated as a gateway
+credential rather than a licence, so it is never sent to Lemon Squeezy as a
+validation attempt.
 
-The likely outcome, unverified: the hosted listing serves the 5 core tools to every
-authenticated MCPize client and the 3 Pro tools to nobody. Do not quote the hosted
-path as an unlock until it is tested with a real MCPize account token and the
-header that actually arrives at the container is recorded. The fix is a fallback
-read for that header in `authenticateRequest`, added only once the header name is
-confirmed on the wire.
-
-`MCPIZE_GATEWAY_SECRET` is not that fix. It compares one shared string and grants
-both cards to whoever presents it, so it can only ever prove "this request came
-through the gateway", never which card the buyer paid for.
+`MCPIZE_GATEWAY_SECRET` is not part of this flow. It compares one shared string and
+grants both cards to whoever presents it, so it can only ever prove "this request
+came through the gateway", never which card the buyer paid for.
 
 ## Per-card entitlements in code
 
