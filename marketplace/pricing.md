@@ -54,20 +54,19 @@ billing, and `meta.product_id` from one store is the only thing the server has t
 resolve.
 
 The trade-off: a buyer who finds the suite on MCPize leaves the listing, subscribes
-on Lemon Squeezy, then pastes the key back as the `LICENSE_KEY` credential.
-MCPize already forwards that credential as the `Authorization` header, so the flow
-works with no code change. Expect drop-off at that hand-off — that is the cost of
-a single checkout.
+on Lemon Squeezy, then pastes the key back into their MCPize client config. Expect
+drop-off at that hand-off — that is the cost of a single checkout.
+
+That hand-off does not work today: MCPize rejects a Lemon Squeezy key at its edge
+before the container ever sees it. See "MCPize requires its own credential" below.
 
 Two consequences for the build:
 
-- **MCPize is hosting, not billing.** Railway sign-up is closed, so the suite
-  deploys to MCPize directly (`runtime: typescript` in `mcpize.yaml`; MCPize
-  builds and runs the server itself, so `server/Dockerfile` is only for local runs
-  and image-based hosts). `MCPIZE_GATEWAY_SECRET` stays in `server/src/auth.ts` as
-  a dormant code path: with no paid listing MCPize has no token to forward, so
-  every MCPize request arrives keyless and resolves to core unless the buyer pastes
-  a Lemon Squeezy key.
+- **MCPize is hosting and identity, not billing.** Railway sign-up is closed, so
+  the suite deploys to MCPize directly (`runtime: typescript` in `mcpize.yaml`;
+  MCPize builds and runs the server itself, so `server/Dockerfile` is only for
+  local runs and image-based hosts). Publishing `--free` removed the payment gate,
+  not MCPize's own access gate — see the next section.
 - **Apify is discovery, not a checkout.** If it is listed at all it is free, and it
   still needs the `ACTOR_WEB_SERVER_PORT` (4321) and `webServerMcpPath: /mcp`
   wiring before the image runs there.
@@ -75,6 +74,51 @@ Two consequences for the build:
 Do not publish a fee number in this table from memory. The Lemon Squeezy
 merchant-of-record rate changes by plan and region — read it from the dashboard
 before quoting a net figure anywhere.
+
+## MCPize requires its own credential
+
+Probed against the live endpoint on **2026-10-29**:
+
+| Request | Response |
+| --- | --- |
+| no auth header | `Authentication required for hosted servers. Please sign in to MCPize.` |
+| `Authorization: Bearer <junk>` | `Valid MCPize authentication required for hosted servers.` |
+| `X-MCP-License-Key: <junk>` | `Authentication required for hosted servers. Please sign in to MCPize.` |
+
+Three things follow.
+
+1. **A free listing is free of billing, not of identity.** `mcpize publish --free`
+   removed the payment requirement. MCPize still demands an MCPize-issued
+   credential before it forwards anything to the container.
+2. **A Lemon Squeezy key sent as `Authorization: Bearer <key>` is parsed by MCPize
+   as an MCPize key.** It fails at the edge and never reaches `server/src/http.ts`,
+   so the "buy on Lemon Squeezy, paste the key back" flow does not work.
+3. **The install snippet MCPize generates does not match the server.** It emits:
+
+   ```bash
+   claude mcp add --transport http fastr-mcp-suite https://fastr-mcp-suite.mcpize.run \
+     --header "X-MCP-License-Key: <value>"
+   ```
+
+   but `authenticateRequest` reads only `authorization`:
+
+   ```ts
+   const token = bearerToken(request?.headers.get('authorization'));
+   if (!token) return { tier: 'core', cards: [], source: 'none', reason: 'no Authorization header' };
+   ```
+
+   and never looks at `x-mcp-license-key`.
+
+The likely outcome, unverified: the hosted listing serves the 5 core tools to every
+authenticated MCPize client and the 3 Pro tools to nobody. Do not quote the hosted
+path as an unlock until it is tested with a real MCPize account token and the
+header that actually arrives at the container is recorded. The fix is a fallback
+read for that header in `authenticateRequest`, added only once the header name is
+confirmed on the wire.
+
+`MCPIZE_GATEWAY_SECRET` is not that fix. It compares one shared string and grants
+both cards to whoever presents it, so it can only ever prove "this request came
+through the gateway", never which card the buyer paid for.
 
 ## Per-card entitlements in code
 
