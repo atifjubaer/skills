@@ -3,6 +3,13 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "MCP Servers & Tooling",
+      "description": "Install and operate the Fastr MCP Suite that serves both Playing Cards as callable tools.",
+      "skills": [
+        "fastr-mcp-suite"
+      ]
+    },
+    {
       "title": "WordPress & E-Commerce",
       "description": "Skills for FluentCart theme and plugin development.",
       "skills": [

@@ -24,6 +24,12 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **Software Licensing:** Public `/activate`, `/validate`, and `/deactivate` endpoints for desktop software and plugins.
   - **Dynamic Checkouts & Lemon.js:** API checkout generation, in-app modal overlays, and custom metadata tracking.
 
+- **`Fastr MCP Suite`** ([`fastr-mcp-suite`](skills/fastr-mcp-suite/SKILL.md)):
+  - **Install Guide:** Exact config for Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, plus the hosted Streamable HTTP transport.
+  - **Tool Reference:** All eight `fc_*`, `ls_*`, and `suite_*` tools with their arguments, return shapes, and when to reach for each.
+  - **Tier Gating:** Which tools a free session sees, what each Playing Card unlocks, and how a Lemon Squeezy licence key is presented over stdio versus HTTP.
+  - **Troubleshooting:** The failures people actually hit — missing Pro tools, wrong-store keys, unknown table names, and the Windows `npx` stdio artifact.
+
 ---
 
 ## Playing Cards (MCP Server)
