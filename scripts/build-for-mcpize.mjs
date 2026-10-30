@@ -26,7 +26,7 @@
 // real checkout and only the server build runs.
 
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -83,6 +83,17 @@ if (!existsSync(join(root, 'dist', 'skills'))) {
 if (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).type !== 'module') {
   console.error('[mcpize-build] root package.json is not the server manifest ("type": "module" missing).');
   process.exit(1);
+}
+
+// MCPize's generated image entrypoint is `node dist/<entry minus .ts>`, i.e.
+// /app/dist/server/src/http.js — it does not always honour startCommand.command.
+// Deployment 9689c123 failed with exactly that missing module while dist/http.js
+// sat next to it, so emit a one-line re-export at the path the entry derives to.
+// If MCPize starts honouring startCommand again, this file is simply unused.
+for (const name of ['http', 'index']) {
+  const shimDir = join(root, 'dist', 'server', 'src');
+  mkdirSync(shimDir, { recursive: true });
+  writeFileSync(join(shimDir, `${name}.js`), `import '../../${name}.js';\n`);
 }
 
 console.log('[mcpize-build] staged dist/ and node_modules/ at the image root.');
