@@ -52,7 +52,7 @@ node dist/index.js        # stdio: Claude Code, Cursor, Windsurf, Smithery CLI
 node dist/http.js         # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
 ```
 
-All ten tools are registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach the server can call everything it ships. Deployment and transport details are documented in [`server/README.md`](./server/README.md).
+All eleven tools are registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach the server can call everything it ships. Deployment and transport details are documented in [`server/README.md`](./server/README.md).
 
 **Licensing:** everything in this repository — the skills under `skills/` and the server under `server/` — is MIT. See [`server/LICENSE.md`](./server/LICENSE.md). Fork it, host it, sell support around it; the only ask is that you keep the copyright notice.
 
