@@ -37,6 +37,8 @@ Manage your product catalog including creating products, managing variations, do
 | GET | `/products/bulk-edit-data` | Bulk Edit Fetch |
 | POST | `/products/bulk-update` | Bulk Update Products |
 | POST | `/products/do-bulk-action` | Do Bulk Action |
+| POST | `/products/variants/bulk-update` | Bulk Update Variants |
+| POST | `/products/variants/group-bulk-update` | Group Bulk Update Variants |
 | POST | `/products/create-dummy` | Create Dummy Products |
 | **Product Details** | | |
 | POST | `/products/{productId}/duplicate` | Duplicate Product |
@@ -58,6 +60,8 @@ Manage your product catalog including creating products, managing variations, do
 | DELETE | `/products/upgrade-path/{id}/delete` | Delete Upgrade Path |
 | GET | `/products/variation/{variantId}/upgrade-paths` | Get Variation Upgrade Paths |
 | **Tax & Shipping Classes** | | |
+| POST | `/products/{postId}/tax-exempt` | Set Product Tax Exemption |
+| POST | `/products/variants/{variantId}/tax-exempt` | Set Variant Tax Exemption |
 | POST | `/products/{postId}/tax-class` | Update Tax Class |
 | POST | `/products/{postId}/tax-class/remove` | Remove Tax Class |
 | POST | `/products/{postId}/shipping-class` | Update Shipping Class |
@@ -81,8 +85,7 @@ Manage your product catalog including creating products, managing variations, do
 | **Integrations** | | |
 | GET | `/products/{productId}/integrations` | Get Product Integration Feeds |
 | GET | `/products/{product_id}/integrations/{integration_name}/settings` | Get Product Integration Settings |
-| POST | `/products/{product_id}/integrations` | Save Product Integration |
-| PUT | `/products/{product_id}/integrations/{integration_id}` | Update Product Integration |
+| POST | `/products/{product_id}/integrations` | Save Product Integration (also updates, via `integration_id`) |
 | DELETE | `/products/{product_id}/integrations/{integration_id}` | Delete Product Integration |
 
 ---
@@ -986,6 +989,90 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/do-bulk-action
 
 ---
 
+### Bulk Update Variants
+
+`POST /fluent-cart/v2/products/variants/bulk-update`
+
+Update price and status fields on multiple product variants in one request. All targeted variants must belong to the same product.
+
+- Rows in the payload that target the same variant ID are **merged (last field wins)**.
+- The batch is applied inside a single locked transaction.
+- The `item_price` / `compare_price` relationship is enforced in both directions — raising `item_price` above an existing `compare_price` clears `compare_price`, and a `compare_price` below `item_price` is rejected back to `0`.
+- Up to **500 update rows** per request; additional rows are silently dropped.
+- `item_price` and `compare_price` are **cents** (`2999` for $29.99). Sending `29.99` creates a 29-cent price.
+
+**Permission:** `products/edit`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `updates` | array | body | **Yes** | Variant updates. Each row needs `id` plus at least one of `item_price`, `compare_price`, `item_status` |
+
+Each entry in `updates`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Variant ID |
+| `item_price` | number | Sale price in cents |
+| `compare_price` | number | Compare-at price in cents |
+| `item_status` | string | Variant status |
+
+#### Response
+
+```json
+{ "message": "Variants updated successfully.", "updated": 2 }
+```
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/variants/bulk-update" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"updates":[{"id":5,"item_price":2999},{"id":6,"compare_price":5999,"item_status":"active"}]}'
+```
+
+---
+
+### Group Bulk Update Variants
+
+`POST /fluent-cart/v2/products/variants/group-bulk-update`
+
+Apply a partial (PATCH-style) update to a **group** of variants at once. Any field left null or omitted is skipped for every variant in the group; only the non-null fields are written.
+
+- For `other_info`, only the supplied non-null sub-keys are **merged** into each variant's existing JSON rather than replacing it.
+- All variants in `variant_ids` must belong to the same product.
+- `sku` can only be set when **exactly one** variant is targeted (SKUs must stay unique).
+
+**Permission:** `products/edit`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `variant_ids` | array | body | **Yes** | Variant IDs to update. All must belong to the same product |
+| `sku` | string | body | No | New SKU. Only when exactly one ID is targeted. Empty string clears it |
+| `item_price` | number | body | No | Sale price in cents, applied to every targeted variant |
+| `compare_price` | number | body | No | Compare-at price in cents. Ignored per-row if below that row's effective `item_price` |
+| `manage_stock` | integer | body | No | `0` or `1` — track stock for the targeted variants |
+| `total_stock` | integer | body | No | New total stock quantity |
+| `fulfillment_type` | string | body | No | `physical` or `digital` |
+| `manage_cost` | string | body | No | `"true"` or `"false"` — track cost of goods |
+| `item_cost` | number | body | No | Cost of goods in cents |
+| `other_info` | object | body | No | Partial delta merged into each variant's `other_info` (e.g. `payment_type`, `repeat_interval`, `signup_fee`) |
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/variants/group-bulk-update" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"variant_ids":[5,6,7],"fulfillment_type":"digital","other_info":{"payment_type":"subscription","repeat_interval":"monthly"}}'
+```
+
+---
+
 ### Create Dummy Products
 
 `POST /fluent-cart/v2/products/create-dummy`
@@ -1630,6 +1717,74 @@ curl -X GET "https://example.com/wp-json/fluent-cart/v2/products/variation/456/u
 ---
 
 ## Tax & Shipping Classes
+
+### Set Product Tax Exemption
+
+`POST /fluent-cart/v2/products/{postId}/tax-exempt`
+
+Set the tax-exempt flag and tax class for an **entire product** — stored on the product detail, not per-variant.
+
+If `tax_class` is omitted, the product's existing tax class (or `standard`) is kept. The **resolved tax class ID** is stored on the product, not the slug.
+
+**Permission:** `products/edit`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `postId` | integer | path | Yes | Product post ID |
+| `tax_exempt` | string | body | No | `yes` or `no`. Defaults to `no` |
+| `tax_class` | string | body | No | Slug of an existing tax class. Defaults to the current class, or `standard` |
+
+#### Response
+
+```json
+{ "message": "Product is now tax exempt", "tax_exempt": "yes", "tax_class": 1, "tax_class_slug": "standard" }
+```
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/123/tax-exempt" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"tax_exempt":"yes","tax_class":"standard"}'
+```
+
+---
+
+### Set Variant Tax Exemption
+
+`POST /fluent-cart/v2/products/variants/{variantId}/tax-exempt`
+
+Set the tax-exempt flag and tax class for a **single variant**. If `tax_class` is omitted, the variant's existing class (or `standard` if none is set) is kept. The supplied tax class must already exist.
+
+**Permission:** `products/edit`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `variantId` | integer | path | Yes | Product variation ID |
+| `tax_exempt` | string | body | No | `yes` or `no`. Defaults to `no` |
+| `tax_class` | string | body | No | Slug of an existing tax class. Defaults to the current class, or `standard` |
+
+#### Response
+
+```json
+{ "message": "Variation is now tax exempt", "tax_exempt": "yes", "tax_class": "standard", "tax_class_slug": "standard" }
+```
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/variants/456/tax-exempt" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"tax_exempt":"yes"}'
+```
+
+---
 
 ### Update Tax Class
 
@@ -2490,45 +2645,24 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/123/integratio
 
 ### Update Product Integration
 
-`PUT /fluent-cart/v2/products/{product_id}/integrations/{integration_id}`
+There is **no `PUT /products/{product_id}/integrations/{integration_id}`** — the published API reference documents only `DELETE` on that path.
 
-Update an existing product integration feed.
-
-**Permission:** `products/edit`
-
-#### Parameters
-
-| Parameter | Type | Location | Required | Description |
-|-----------|------|----------|----------|-------------|
-| `product_id` | integer | path | Yes | The product ID |
-| `integration_id` | integer | path | Yes | The integration feed ID |
-| `integration_name` | string | body | Yes | Integration provider name |
-| `integration` | string (JSON) | body | Yes | JSON-encoded integration settings |
-| `enabled` | string | body | No | `yes` or `no` |
-| `name` | string | body | No | Feed display name |
-
-#### Response
-
-```json
-{
-  "message": "Integration has been successfully updated",
-  "integration": { ... }
-}
-```
-
-#### Example
+Updating goes back through the save endpoint with the feed's `integration_id` in the body:
 
 ```bash
-curl -X PUT "https://example.com/wp-json/fluent-cart/v2/products/123/integrations/10" \
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/products/123/integrations" \
   -u "username:app_password" \
   -H "Content-Type: application/json" \
   -d '{
+    "integration_id": 10,
     "integration_name": "fluentcrm",
     "integration": "{\"list_id\": 2, \"tags\": [5, 15]}",
     "enabled": "yes",
     "name": "Updated FluentCRM Feed"
   }'
 ```
+
+See [Save Product Integration](#save-product-integration) for the full parameter list.
 
 ---
 

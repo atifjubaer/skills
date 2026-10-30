@@ -29,11 +29,15 @@ Manage customer orders including creation, updates, payments, refunds, shipping,
 | GET | `/orders/{order}/transactions` | Get Order Transactions |
 | GET | `/orders/{id}/transactions/{transaction_id}` | Get Single Transaction |
 | PUT | `/orders/{order}/transactions/{transaction}/status` | Update Transaction Status |
+| POST | `/orders/{order}/transactions/{transaction}/sync` | Sync Pending Transaction |
 | POST | `/orders/{order}/create-custom` | Create Custom Order Item |
 | PUT | `/orders/{order}/statuses` | Update Statuses |
 | PUT | `/orders/{order}/sync-statuses` | Sync Order Statuses |
 | GET | `/orders/shipping_methods` | Get Shipping Methods |
 | POST | `/orders/calculate-shipping` | Calculate Shipping |
+| POST | `/orders/calculate-tax` | Calculate Order Tax |
+| POST | `/orders/price` | Price Order |
+| GET | `/orders/currencies` | List Order Currencies |
 | POST | `/orders/{order}/generate-missing-licenses` | Generate Missing Licenses |
 | POST | `/orders/do-bulk-action` | Bulk Actions |
 
@@ -999,6 +1003,54 @@ curl -X GET "https://example.com/wp-json/fluent-cart/v2/orders/42/transactions/1
 
 ---
 
+## Sync Pending Transaction
+
+`POST /fluent-cart/v2/orders/{order}/transactions/{transaction}/sync`
+
+Re-fetch a pending transaction's current status **directly from its payment gateway** and update the local record to match. Use this to reconcile a transaction stuck in `pending` after a webhook was missed or delayed.
+
+**Permission:** `orders/manage`
+
+### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Order ID |
+| `transaction` | integer | path | Yes | Transaction ID |
+
+### Response
+
+```json
+{
+  "message": "Transaction has been synced from the payment gateway successfully!",
+  "transaction": {
+    "id": 78,
+    "order_id": 42,
+    "vendor_charge_id": "ch_3PxKE2JY8q",
+    "payment_method": "stripe",
+    "payment_mode": "live",
+    "payment_method_type": "card",
+    "currency": "USD",
+    "transaction_type": "payment",
+    "card_last_4": "4242",
+    "card_brand": "visa",
+    "status": "paid",
+    "total": 10692,
+    "uuid": "txn_f7e8d9c0",
+    "created_at": "2026-08-18 10:00:00"
+  }
+}
+```
+
+### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/42/transactions/78/sync" \
+  -u "username:app_password"
+```
+
+---
+
 ## Update Order Address
 
 `PUT /fluent-cart/v2/orders/{order}/address/{id}`
@@ -1237,5 +1289,174 @@ Synchronize the order's status and payment status based on the latest transactio
 
 ```bash
 curl -X PUT "https://example.com/wp-json/fluent-cart/v2/orders/42/sync-statuses" \
+  -u "username:app_password"
+```
+
+---
+
+## Calculate Order Tax
+
+`POST /fluent-cart/v2/orders/calculate-tax`
+
+Calculate tax for an admin-created order from a destination address and a list of line items. This is a pure calculation helper — **no database writes occur and no order is created or modified**.
+
+Up to 100 items are processed per request; any beyond that are silently dropped. If tax calculation is not available for the given address, all totals are returned as zero.
+
+**Permission:** `orders/create` or `orders/manage`
+
+### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `country` | string | body | No | Destination country code (e.g. `US`) |
+| `state` | string | body | No | Destination state/province code |
+| `city` | string | body | No | Destination city |
+| `postcode` | string | body | No | Destination postal/zip code |
+| `items` | array | body | No | Line items. Capped at 100 per request |
+
+Each entry in `items`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `post_id` | integer | Product post ID |
+| `object_id` | integer | Variation / object ID |
+| `subtotal` | integer | Line subtotal in cents |
+| `discount_total` | integer | Discount applied to the line, in cents |
+| `shipping_charge` | integer | Shipping attributed to the line, in cents |
+| `quantity` | integer | Line quantity (minimum 1) |
+
+### Response
+
+```json
+{
+  "tax_total": 792,
+  "shipping_tax": 0,
+  "tax_behavior": 0,
+  "tax_country": "US",
+  "tax_lines": [
+    { "label": "CA State Tax", "rate_percent": 8, "tax_amount": 792, "inclusive": false }
+  ]
+}
+```
+
+### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/calculate-tax" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US", "state": "CA", "city": "Springfield", "postcode": "62704",
+    "items": [{ "post_id": 123, "object_id": 456, "subtotal": 9900, "discount_total": 0, "shipping_charge": 0, "quantity": 1 }]
+  }'
+```
+
+---
+
+## Price Order
+
+`POST /fluent-cart/v2/orders/price`
+
+Price an admin order **before creating it**. Nothing is saved.
+
+Catalog lines are priced from the product in the requested `currency` at the store's exchange rate. Coupons and the manual discount are validated and applied the same way [Create Order](#create-order) applies them.
+
+To save exactly what was previewed, send the returned `quote_revision` and `total_amount` to Create Order with the same `currency`, lines, coupons, discount and shipping. If the rate or a price changed in between, Create Order fails with **`fx_prices_updated`** — price the order again and resend.
+
+Amounts are in cents of the order's currency, before tax.
+
+**Permission:** `orders/create`
+
+### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `customer_id` | integer | body | No | Existing customer ID |
+| `currency` | string | body | No | Order currency code; defaults to the store currency |
+| `order_items` | array | body | **Yes** | Lines to price |
+| `applied_coupon` | array | body | No | Coupon codes to validate and apply |
+| `discount` | object | body | No | Manual discount (same shape as Create Order) |
+| `shipping_total` | integer | body | No | Shipping total in cents |
+
+Each entry in `order_items`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `post_id` | integer | Product post ID |
+| `variation_id` | integer | Variation ID |
+| `object_id` | integer | Object (variation) ID |
+| `quantity` | integer | Line quantity |
+| `unit_price` | integer | Unit price in cents override |
+| `has_custom_price` | boolean | Whether `unit_price` overrides the catalog price |
+| `shipping_charge` | integer | Shipping attributed to the line, in cents |
+| `other_info` | object | Arbitrary line metadata |
+
+### Response
+
+```json
+{
+  "currency": "EUR",
+  "quote_revision": "afe0d9020e760936a57bea648532cb53",
+  "order_items": [
+    {
+      "object_id": 5, "post_id": 10, "quantity": 1,
+      "unit_price": 2300, "price": 2300, "subtotal": 2300, "line_total": 2300,
+      "discount_total": 230, "coupon_discount": 230, "manual_discount": 0,
+      "shipping_charge": 0,
+      "other_info": {
+        "payment_type": "onetime",
+        "fx_base": { "unit_price": 2500, "signup_fee": 0 },
+        "fx": { "currency": "EUR", "rate": "0.920000000000", "rules": "none|none|0" }
+      }
+    }
+  ],
+  "applied_coupons": { "SAVE10": { "id": 3, "code": "SAVE10", "discount": 230 } },
+  "shipping_total": 0,
+  "subtotal": 2300,
+  "coupon_discount_total": 230,
+  "manual_discount_total": 0,
+  "total_amount": 2070
+}
+```
+
+### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/price" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"currency":"EUR","order_items":[{"post_id":10,"object_id":5,"quantity":1}],"applied_coupon":["SAVE10"]}'
+```
+
+---
+
+## List Order Currencies
+
+`GET /fluent-cart/v2/orders/currencies`
+
+List the currencies an admin order can be created in, with today's rate for each. The store currency comes first.
+
+The list is **empty when Multi-Currency is off** or no other currency has a rate — then orders can only be created in the store currency.
+
+**Permission:** `orders/create`
+
+### Response
+
+```json
+{
+  "currencies": [
+    { "code": "USD", "sign": "$", "rate": "1.000000000000", "is_base": true },
+    {
+      "code": "EUR", "sign": "€", "rate": "0.920000000000", "is_base": false,
+      "rounding": "none", "charm": "none", "adjustment": "0", "decimals": 2
+    }
+  ]
+}
+```
+
+### Example
+
+```bash
+curl -X GET "https://example.com/wp-json/fluent-cart/v2/orders/currencies" \
   -u "username:app_password"
 ```
