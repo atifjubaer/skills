@@ -5,6 +5,7 @@ import type { AuthContext } from './auth.js';
 import { registerFluentCartTools } from './cards/fluentcart/tools.js';
 import { registerLemonSqueezyTools } from './cards/lemonsqueezy/tools.js';
 import { skillsRoot } from './paths.js';
+import { SUITE_VERSION } from './version.js';
 
 type SkillCatalog = Awaited<ReturnType<typeof loadSkills>>;
 
@@ -32,7 +33,7 @@ function skillsCatalog(): Promise<SkillCatalog | null> {
 export async function createServerInstance(auth: AuthContext): Promise<McpServer> {
   const server = new McpServer({
     name: 'fastr-dev-suite',
-    version: '1.0.0'
+    version: SUITE_VERSION
   });
 
   // 1. Attach Official MCP 2026-07-28 Skills Catalog
@@ -93,7 +94,7 @@ function suiteInfo(auth: AuthContext, card: CardFilter = 'all') {
 
   return {
     suite: 'fastr-dev-suite',
-    version: '1.0.0',
+    version: SUITE_VERSION,
     licence: 'MIT',
     price: 'free',
     limits: 'none — unlimited tool calls, no account, no key, no subscription',

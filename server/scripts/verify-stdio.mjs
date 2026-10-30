@@ -7,12 +7,14 @@
 // retired PRO_* variables must be inert rather than fatal.
 import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverRoot = path.resolve(__dirname, '..');
 const entry = path.join(serverRoot, 'dist', 'index.js');
+const pkg = JSON.parse(readFileSync(path.join(serverRoot, 'package.json'), 'utf8'));
 
 const results = [];
 function check(name, pass, detail = '') {
@@ -110,6 +112,13 @@ const TOOLS = [
       clientInfo: { name: 'fastr-verify', version: '0.0.0' }
     });
     check('free: initialize', Boolean(init.result?.serverInfo), `${init.result?.serverInfo?.name}@${init.result?.serverInfo?.version}`);
+    // src/version.ts is a constant because the manifest is not always next to
+    // dist/ at runtime; this check is what stops the two drifting apart.
+    check(
+      'free: advertise the package version',
+      init.result?.serverInfo?.version === pkg.version,
+      `server ${init.result?.serverInfo?.version} vs package ${pkg.version}`
+    );
     s.notify('notifications/initialized');
 
     const tools = await s.request('tools/list');
