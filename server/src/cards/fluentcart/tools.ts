@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { hasCard, type AuthContext } from '../../auth.js';
 import { skillRefs } from '../../paths.js';
+import { listReferences, readReference } from '../../reference-reader.js';
 
 export function registerFluentCartTools(server: McpServer, auth: AuthContext): void {
   const FC_REFS_DIR = skillRefs('fluentcart-developer');
@@ -15,7 +16,7 @@ export function registerFluentCartTools(server: McpServer, auth: AuthContext): v
   server.registerTool(
     'fc_search_hooks',
     {
-      description: 'Search FluentCart 315+ action and filter hooks across order lifecycles, checkout, customer events, and payment gateways.',
+      description: 'Search FluentCart 680+ action and filter hooks across order lifecycles, checkout, customer events, payment gateways, modules and Pro modules.',
       inputSchema: {
         query: z.string().describe('Hook name or event keyword, e.g. "order_created", "checkout_validate", "payment_processed"')
       },
@@ -27,7 +28,11 @@ export function registerFluentCartTools(server: McpServer, auth: AuthContext): v
           return { content: [{ type: 'text', text: 'FluentCart references directory not found.' }], isError: true };
         }
 
-        const files = fs.readdirSync(FC_REFS_DIR).filter(f => f.startsWith('action-hooks') || f.startsWith('filter-hooks'));
+        // The per-topic files carry the detail; hooks-complete-index.md carries
+        // the module and Pro-module hooks that have no per-topic file at all.
+        const files = fs
+          .readdirSync(FC_REFS_DIR)
+          .filter(f => f.startsWith('action-hooks') || f.startsWith('filter-hooks') || f === 'hooks-complete-index.md');
         const matches: string[] = [];
         const lowerQuery = query.toLowerCase();
 
@@ -85,7 +90,14 @@ export function registerFluentCartTools(server: McpServer, auth: AuthContext): v
 
         if (!match) {
           return {
-            content: [{ type: 'text', text: `Table "${table}" not found in database-schema-reference.md. Check available tables: orders, customers, subscriptions, order_items, licenses, coupons.` }]
+            content: [{
+              type: 'text',
+              text:
+                `Table "${table}" not found in database-schema-reference.md. It documents every ` +
+                `wp_fct_* table — try the table name without the prefix, e.g. "orders", "order_items", ` +
+                `"customer_addresses". For a model's attributes and relations call ` +
+                `fc_get_reference({ file: "models-complete-index.md", section: "..." }).`
+            }]
           };
         }
 
@@ -95,6 +107,66 @@ export function registerFluentCartTools(server: McpServer, auth: AuthContext): v
       } catch (err: any) {
         return {
           content: [{ type: 'text', text: `Error retrieving DB schema: ${err.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    'fc_get_reference',
+    {
+      description:
+        'Read any FluentCart reference file — REST API endpoints, database models, payment ' +
+        'gateways, modules, engineering notes. Call with no arguments to list the files; pass "file" ' +
+        'to read one, optionally with "section" to pull a single heading instead of the whole document.',
+      inputSchema: {
+        file: z
+          .string()
+          .optional()
+          .describe('Reference file name, e.g. "rest-api-subscriptions.md". Omit to list every file'),
+        section: z
+          .string()
+          .optional()
+          .describe('Heading to extract, e.g. "Void Renewal Invoice". Returns only that section')
+      },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ file, section }) => {
+      try {
+        if (!fs.existsSync(FC_REFS_DIR)) {
+          return { content: [{ type: 'text', text: 'FluentCart references directory not found.' }], isError: true };
+        }
+
+        if (!file) {
+          const { files } = listReferences(FC_REFS_DIR);
+          const lines = files.map(
+            (f) => `- **${f.file}** (${Math.round(f.bytes / 1024)} KB) — ${f.title}`
+          );
+          return {
+            content: [
+              {
+                type: 'text',
+                text:
+                  `${files.length} FluentCart reference files. Re-run with "file" to read one, ` +
+                  `or "file" + "section" for a single heading.\n\n${lines.join('\n')}`
+              }
+            ]
+          };
+        }
+
+        const result = readReference(FC_REFS_DIR, file, section);
+        if ('error' in result) {
+          return { content: [{ type: 'text', text: result.error }], isError: true };
+        }
+
+        const sections = result.sections.length
+          ? `\n\nSections in ${result.file}: ${result.sections.join(' | ')}`
+          : '';
+        return { content: [{ type: 'text', text: `${result.text}${sections}` }] };
+      } catch (err: any) {
+        return {
+          content: [{ type: 'text', text: `Failed to read reference: ${err.message}` }],
           isError: true
         };
       }

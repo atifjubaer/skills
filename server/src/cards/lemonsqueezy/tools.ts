@@ -5,6 +5,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { hasCard, type AuthContext } from '../../auth.js';
 import { skillRefs } from '../../paths.js';
+import { listReferences, readReference } from '../../reference-reader.js';
 
 const LS_VALIDATE_ENDPOINT = 'https://api.lemonsqueezy.com/v1/licenses/validate';
 
@@ -65,7 +66,9 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
             'checkouts-and-orders.md',
             'subscriptions-lifecycle.md',
             'license-keys-and-activation.md',
-            'developer-guide.md'
+            'developer-guide.md',
+            'api-reference.md',
+            'go-live-guide.md'
           ];
         }
 
@@ -92,7 +95,7 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
           return {
             content: [{
               type: 'text',
-              text: `No exact matches found for "${query}". Available guides: webhooks-and-security.md, checkouts-and-orders.md, subscriptions-lifecycle.md, license-keys-and-activation.md.`
+              text: `No exact matches found for "${query}". Available guides: webhooks-and-security.md, checkouts-and-orders.md, subscriptions-lifecycle.md, license-keys-and-activation.md, developer-guide.md, api-reference.md, go-live-guide.md.`
             }]
           };
         }
@@ -191,6 +194,66 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
       return {
         content: [{ type: 'text', text: JSON.stringify(selected, null, 2) }]
       };
+    }
+  );
+
+  server.registerTool(
+    'ls_get_reference',
+    {
+      description:
+        'Read a Lemon Squeezy reference file in full or by section — developer guide, API reference, ' +
+        'checkout/order flows, subscription lifecycle, licence keys, webhooks and security, go-live. ' +
+        'Call with no arguments to list the files.',
+      inputSchema: {
+        file: z
+          .string()
+          .optional()
+          .describe('Reference file name, e.g. "webhooks-and-security.md". Omit to list every file'),
+        section: z
+          .string()
+          .optional()
+          .describe('Heading to extract, e.g. "Webhook Event Catalog". Returns only that section')
+      },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ file, section }) => {
+      try {
+        if (!fs.existsSync(LS_REFS_DIR)) {
+          return { content: [{ type: 'text', text: 'Lemon Squeezy references directory not found.' }], isError: true };
+        }
+
+        if (!file) {
+          const { files } = listReferences(LS_REFS_DIR);
+          const lines = files.map(
+            (f) => `- **${f.file}** (${Math.round(f.bytes / 1024)} KB) — ${f.title}`
+          );
+          return {
+            content: [
+              {
+                type: 'text',
+                text:
+                  `${files.length} Lemon Squeezy reference files. Re-run with "file" to read one, ` +
+                  `or "file" + "section" for a single heading.\n\n${lines.join('\n')}`
+              }
+            ]
+          };
+        }
+
+        const result = readReference(LS_REFS_DIR, file, section);
+        if ('error' in result) {
+          return { content: [{ type: 'text', text: result.error }], isError: true };
+        }
+
+        const sections = result.sections.length
+          ? `\n\nSections in ${result.file}: ${result.sections.join(' | ')}`
+          : '';
+        return { content: [{ type: 'text', text: `${result.text}${sections}` }] };
+      } catch (err: any) {
+        return {
+          content: [{ type: 'text', text: `Failed to read reference: ${err.message}` }],
+          isError: true
+        };
+      }
     }
   );
 

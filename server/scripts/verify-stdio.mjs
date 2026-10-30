@@ -82,7 +82,15 @@ const MODERN_META = {
   'io.modelcontextprotocol/clientCapabilities': {}
 };
 
-const CORE = ['ls_search_docs', 'ls_get_schema', 'fc_search_hooks', 'fc_get_db_schema', 'suite_get_pro_info'];
+const CORE = [
+  'ls_search_docs',
+  'ls_get_schema',
+  'ls_get_reference',
+  'fc_search_hooks',
+  'fc_get_db_schema',
+  'fc_get_reference',
+  'suite_get_pro_info'
+];
 const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_gateway_boilerplate'];
 
 // ---------------------------------------------------------------- core tier
@@ -117,6 +125,44 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
 
     const schema = await s.request('tools/call', { name: 'fc_get_db_schema', arguments: { table: 'orders' } });
     check('core: fc_get_db_schema', !schema.result?.isError && (schema.result?.content?.[0]?.text ?? '').length > 50);
+
+    // Both reference readers must reach a file no other tool exposes — the
+    // point of adding them was that ~30 reference files were unreachable.
+    const fcRefs = await s.request('tools/call', { name: 'fc_get_reference', arguments: {} });
+    const fcRefsText = fcRefs.result?.content?.[0]?.text ?? '';
+    check(
+      'core: fc_get_reference lists files',
+      fcRefsText.includes('rest-api-subscriptions.md') && fcRefsText.includes('models-complete-index.md'),
+      `${fcRefsText.split('\n').length} lines`
+    );
+
+    const fcSection = await s.request('tools/call', {
+      name: 'fc_get_reference',
+      arguments: { file: 'rest-api-subscriptions.md', section: 'Void Renewal Invoice' }
+    });
+    const fcSectionText = fcSection.result?.content?.[0]?.text ?? '';
+    check(
+      'core: fc_get_reference section',
+      fcSectionText.startsWith('### Void Renewal Invoice'),
+      `${fcSectionText.length} chars`
+    );
+
+    const traversal = await s.request('tools/call', {
+      name: 'fc_get_reference',
+      arguments: { file: '../paths.ts' }
+    });
+    check('core: fc_get_reference rejects traversal', traversal.result?.isError === true);
+
+    const lsRefs = await s.request('tools/call', {
+      name: 'ls_get_reference',
+      arguments: { file: 'webhooks-and-security.md', section: 'Webhook Event Catalog' }
+    });
+    const lsRefsText = lsRefs.result?.content?.[0]?.text ?? '';
+    check(
+      'core: ls_get_reference section',
+      lsRefsText.includes('subscription_payment_refunded'),
+      `${lsRefsText.length} chars`
+    );
 
     const info = await s.request('tools/call', { name: 'suite_get_pro_info', arguments: {} });
     const infoText = info.result?.content?.[0]?.text ?? '';
