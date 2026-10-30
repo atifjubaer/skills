@@ -25,7 +25,8 @@ All three are monthly subscriptions with licence keys enabled; verified by
 `https://fastrsoft.lemonsqueezy.com/checkout/buy/<variant_id>`.
 
 Core tools are always free, on every SKU and with no key at all: `fc_search_hooks`,
-`fc_get_db_schema`, `ls_search_docs`, `ls_get_schema`, `suite_get_pro_info`.
+`fc_get_db_schema`, `fc_get_reference`, `ls_search_docs`, `ls_get_schema`,
+`ls_get_reference`, `suite_get_pro_info`.
 
 All-Access is the intended purchase: $19 buys what $24 would cost as two cards.
 Two cards exist to give a single-framework developer a cheaper entry point and to

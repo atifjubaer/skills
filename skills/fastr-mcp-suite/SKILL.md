@@ -110,7 +110,7 @@ Send the license key per request: `Authorization: Bearer <license-key>`. When th
 
 ## 2. Confirm the connection before doing real work
 
-1. List the tools the client sees. Expect **5** on a free session, **6–8** with a key.
+1. List the tools the client sees. Expect **7** on a free session, **8–10** with a key.
 2. Call `suite_get_pro_info` with `{"card": "all"}`. It returns which Pro tools are unlocked, which are locked, and why.
 3. Call one cheap read tool, e.g. `fc_search_hooks` with `{"query": "order_created"}`.
 
@@ -124,8 +124,10 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | --- | --- |
 | A FluentCart hook name, when it fires, its arguments | `fc_search_hooks` |
 | A `wp_fct_*` table, its columns, the Eloquent model | `fc_get_db_schema` |
+| A FluentCart REST endpoint, model columns, gateway guide, module notes — anything past the four lookups above | `fc_get_reference` |
 | Lemon Squeezy webhook signatures, checkout payloads, subscription states, license endpoints | `ls_search_docs` |
 | The exact JSON:API body for a Lemon Squeezy endpoint | `ls_get_schema` |
+| A Lemon Squeezy guide read in full or by section | `ls_get_reference` |
 | What is locked and how to unlock it | `suite_get_pro_info` |
 | Generating a full FluentCart gateway class | `fc_generate_payment_gateway_boilerplate` *(Pro)* |
 | Checking an HMAC signature against a raw payload | `ls_verify_webhook` *(Pro)* |
@@ -157,6 +159,18 @@ Returns the schema section for one table: columns, types, keys, and the matching
 
 Well-known tables: `orders`, `customers`, `subscriptions`, `order_items`, `licenses`, `coupons`. An unknown name returns a "not found" message listing those six — re-run with one of them rather than guessing a `wp_fct_` prefix variant.
 
+### `fc_get_reference`
+
+```json
+{ "file": "rest-api-subscriptions.md", "section": "Void Renewal Invoice" }
+```
+
+Opens any file under `skills/fluentcart-developer/references/`. Omit **both** arguments to list all 49 files with their size and title; pass `file` alone to read the whole document (capped at 14,000 characters — a truncation note says so); add `section` to pull a single `##`/`###` heading instead.
+
+Use it for everything `fc_search_hooks` and `fc_get_db_schema` do not answer: REST endpoints (`rest-api-*.md`), every model's columns (`models-complete-index.md`), the deprecated hook tables (`hooks-complete-index.md`), payment gateways, modules, fees, engineering notes.
+
+An unknown file name that matches one real file loosely is resolved for you; anything ambiguous returns the candidate list rather than a guess. Path traversal is rejected, so pass a plain file name.
+
 ### `ls_search_docs`
 
 ```json
@@ -176,6 +190,16 @@ Reach for this first for "how does X work"; reach for `ls_get_schema` when the u
 `endpoint` must be one of: `checkouts`, `orders`, `subscriptions`, `license-keys`, `customers`, `products`, `variants`, `webhooks`.
 
 Returns the endpoint path, the JSON:API content type, and a payload skeleton with the required relationships. Use it verbatim; Lemon Squeezy rejects bodies with the wrong `type` or a missing `relationships` block.
+
+### `ls_get_reference`
+
+```json
+{ "file": "webhooks-and-security.md", "section": "Webhook Event Catalog" }
+```
+
+Same contract as `fc_get_reference`, over the 7 Lemon Squeezy reference files: `developer-guide.md`, `api-reference.md`, `checkouts-and-orders.md`, `subscriptions-lifecycle.md`, `license-keys-and-activation.md`, `webhooks-and-security.md`, `go-live-guide.md`.
+
+Omit both arguments to list them; pass `file` for the whole document; add `section` for one heading. Reach for it when `ls_search_docs` returns a snippet that stops short of what the user needs.
 
 ### `suite_get_pro_info`
 
@@ -229,10 +253,10 @@ A **card** is one product. A session gets the Pro tools of the cards its key is 
 
 | Session | Tools registered |
 | --- | --- |
-| No key (`core`) | The 5 core tools + the skills catalog |
+| No key (`core`) | The 7 core tools + the skills catalog |
 | Card 1 key | All core tools + `fc_generate_payment_gateway_boilerplate` |
 | Card 2 key | All core tools + `ls_verify_webhook`, `ls_validate_license` |
-| All-Access key | All 8 |
+| All-Access key | All 10 |
 
 How the key is presented depends on the transport:
 
