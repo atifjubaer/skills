@@ -76,7 +76,8 @@ const CARD_TOOLS: Record<Exclude<CardFilter, 'all'>, string[]> = {
     'fc_search_hooks',
     'fc_get_db_schema',
     'fc_get_reference',
-    'fc_generate_payment_gateway_boilerplate'
+    'fc_generate_payment_gateway_boilerplate',
+    'fc_generate_licensing_boilerplate'
   ],
   lemonsqueezy: [
     'ls_search_docs',

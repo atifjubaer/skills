@@ -106,6 +106,9 @@ Endpoints under `/fluent-cart/v2/customer-profile/licenses` identify licenses by
 
 Designed for distributed software (plugins, themes, desktop applications) to perform automatic updates and activation directly via query string requests.
 
+> **Client SDK Available:**  
+> For WordPress plugins and themes, use the official FluentCart Software Licensing SDK (`fluent-cart/software-licensing-sdk`). See the full client integration manual in [software-licensing-sdk.md](software-licensing-sdk.md) and the runnable plugin in [examples/sample-plugin-with-licensing-sdk/](../examples/sample-plugin-with-licensing-sdk/).
+
 **Base URL:** `https://your-site.com/?fluent-cart={action}`
 
 ### Key Endpoints

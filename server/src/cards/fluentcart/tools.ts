@@ -236,4 +236,106 @@ class ${className} extends AbstractPaymentGateway
       };
     }
   );
+
+  server.registerTool(
+    'fc_generate_licensing_boilerplate',
+    {
+      description:
+        'Generate production-ready PHP boilerplate for integrating the official FluentCart Software Licensing SDK into a commercial WordPress plugin or theme, with remote activation, status checks, and automatic updates.',
+      inputSchema: {
+        pluginNamespace: z.string().describe('Unique PHP namespace for your plugin, e.g. "Acme\\AwesomePlugin"'),
+        pluginTitle: z.string().describe('Display title of your plugin, e.g. "Awesome Plugin Pro"'),
+        itemId: z.number().describe('Product/Item ID in FluentCart Pro'),
+        apiUrl: z.string().describe('Base URL of your FluentCart store, e.g. "https://store.example.com/"'),
+        includeAdminUi: z.boolean().default(true).describe('Include turnkey Admin License Settings page code')
+      }
+    },
+    async ({ pluginNamespace, pluginTitle, itemId, apiUrl, includeAdminUi }) => {
+      const cleanNamespace = pluginNamespace.replace(/^\\+|\\+$/g, '');
+      const slug = pluginTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const constPrefix = slug.toUpperCase().replace(/-/g, '_');
+
+      const adminUiCode = includeAdminUi
+        ? `
+    // 3. Mount turnkey Admin License Management page
+    if (is_admin() && class_exists('\\\\${cleanNamespace}\\\\LicenseSettings')) {
+        $settings = new \\\\${cleanNamespace}\\\\LicenseSettings();
+        $settings->register($licenseManager);
+
+        $settings->setConfig([
+            'title'       => __('${pluginTitle} License', '${slug}'),
+            'heading'     => __('Activate License Key', '${slug}'),
+            'description' => __('Enter your FluentCart license key to receive automatic one-click updates and pro features.', '${slug}'),
+            'help_text'   => __('Manage your active site licenses in your customer portal.', '${slug}')
+        ]);
+
+        $settings->addPage([
+            'type'        => 'submenu',
+            'parent_slug' => 'tools.php',
+            'page_title'  => __('${pluginTitle} License', '${slug}'),
+            'menu_title'  => __('${pluginTitle} License', '${slug}'),
+            'capability'  => 'manage_options',
+            'menu_slug'   => '${slug}-license'
+        ]);
+    }`
+        : '';
+
+      const code = `<?php
+defined('ABSPATH') || exit;
+
+/**
+ * FluentCart Software Licensing SDK Integration Boilerplate
+ * For: ${pluginTitle}
+ * Powered by fluent-cart/software-licensing-sdk
+ */
+
+define('${constPrefix}_VERSION', '1.0.0');
+define('${constPrefix}_DIR', plugin_dir_path(__FILE__));
+
+add_action('plugins_loaded', function () {
+    // 1. Include the SDK licensing class
+    if (!class_exists('\\\\${cleanNamespace}\\\\FluentLicensing')) {
+        require_once ${constPrefix}_DIR . 'updater/FluentLicensing.php';
+    }
+
+    $licenseManager = new \\\\${cleanNamespace}\\\\FluentLicensing();
+
+    // 2. Register licensing parameters
+    $licenseManager->register([
+        'version'           => ${constPrefix}_VERSION,
+        'item_id'           => ${itemId},
+        'basename'          => plugin_basename(__FILE__),
+        'api_url'           => '${apiUrl}',
+        'plugin_title'      => '${pluginTitle}',
+        'purchase_url'      => '${apiUrl}checkout/?item_id=${itemId}',
+        'activate_url'      => admin_url('tools.php?page=${slug}-license'),
+        'show_check_update' => true,
+        'settings_key'      => '__${slug.replace(/-/g, '_')}_sl_info'
+    ]);${adminUiCode}
+});
+
+/**
+ * Helper to check whether the plugin license is currently active.
+ */
+function ${slug.replace(/-/g, '_')}_is_license_active(): bool
+{
+    if (!class_exists('\\\\${cleanNamespace}\\\\FluentLicensing')) {
+        return false;
+    }
+
+    $manager = \\\\${cleanNamespace}\\\\FluentLicensing::getInstance();
+    if (!$manager) {
+        return false;
+    }
+
+    $status = $manager->getStatus();
+    return !is_wp_error($status) && isset($status['status']) && $status['status'] === 'valid';
+}
+`;
+
+      return {
+        content: [{ type: 'text', text: code }]
+      };
+    }
+  );
 }
