@@ -1,3 +1,9 @@
+<!--
+Source:    https://docs.lemonsqueezy.com/api
+Topic:     License API — activate, validate, deactivate
+Retrieved: 2026-10-28 (date added to this repo; no scrape timestamp was recorded)
+-->
+
 # Lemon Squeezy Software Licensing API
 
 For desktop apps, CLI tools, WordPress plugins, or self-hosted SaaS scripts requiring license activation, verification, and deactivation.

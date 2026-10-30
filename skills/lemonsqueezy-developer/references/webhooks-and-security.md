@@ -1,3 +1,9 @@
+<!--
+Source:    https://docs.lemonsqueezy.com/api
+Topic:     Webhooks — event payloads and HMAC-SHA256 signature verification
+Retrieved: 2026-10-28 (date added to this repo; no scrape timestamp was recorded)
+-->
+
 # Lemon Squeezy Webhooks & HMAC-SHA256 Security
 
 Webhooks allow your application to receive real-time POST notifications from Lemon Squeezy whenever an order, subscription, invoice, or license key event occurs.

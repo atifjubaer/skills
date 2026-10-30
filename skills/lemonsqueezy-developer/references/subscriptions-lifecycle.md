@@ -1,3 +1,9 @@
+<!--
+Source:    https://docs.lemonsqueezy.com/api
+Topic:     Subscriptions and Invoices — lifecycle, pauses, cancellations, plan changes
+Retrieved: 2026-10-28 (date added to this repo; no scrape timestamp was recorded)
+-->
+
 # Lemon Squeezy Subscriptions Lifecycle & Invoices API
 
 Comprehensive guide for managing SaaS billing, plan migrations, pauses, cancellations, and invoices.
