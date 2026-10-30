@@ -15,7 +15,7 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **Complete Database Manual:** 34 DB migrations, all `wp_fct_*` schema tables, Eloquent ORM models, relationships, and Query Builder.
   - **315+ Action & Filter Hooks:** 14 dedicated hook reference files covering order lifecycles, payment webhooks, cart fees, and admin UI.
   - **15 REST API Modules (Core & Pro):** Orders, Products, Customers, Coupons, Subscriptions, Tax, Shipping, Settings, Email Notifications, Reports, Integrations, Files, Labels & Attributes, Dashboard & Utilities, Public Shop, Checkout, Customer Profile, Software Licensing (Pro), Roles & Permissions (Pro), Order Bumps (Pro).
-  - **5 Runnable Example Projects:** Custom Addon plugin, Fee Surcharge plugin, Payment Gateway plugin, Shipping Carrier, and Starter Child Theme.
+  - **6 Runnable Example Projects:** Custom Addon plugin, Fee Surcharge plugin, Payment Gateway plugin, Shipping Carrier, Starter Child Theme, and Software Licensing SDK plugin.
 
 - **`Lemon Squeezy Developer`** (`lemonsqueezy-developer`):
   - **Complete JSON:API Manual:** Stores, Products, Variants, Prices, Files, Orders, and Subscriptions specifications.
@@ -26,7 +26,7 @@ This repository provides ready-to-use configurations, reference manuals, and cod
 
 - **`Fastr MCP Suite`** ([`fastr-mcp-suite`](skills/fastr-mcp-suite/SKILL.md)):
   - **Install Guide:** Exact config for Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, plus the hosted Streamable HTTP transport.
-  - **Tool Reference:** All ten `fc_*`, `ls_*`, and `suite_*` tools with their arguments, return shapes, and when to reach for each.
+  - **Tool Reference:** All eleven `fc_*`, `ls_*`, and `suite_*` tools with their arguments, return shapes, and when to reach for each.
   - **No Gate:** Every tool is free for every client — no licence key, account, or request quota.
   - **Troubleshooting:** The failures people actually hit — unknown table names, unreachable reference files, and the Windows `npx` stdio artifact.
 
@@ -38,7 +38,7 @@ Skills tell the model what to do. The MCP server in [`server/`](./server/README.
 
 | Card | Tools |
 | --- | --- |
-| **Card 1 — FluentCart Developer Agent** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate` |
+| **Card 1 — FluentCart Developer Agent** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate` |
 | **Card 2 — Lemon Squeezy Developer Agent** | `ls_search_docs`, `ls_get_schema`, `ls_get_reference`, `ls_verify_webhook`, `ls_validate_license` |
 | **Suite** | `suite_get_info` |
 

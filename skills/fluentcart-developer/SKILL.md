@@ -101,6 +101,7 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [ghost-product-selling.md](references/ghost-product-selling.md) — Ghost product selling, custom cart items, validation hooks, quantity changes, checkout validation, admin order updates, sample datasets.
 - [payment-gateway-integration.md](references/payment-gateway-integration.md) — Payment Methods module architecture, custom gateway development (gateway class, settings, API, webhooks), registration, processing flow, testing.
 - [paddle-gateway-case-study.md](references/paddle-gateway-case-study.md) — Paddle payment gateway case study, settings field schema, real-world gateway implementation example.
+- [software-licensing-sdk.md](references/software-licensing-sdk.md) — Official FluentCart Software Licensing SDK (`fluent-cart/software-licensing-sdk`): client-side plugin updates, `FluentLicensing`, `LicenseSettings`, `PluginUpdater`, remote endpoints (`?fluent-cart=activate_license`), and filter hooks.
 #### Runnable Code Examples & Project Boilerplates (`examples/`)
 - [examples/README.md](examples/README.md) — Inventory and developer guide for ready-to-use sample plugins and templates.
 - [sample-custom-addon/fluentcart-custom-addon.php](examples/sample-custom-addon/fluentcart-custom-addon.php) — Complete starter plugin with hook handlers, custom order meta, system logging, fee filters, and custom REST API endpoint.
@@ -108,6 +109,7 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [sample-custom-payment-gateway/fluentcart-custom-gateway-example.php](examples/sample-custom-payment-gateway/fluentcart-custom-gateway-example.php) — Complete custom payment gateway implementation extending `AbstractPaymentGateway` and `BaseGatewaySettings`.
 - [sample-shipping-carrier/fluentcart-custom-shipping-carrier.php](examples/sample-shipping-carrier/fluentcart-custom-shipping-carrier.php) — Dynamic shipping carrier calculation filter callback example.
 - [fluentcart-starter-child-theme/](examples/fluentcart-starter-child-theme/) — Starter child theme with `add_theme_support('fluent_cart')` and template override structure.
+- [sample-plugin-with-licensing-sdk/](examples/sample-plugin-with-licensing-sdk/) — Premium WordPress plugin with official FluentCart Software Licensing SDK integration, remote activation, and native one-click updates.
 
 ---
 

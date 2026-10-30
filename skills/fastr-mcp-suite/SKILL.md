@@ -122,6 +122,7 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | A Lemon Squeezy guide read in full or by section | `ls_get_reference` |
 | What this server contains and how it is licensed | `suite_get_info` |
 | Generating a full FluentCart gateway class | `fc_generate_payment_gateway_boilerplate` |
+| Generating FluentCart Software Licensing SDK integration boilerplate | `fc_generate_licensing_boilerplate` |
 | Checking an HMAC signature against a raw payload | `ls_verify_webhook` |
 | Validating a customer's license key live | `ls_validate_license` |
 
@@ -174,6 +175,20 @@ An unknown file name that matches one real file loosely is resolved for you; any
 ```
 
 `gatewaySlug` must be lowercase with underscores. Returns a complete PHP gateway: the `fluent_cart/payment_methods` registration, the gateway class, the settings schema, and the webhook listener. It is a starting point — the remote API calls, credentials, and status mapping still need the gateway's own documentation.
+
+### `fc_generate_licensing_boilerplate`
+
+```json
+{
+  "pluginNamespace": "Acme\\AwesomePlugin",
+  "pluginTitle": "Awesome Plugin Pro",
+  "itemId": 42,
+  "apiUrl": "https://store.example.com/",
+  "includeAdminUi": true
+}
+```
+
+Generates production-ready client integration PHP code for third-party WordPress plugins and themes using the official FluentCart Software Licensing SDK (`fluent-cart/software-licensing-sdk`). Emits the `FluentLicensing` registration, license status check helpers, and turnkey Admin License Management settings page (`LicenseSettings`).
 
 ### `ls_search_docs`
 

@@ -23,3 +23,8 @@ This directory contains production-ready code examples, runnable plugins, and pr
 ### 5. Starter Child Theme (`fluentcart-starter-child-theme/`)
 - Declarative `add_theme_support('fluent_cart')` child theme template.
 - Features: Overriding checkout templates in `fluent-cart/checkout.php` and custom checkout hooks in `functions.php`.
+
+### 6. Premium Plugin with Software Licensing SDK (`sample-plugin-with-licensing-sdk/`)
+- Full integration of the official FluentCart Software Licensing SDK (`fluent-cart/software-licensing-sdk`).
+- Features: Remote license key validation/activation, native WordPress one-click updates via `PluginUpdater`, turnkey admin license settings page via `LicenseSettings`, and conditional premium feature gating.
+

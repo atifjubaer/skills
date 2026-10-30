@@ -99,6 +99,7 @@ const TOOLS = [
   'fc_get_db_schema',
   'fc_get_reference',
   'fc_generate_payment_gateway_boilerplate',
+  'fc_generate_licensing_boilerplate',
   'suite_get_info'
 ];
 
@@ -124,7 +125,7 @@ const TOOLS = [
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
     const missing = TOOLS.filter(t => !names.includes(t));
-    check('free: all 10 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
+    check('free: all 11 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
     check('free: no duplicate registration', names.length === TOOLS.length, `${names.length} of ${TOOLS.length}`);
 
     const skills = await s.request('skills/list');
@@ -225,6 +226,21 @@ const TOOLS = [
     });
     const php = boiler.result?.content?.[0]?.text ?? '';
     check('free: gateway boilerplate', php.includes('class PaddleBillingGateway') && php.includes("'subscriptions'"));
+
+    const licBoiler = await s.request('tools/call', {
+      name: 'fc_generate_licensing_boilerplate',
+      arguments: {
+        pluginNamespace: 'Acme\\ProPlugin',
+        pluginTitle: 'Acme Pro Plugin',
+        itemId: 42,
+        apiUrl: 'https://store.example.com/'
+      }
+    });
+    const licPhp = licBoiler.result?.content?.[0]?.text ?? '';
+    check(
+      'free: licensing boilerplate',
+      licPhp.includes('FluentLicensing') && licPhp.includes('LicenseSettings') && licPhp.includes('item_id')
+    );
   } catch (err) {
     check('free session', false, err.message);
   } finally {
