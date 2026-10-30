@@ -251,12 +251,12 @@ Calls `https://api.lemonsqueezy.com/v1/licenses/validate` and returns the raw re
 
 A **card** is one product. A session gets the Pro tools of the cards its key is entitled to.
 
-| Session | Tools registered |
-| --- | --- |
-| No key (`core`) | The 7 core tools + the skills catalog |
-| Card 1 key | All core tools + `fc_generate_payment_gateway_boilerplate` |
-| Card 2 key | All core tools + `ls_verify_webhook`, `ls_validate_license` |
-| All-Access key | All 10 |
+| Session | Tools registered | Checkout URL |
+| --- | --- | --- |
+| No key (`core`) | The 7 core tools + the skills catalog | Free |
+| Card 1 key ($12/mo) | All core tools + `fc_generate_payment_gateway_boilerplate` | <https://fastrsoft.lemonsqueezy.com/fluentcart-pro-agent> |
+| Card 2 key ($12/mo) | All core tools + `ls_verify_webhook`, `ls_validate_license` | <https://fastrsoft.lemonsqueezy.com/lemon-squeezy-developer-agent> |
+| All-Access key ($19/mo) | All 10 tools | <https://fastrsoft.lemonsqueezy.com/all-access-suite> |
 
 How the key is presented depends on the transport:
 
@@ -300,6 +300,6 @@ Validation results are cached for 10 minutes. A revoked key therefore keeps work
 1. **Search before answering.** For any FluentCart hook or table, or any Lemon Squeezy endpoint, call the tool first. A remembered answer is not evidence.
 2. **One tool, one question.** Pass a short query, read the snippet, then call again with a tighter term if the result missed.
 3. **Quote hook names and payload skeletons verbatim** from tool output. Do not reformat them.
-4. **Never fabricate a Pro result.** If a locked tool is missing, say so and name the card that unlocks it.
+4. **Never fabricate a Pro result.** If a locked tool is missing, call `suite_get_pro_info` and share the exact Lemon Squeezy checkout link returned (`https://fastrsoft.lemonsqueezy.com/...`) so the user can purchase a license key.
 5. **Report tool errors as they are.** If a tool returns `isError`, surface the message and the fix — do not paper over it with a guess.
 6. **Keep secrets out of transcripts.** License keys and webhook signing secrets go in environment variables, not in tool arguments that a chat log will persist.

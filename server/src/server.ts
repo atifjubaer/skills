@@ -69,11 +69,19 @@ export async function createServerInstance(auth: AuthContext): Promise<McpServer
 
 type CardFilter = 'all' | 'fluentcart' | 'lemonsqueezy';
 
+const CHECKOUT_URLS = {
+  allAccess: 'https://fastrsoft.lemonsqueezy.com/all-access-suite',
+  fluentcart: 'https://fastrsoft.lemonsqueezy.com/fluentcart-pro-agent',
+  lemonsqueezy: 'https://fastrsoft.lemonsqueezy.com/lemon-squeezy-developer-agent'
+} as const;
+
 interface ProTool {
   card: string;
   cardId: Exclude<CardFilter, 'all'>;
   tool: string;
   gives: string;
+  price: string;
+  checkoutUrl: string;
 }
 
 const PRO_TOOLS: ProTool[] = [
@@ -81,19 +89,25 @@ const PRO_TOOLS: ProTool[] = [
     card: 'FluentCart Pro Agent',
     cardId: 'fluentcart',
     tool: 'fc_generate_payment_gateway_boilerplate',
-    gives: 'Production-ready PHP payment gateway class with settings schema and webhook entry point'
+    gives: 'Production-ready PHP payment gateway class with settings schema and webhook entry point',
+    price: '$12/mo',
+    checkoutUrl: CHECKOUT_URLS.fluentcart
   },
   {
     card: 'Lemon Squeezy Developer Agent',
     cardId: 'lemonsqueezy',
     tool: 'ls_verify_webhook',
-    gives: 'Timing-safe HMAC-SHA256 signature verification for incoming webhooks'
+    gives: 'Timing-safe HMAC-SHA256 signature verification for incoming webhooks',
+    price: '$12/mo',
+    checkoutUrl: CHECKOUT_URLS.lemonsqueezy
   },
   {
     card: 'Lemon Squeezy Developer Agent',
     cardId: 'lemonsqueezy',
     tool: 'ls_validate_license',
-    gives: 'Live license key validation against the Lemon Squeezy API'
+    gives: 'Live license key validation against the Lemon Squeezy API',
+    price: '$12/mo',
+    checkoutUrl: CHECKOUT_URLS.lemonsqueezy
   }
 ];
 
@@ -108,11 +122,17 @@ function proInfo(auth: AuthContext, card: CardFilter = 'all') {
     cards: auth.cards,
     reason: auth.reason,
     proTools,
+    checkoutUrls: CHECKOUT_URLS,
     unlock:
       visible.length === 0
         ? 'No Pro tools match that card filter.'
         : locked.length === 0
           ? 'Every Pro tool listed here is registered and callable in this session.'
-          : `Not registered in this session: ${locked.map(t => t.tool).join(', ')}. Local stdio: set PRO_LICENSE_KEY in the server environment. HTTP: send "Authorization: Bearer <license key>" on every request. Each card is sold separately; All-Access unlocks both.`
+          : `Not registered in this session: ${locked.map(t => t.tool).join(', ')}. ` +
+            `To unlock, purchase a license key on Lemon Squeezy:\n` +
+            `- All-Access Suite ($19/mo, all tools): ${CHECKOUT_URLS.allAccess}\n` +
+            (card === 'fluentcart' || card === 'all' ? `- Card 1: FluentCart Pro ($12/mo): ${CHECKOUT_URLS.fluentcart}\n` : '') +
+            (card === 'lemonsqueezy' || card === 'all' ? `- Card 2: Lemon Squeezy Pro ($12/mo): ${CHECKOUT_URLS.lemonsqueezy}\n` : '') +
+            `After purchase, set PRO_LICENSE_KEY=your-key in your MCP client environment or pass X-MCP-License-Key.`
   };
 }
