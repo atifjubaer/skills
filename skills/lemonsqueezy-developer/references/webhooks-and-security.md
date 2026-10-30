@@ -92,8 +92,11 @@ export async function POST(req: NextRequest) {
 | `subscription_payment_success` | Successful recurring renewal | Log payment invoice, extend subscription period. |
 | `subscription_payment_failed` | Recurring charge card failure | Send dunning notification or mark `past_due`. |
 | `subscription_payment_recovered`| Dunning succeeded | Return status to `active`. |
+| `subscription_payment_refunded` | A subscription invoice was fully or partially refunded | Reverse the granted period or credit the customer; check `refunded_amount` on the invoice. |
+| `customer_updated` | Customer record changed (email, name, address) | Sync local customer record. |
 | `license_key_created` | License key generated for product | Deliver key to customer via UI/email. |
 | `license_key_updated` | Key status or activation limit modified | Sync local license records. |
+| `affiliate_activated` | An affiliate was approved | Enable affiliate tracking or payout records. |
 
 ---
 

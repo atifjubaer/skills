@@ -658,6 +658,7 @@ subscription_unpaused
 subscription_payment_failed
 subscription_payment_success
 subscription_payment_recovered
+subscription_payment_refunded
 license_key_created
 license_key_updated
 affiliate_activated

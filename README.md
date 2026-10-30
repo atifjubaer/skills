@@ -38,10 +38,10 @@ Skills tell the model what to do. The MCP server in [`server/`](./server/README.
 
 | Card | Core (free) | Pro |
 | --- | --- | --- |
-| **Card 1 — FluentCart Pro Agent** | `fc_search_hooks`, `fc_get_db_schema` | `fc_generate_payment_gateway_boilerplate` |
-| **Card 2 — Lemon Squeezy Developer Agent** | `ls_search_docs`, `ls_get_schema` | `ls_verify_webhook`, `ls_validate_license` |
+| **Card 1 — FluentCart Pro Agent** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference` | `fc_generate_payment_gateway_boilerplate` |
+| **Card 2 — Lemon Squeezy Developer Agent** | `ls_search_docs`, `ls_get_schema`, `ls_get_reference` | `ls_verify_webhook`, `ls_validate_license` |
 
-Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base.
+Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base. `fc_get_reference` and `ls_get_reference` open any file under a skill's `references/` folder by name, or a single heading inside it — that is how the 49 FluentCart and 7 Lemon Squeezy reference files reach an MCP client that never loads them wholesale.
 
 ```bash
 npx -y fastr-mcp-suite    # stdio: no install, no build — published as fastr-mcp-suite

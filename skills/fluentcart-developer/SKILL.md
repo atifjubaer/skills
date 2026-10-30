@@ -62,18 +62,22 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [filter-hooks-customers-subscriptions.md](references/filter-hooks-customers-subscriptions.md) — Customer portal tabs/endpoints, subscription statuses, grace periods, billing cycles, reminder schedules.
 - [filter-hooks-integrations-advanced.md](references/filter-hooks-integrations-advanced.md) — Integration feeds, S3/local file storage, template paths, dashboard widgets, list filter queries, e-invoicing.
 
+#### Complete Hook Index
+- [hooks-complete-index.md](references/hooks-complete-index.md) — Every hook the docs publish (680): name, purpose and source file, including the Module and Pro-Module hooks that have no per-topic file, plus the deprecated names that still fire. Check here first when a hook is not in the 14 topic files above.
+
 #### Core Architecture & System References
 - [fluentcart-developer-guide.md](references/fluentcart-developer-guide.md) — Comprehensive developer guide, core concepts, codebase directory layout, and version comparison.
 - [database-schema-reference.md](references/database-schema-reference.md) — Complete database schema for all `wp_fct_*` tables.
 - [database-models-reference.md](references/database-models-reference.md) — FluentCart Eloquent Models, relationships, and scopes across Core and Pro modules.
+- [models-complete-index.md](references/models-complete-index.md) — Every model the docs publish (41), with DB table, class, source file, traits, attributes and relationships. Use when the model is not in `database-models-reference.md`.
 - [database-models-query-builder.md](references/database-models-query-builder.md) — FluentCart ORM Query Builder usage, aggregates, CRUD operations, and comprehensive model map.
 - [rest-api-reference.md](references/rest-api-reference.md) — Full REST API endpoints index, authentication, request/response formats.
 - [rest-api-overview.md](references/rest-api-overview.md) — REST API getting started, authentication standards, module catalog, permission system (32 permissions across 4 roles), and error handling.
-- [rest-api-orders.md](references/rest-api-orders.md) — Orders REST API (22 endpoints): CRUD, calculate shipping, bulk actions, refunds, customer reassignment, dispute handling, transactions.
-- [rest-api-products.md](references/rest-api-products.md) — Products REST API (59 endpoints): CRUD, pricing, search/lookup, bulk operations, duplicate, bundle info, upgrade paths, inventory, downloadables, variations, integrations.
+- [rest-api-orders.md](references/rest-api-orders.md) — Orders REST API (26 endpoints): CRUD, calculate shipping/tax, price preview, order currencies, bulk actions, refunds, customer reassignment, dispute handling, transactions.
+- [rest-api-products.md](references/rest-api-products.md) — Products REST API (62 endpoints): CRUD, pricing, search/lookup, bulk operations (incl. variant bulk update), duplicate, bundle info, upgrade paths, inventory, downloadables, variations, tax exemption, integrations.
 - [rest-api-customers.md](references/rest-api-customers.md) — Customers REST API (18 endpoints): CRUD, additional info (labels), bulk actions, order history, LTV recalculation, address management, WP user association.
 - [rest-api-coupons.md](references/rest-api-coupons.md) — Coupons REST API (12 endpoints): CRUD, paginated listing, apply/cancel/reapply, product eligibility, checkout settings, Coupon model & DB table reference.
-- [rest-api-subscriptions.md](references/rest-api-subscriptions.md) — Subscriptions REST API (17 endpoints): Admin lifecycle (cancel, remote fetch, early payment links), Customer Portal self-service (payment updates, gateway switching, auto-renew cancellation), status constants, and hooks.
+- [rest-api-subscriptions.md](references/rest-api-subscriptions.md) — Subscriptions REST API (27 endpoints): Admin lifecycle (cancel, charge-now, create-renewal, skip-renewal, update, vendor-id repair), renewal invoices (list, show, resend, void), Customer Portal self-service (payment updates, gateway switching, auto-renew cancellation), status constants, and hooks.
 - [rest-api-tax.md](references/rest-api-tax.md) — Tax REST API (26 endpoints): Tax filing, tax classes, country rates, shipping/product category overrides, global tax settings, and EU VAT / OSS cross-border compliance.
 - [rest-api-shipping.md](references/rest-api-shipping.md) — Shipping REST API (15 endpoints, `store/sensitive` permission): Shipping zones (region reset side effects, reordering), shipping methods (`flat_rate`, `free_shipping`, `local_pickup`, state scoping), shipping classes (`fixed` & `percentage` costs, `per_item` flags), and data models.
 - [rest-api-settings.md](references/rest-api-settings.md) — Settings REST API (30 endpoints, `StoreSettingsPolicy` & `is_super_admin`): Gateway setup (Stripe, PayPal connect, reordering, designs, addons), PayPal OAuth & webhooks, store configuration (`FluentMetaRequest`), module toggles, permissions, confirmation shortcodes, storage drivers (S3, Bunny, Local), and checkout fields.

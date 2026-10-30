@@ -22,6 +22,21 @@ Manage recurring subscriptions including listing, cancellation, reactivation, pa
 | PUT | `/orders/{order}/subscriptions/{subscription}/reactivate` | Reactivate Subscription (Reserved) |
 | PUT | `/orders/{order}/subscriptions/{subscription}/pause` | Pause Subscription (Reserved) |
 | PUT | `/orders/{order}/subscriptions/{subscription}/resume` | Resume Subscription (Reserved) |
+| POST | `/orders/{order}/subscriptions/{subscription}/charge-now` | Charge Subscription Now |
+| POST | `/orders/{order}/subscriptions/{subscription}/create-renewal` | Create Renewal Now |
+| POST | `/orders/{order}/subscriptions/{subscription}/skip-renewal` | Skip Next Renewal Period |
+| PUT | `/orders/{order}/subscriptions/{subscription}/update` | Update Subscription |
+| PUT | `/orders/{order}/subscriptions/{subscription}/vendor-ids` | Update Vendor IDs |
+| POST | `/orders/{order}/subscriptions/{subscription}/verify-vendor-ids` | Verify Vendor IDs |
+
+### Renewal Invoices
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/renewals` | List Renewal Invoices |
+| GET | `/renewals/{id}` | Get Renewal Invoice Details |
+| POST | `/renewals/{order}/resend` | Resend Renewal Invoice Email |
+| POST | `/renewals/{order}/void` | Void Renewal Invoice |
 
 ### Customer Portal Endpoints
 
@@ -309,6 +324,198 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions
 
 ---
 
+### Charge Subscription Now
+
+`POST /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/charge-now`
+
+Run one immediate off-session charge attempt against a subscription's open renewal invoice. Requires a store-billed (manual or auto-charge) subscription that already has a pending or scheduled renewal order.
+
+A declined card is returned as **HTTP 200 with `status: "failed"`** — the request itself succeeded, the charge attempt did not. Only a state violation (e.g. no open renewal order to charge) returns an error response, so branch on the body, not solely on the status code.
+
+**Permission:** `subscriptions/manage`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Parent order ID the subscription belongs to |
+| `subscription` | integer | path | Yes | Subscription ID |
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions/1/charge-now" \
+  -u "username:app_password"
+```
+
+---
+
+### Create Renewal Now
+
+`POST /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/create-renewal`
+
+Immediately create the next renewal order for a store-billed (manual or auto-charge) subscription, ahead of its scheduled billing date. Only valid for `active` or `trialing` subscriptions that have an upcoming billing date.
+
+For auto-charge (system) subscriptions the newly created — or already-open — renewal is charged immediately; for manual subscriptions it produces an invoice the customer pays.
+
+**Permission:** `subscriptions/manage`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Parent order ID the subscription belongs to |
+| `subscription` | integer | path | Yes | Subscription ID |
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions/1/create-renewal" \
+  -u "username:app_password"
+```
+
+---
+
+### Skip Next Renewal Period
+
+`POST /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/skip-renewal`
+
+Advance a store-billed (manual or auto-charge) subscription's `next_billing_date` to the following period **without** creating or charging a renewal for the current one. Only valid for `active` or `trialing` subscriptions with an upcoming billing date.
+
+The skip does not stack — if a skip is already pending, or there is nothing left to advance, the request fails.
+
+**Permission:** `subscriptions/manage`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Parent order ID the subscription belongs to |
+| `subscription` | integer | path | Yes | Subscription ID |
+| `reason` | string | body | No | Note recorded against the skip |
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions/1/skip-renewal" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"reason":"Customer travelling"}'
+```
+
+---
+
+### Update Subscription
+
+`PUT /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/update`
+
+Update a manual subscription's billing details — recurring amount, remaining bill count, billing interval, status, or next billing date. Only subscriptions with a **manual** collection method can be updated through this endpoint; system (auto-charge) and gateway-managed subscriptions are rejected.
+
+> `recurring_total` is a decimal amount in the store's currency (e.g. `29.99`), **not cents** — unlike almost every other money field in this API.
+
+**Permission:** `subscriptions/manage`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Parent order ID the subscription belongs to |
+| `subscription` | integer | path | Yes | Subscription ID |
+| `status` | string | body | Yes | New status: `active`, `paused`, `trialing`, `canceled`, `expired`, `completed`, `past_due` |
+| `recurring_total` | number | body | No | New recurring amount as a decimal (`29.99`), not cents |
+| `bill_times` | integer | body | No | Number of remaining billing cycles |
+| `billing_interval` | string | body | No | Interval label (e.g. `monthly`, `yearly`) |
+| `next_billing_date` | string | body | No | Any string `strtotime()` can parse |
+
+#### Example
+
+```bash
+curl -X PUT "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions/1/update" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"active","recurring_total":29.99,"billing_interval":"monthly","bill_times":12}'
+```
+
+---
+
+### Update Vendor IDs
+
+`PUT /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/vendor-ids`
+
+Correct the gateway identifiers (`vendor_subscription_id`, `vendor_customer_id`) on a gateway-billed subscription.
+
+Opt-in: the endpoint returns an error unless the site returns `true` from the `fluent_cart/subscription/vendor_id_editing_enabled` filter. It writes only the identifier columns — no renewal is voided, no invoice re-synced, no status event dispatched, and the payment gateway is not called. Only the keys you send are written; send an empty string to clear one.
+
+The new `vendor_subscription_id` is claimed atomically, so another subscription on the same payment method cannot already hold it.
+
+**Permission:** `subscriptions/manage`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | The parent order ID |
+| `subscription` | integer | path | Yes | The subscription ID |
+| `vendor_subscription_id` | string | body | No | Subscription ID at the payment gateway. Empty string clears it; omit to leave untouched. Max 45 chars, `^[a-zA-Z0-9_.-]+$` |
+| `vendor_customer_id` | string | body | No | Customer ID at the payment gateway. Empty string clears it; omit to leave untouched. Max 45 chars, `^[a-zA-Z0-9_.-]+$` |
+
+#### Example
+
+```bash
+curl -X PUT "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions/1/vendor-ids" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"vendor_subscription_id":"sub_1QxYzAbC"}'
+```
+
+---
+
+### Verify Vendor IDs
+
+`POST /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/verify-vendor-ids`
+
+Read-only lookup of a candidate vendor subscription ID at the payment gateway, used before saving a correction. Writes nothing locally and nothing at the gateway.
+
+Requires the `fluent_cart/subscription/vendor_id_editing_enabled` filter and a gateway declaring the `verify_vendor_ids` capability (Stripe and PayPal); other gateways return an error. A successful lookup proves the ID exists in the merchant account whose credentials this store holds — it is **not** proof of ownership, since one merchant account can back several stores.
+
+**Permission:** `subscriptions/manage`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | The parent order ID |
+| `subscription` | integer | path | Yes | The subscription ID |
+| `vendor_subscription_id` | string | body | No | The candidate subscription ID to look up. Max 45 chars, `^[a-zA-Z0-9_.-]+$` |
+| `vendor_customer_id` | string | body | No | The candidate customer ID. Sent because some gateways nest the subscription under its customer. Max 45 chars, `^[a-zA-Z0-9_.-]+$` |
+
+#### Response
+
+```json
+{
+  "message": "Subscription found at the payment gateway.",
+  "verification": {
+    "id": "sub_1PxaBcDeFgHiJkLmNoPqRsTu",
+    "status": "active",
+    "customer_id": "cus_QrStUvWxYz012345",
+    "amount": 9900,
+    "currency": "USD",
+    "next_billing_date": "2027-05-29 12:35:43"
+  }
+}
+```
+
+#### Example
+
+```bash
+curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions/1/verify-vendor-ids" \
+  -u "username:app_password" \
+  -H "Content-Type: application/json" \
+  -d '{"vendor_subscription_id":"sub_1P9xyzABCdef","vendor_customer_id":"cus_NffrFeUfNV2Hib"}'
+```
+
+---
+
 ### Reserved Admin Endpoints
 
 - `PUT /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/reactivate`
@@ -316,6 +523,131 @@ curl -X POST "https://example.com/wp-json/fluent-cart/v2/orders/10/subscriptions
 - `PUT /fluent-cart/v2/orders/{order}/subscriptions/{subscription}/resume`
 
 *Note: Registered but currently return "Not available yet". Reserved for future implementation.*
+
+---
+
+## Renewal Invoices
+
+A renewal invoice is just an order with `type = "renewal"`, so these endpoints read and act on the order record rather than a separate table. They are the admin-side controls for chasing and cleaning up unpaid renewals.
+
+### List Renewal Invoices
+
+`GET /fluent-cart/v2/renewals`
+
+List orders of type `renewal` (subscription renewal invoices), newest first, paginated. Each row includes its `customer` relation.
+
+**Permission:** `orders/view`
+
+**Policy:** `OrderPolicy`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `payment_status` | string | query | No | Filter by payment status (e.g. `paid`, `pending`, `failed`) |
+| `parent_id` | integer | query | No | Only renewal invoices belonging to this parent order ID |
+| `customer_id` | integer | query | No | Only renewal invoices belonging to this customer ID |
+
+#### Response
+
+```json
+{
+  "invoices": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 5151,
+        "status": "completed",
+        "parent_id": "1880",
+        "receipt_number": "6322",
+        "invoice_no": "INV-6322",
+        "fulfillment_type": "digital",
+        "type": "renewal",
+        "mode": "live",
+        "shipping_status": "unshipped",
+        "customer_id": 1484
+      }
+    ]
+  }
+}
+```
+
+`invoices` is a Laravel paginator payload (`current_page`, `data`, `total`, `per_page`, …).
+
+---
+
+### Get Renewal Invoice Details
+
+`GET /fluent-cart/v2/renewals/{id}`
+
+Retrieve a single renewal invoice, including its customer, order items and transactions.
+
+**Permission:** `orders/view`
+
+**Policy:** `OrderPolicy`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `id` | integer | path | Yes | Renewal order ID |
+
+---
+
+### Resend Renewal Invoice Email
+
+`POST /fluent-cart/v2/renewals/{order}/resend`
+
+Resend the pay-now email for a pending renewal invoice. Only allowed when `payment_status = pending`.
+
+If the invoice belongs to a system (store-managed) subscription that is still mid-retry, the resend is **blocked until the automatic retry ladder is exhausted**, so it never overlaps the dunning emails.
+
+**Permission:** `orders/manage`
+
+**Policy:** `OrderPolicy`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Renewal order ID |
+
+#### Response
+
+```json
+{ "message": "Renewal order email has been resent" }
+```
+
+---
+
+### Void Renewal Invoice
+
+`POST /fluent-cart/v2/renewals/{order}/void`
+
+Cancel a pending or scheduled renewal invoice. This is not a soft delete — it:
+
+1. sets the order's `payment_status` to `failed` and `status` to `canceled`,
+2. fails any pending transactions on it,
+3. advances the subscription past this billing period, so the scheduler does not immediately regenerate the same invoice,
+4. recounts the customer's stats.
+
+If a concurrent webhook pays the invoice between validation and the update, the void is **rejected** rather than overwriting a paid invoice.
+
+**Permission:** `orders/manage`
+
+**Policy:** `OrderPolicy`
+
+#### Parameters
+
+| Parameter | Type | Location | Required | Description |
+|-----------|------|----------|----------|-------------|
+| `order` | integer | path | Yes | Renewal order ID |
+
+#### Response
+
+```json
+{ "message": "Renewal order has been voided successfully" }
+```
 
 ---
 

@@ -59,7 +59,7 @@ Point a client at the built file:
 
 | Entitlement | What is registered |
 | --- | --- |
-| `core` (free) | `ls_search_docs`, `ls_get_schema`, `fc_search_hooks`, `fc_get_db_schema`, `suite_get_pro_info`, plus `skills/list` and `resources/read` for both skills |
+| `core` (free) | `ls_search_docs`, `ls_get_schema`, `ls_get_reference`, `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `suite_get_pro_info`, plus `skills/list` and `resources/read` for both skills |
 | Card 1 — FluentCart Pro Agent | everything above **and** `fc_generate_payment_gateway_boilerplate` |
 | Card 2 — Lemon Squeezy Developer Agent | everything above **and** `ls_verify_webhook`, `ls_validate_license` |
 | All-Access | everything above **and** all three Pro tools |
@@ -136,6 +136,7 @@ npx -y smithery mcp publish "https://<your-host>/mcp" -n <namespace>/fastr-mcp-s
 src/
   auth.ts                     tier resolution (stdio env + HTTP license validation)
   paths.ts                    skills folder resolution (bundled dist/skills → repo skills/)
+  reference-reader.ts         list/read/extract-section for a skill's references/*.md
   server.ts                   server factory, catalog attach, Pro info tool
   index.ts                    stdio entry
   http.ts                     Streamable HTTP entry + /health
