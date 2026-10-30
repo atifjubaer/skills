@@ -6,6 +6,29 @@ import { registerFluentCartTools } from './cards/fluentcart/tools.js';
 import { registerLemonSqueezyTools } from './cards/lemonsqueezy/tools.js';
 import { skillsRoot } from './paths.js';
 
+type SkillCatalog = Awaited<ReturnType<typeof loadSkills>>;
+
+/**
+ * The skills catalog is static: it is read from disk and never depends on the
+ * caller's tier. Building it costs ~20 ms (64 files, 1.6 MB) — 99% of a
+ * per-request server, since the HTTP handler builds a fresh McpServer for every
+ * call. So it is loaded once per process and the same catalogue is attached to
+ * each request's server; attaching a built catalogue costs ~0.03 ms.
+ *
+ * A failed load is not cached: the next request tries again rather than leaving
+ * the process without a catalogue until it restarts.
+ */
+let catalogPromise: Promise<SkillCatalog | null> | undefined;
+
+function skillsCatalog(): Promise<SkillCatalog | null> {
+  catalogPromise ??= loadSkills(skillsRoot()).catch((err: any) => {
+    console.error(`[Warning] Could not load skills catalog: ${err.message}`);
+    catalogPromise = undefined;
+    return null;
+  });
+  return catalogPromise;
+}
+
 export async function createServerInstance(auth: AuthContext): Promise<McpServer> {
   const server = new McpServer({
     name: 'fastr-dev-suite',
@@ -14,8 +37,8 @@ export async function createServerInstance(auth: AuthContext): Promise<McpServer
 
   // 1. Attach Official MCP 2026-07-28 Skills Catalog
   try {
-    const catalog = await loadSkills(skillsRoot());
-    catalog.attach(server);
+    const catalog = await skillsCatalog();
+    if (catalog) catalog.attach(server);
   } catch (err: any) {
     console.error(`[Warning] Could not attach skills catalog: ${err.message}`);
   }
