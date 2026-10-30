@@ -129,7 +129,11 @@ const TOOLS = [
 
     const skills = await s.request('skills/list');
     const skillList = skills.result?.skills ?? [];
-    check('free: skills/list', skillList.length === 2, `${skillList.length} skills`);
+    // Names, not a count: skills are discovered from `skills/` at build time, so
+    // shipping one more must not fail the probe.
+    const skillNames = skillList.map(s => s.frontmatter?.name ?? '');
+    const missingSkills = ['fluentcart-developer', 'lemonsqueezy-developer'].filter(n => !skillNames.includes(n));
+    check('free: skills/list', missingSkills.length === 0, missingSkills.join(', ') || `${skillList.length} skills: ${skillNames.join(', ')}`);
 
     const search = await s.request('tools/call', { name: 'ls_search_docs', arguments: { query: 'signature', category: 'webhooks' } });
     check('free: ls_search_docs', (search.result?.content?.[0]?.text ?? '').length > 100);
