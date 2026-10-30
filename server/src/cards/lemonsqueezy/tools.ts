@@ -6,6 +6,35 @@ import { z } from 'zod';
 import { hasCard, type AuthContext } from '../../auth.js';
 import { skillRefs } from '../../paths.js';
 
+const LS_VALIDATE_ENDPOINT = 'https://api.lemonsqueezy.com/v1/licenses/validate';
+
+/**
+ * `ls_validate_license` reaches out to Lemon Squeezy on every call, and it is a
+ * Pro tool, so a single buyer can drive unlimited requests into the API through
+ * this server. Three bounds, all process-wide — a cache declared inside
+ * `registerLemonSqueezyTools` would be rebuilt per request and never hit.
+ *
+ * A validation is a point-in-time answer rather than an entitlement, so the TTL
+ * is short: a revoked key stops validating within a minute.
+ */
+const VALIDATION_CACHE_TTL_MS = 60 * 1000;
+const VALIDATION_CACHE_MAX = 500;
+const MAX_INFLIGHT_VALIDATIONS = 32;
+const VALIDATION_TIMEOUT_MS = 5000;
+
+/** The key and the instance id together decide the answer, so both key the cache. */
+const validationCache = new Map<string, { body: unknown; expiresAt: number }>();
+let inFlightValidations = 0;
+
+function cacheValidation(key: string, body: unknown): void {
+  if (validationCache.size >= VALIDATION_CACHE_MAX) {
+    // Insertion-ordered, so the first key is the oldest entry.
+    const oldest = validationCache.keys().next().value;
+    if (oldest !== undefined) validationCache.delete(oldest);
+  }
+  validationCache.set(key, { body, expiresAt: Date.now() + VALIDATION_CACHE_TTL_MS });
+}
+
 export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext): void {
   const LS_REFS_DIR = skillRefs('lemonsqueezy-developer');
 
@@ -219,8 +248,24 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
       }
     },
     async ({ licenseKey, instanceId }) => {
+      const cacheKey = `${licenseKey}\u0000${instanceId ?? ''}`;
+      const cached = validationCache.get(cacheKey);
+      if (cached && cached.expiresAt > Date.now()) {
+        return {
+          content: [{ type: 'text', text: `${JSON.stringify(cached.body, null, 2)}\n\n(cached result, at most 60s old)` }]
+        };
+      }
+
+      if (inFlightValidations >= MAX_INFLIGHT_VALIDATIONS) {
+        return {
+          content: [{ type: 'text', text: 'Lemon Squeezy validation concurrency limit reached; retry in a moment.' }],
+          isError: true
+        };
+      }
+
+      inFlightValidations += 1;
       try {
-        const res = await fetch('https://api.lemonsqueezy.com/v1/licenses/validate', {
+        const res = await fetch(LS_VALIDATE_ENDPOINT, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -229,10 +274,14 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
           body: new URLSearchParams({
             license_key: licenseKey,
             ...(instanceId ? { instance_id: instanceId } : {})
-          })
+          }),
+          signal: AbortSignal.timeout(VALIDATION_TIMEOUT_MS)
         });
 
         const data = await res.json();
+        // Cache successful lookups only: an outage must not pin a "could not
+        // validate" answer onto a paying customer for the next minute.
+        if (res.ok) cacheValidation(cacheKey, data);
         return {
           content: [{ type: 'text', text: JSON.stringify(data, null, 2) }]
         };
@@ -241,6 +290,8 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
           content: [{ type: 'text', text: `Failed to connect to Lemon Squeezy API: ${err.message}` }],
           isError: true
         };
+      } finally {
+        inFlightValidations -= 1;
       }
     }
   );
