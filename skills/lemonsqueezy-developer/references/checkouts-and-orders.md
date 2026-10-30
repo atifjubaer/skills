@@ -1,3 +1,9 @@
+<!--
+Source:    https://docs.lemonsqueezy.com/api
+Topic:     Checkouts (create, overlay, custom data) and Orders
+Retrieved: 2026-10-28 (date added to this repo; no scrape timestamp was recorded)
+-->
+
 # Lemon Squeezy Checkouts & Orders API
 
 Generate dynamic checkout URLs, embed checkout overlays (iframe), pass custom metadata, and retrieve order details.

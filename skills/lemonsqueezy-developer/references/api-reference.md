@@ -1,3 +1,9 @@
+<!--
+Source:    https://docs.lemonsqueezy.com/api
+Topic:     API reference — test mode, versioning, endpoints, JSON:API conventions
+Retrieved: 2026-10-28 (date added to this repo; no scrape timestamp was recorded)
+-->
+
 Test mode
 You can build and test a full API integration with Lemon Squeezy using Test mode. Any API keys created in Test mode will interact with your test mode store data.
 

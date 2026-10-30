@@ -1,3 +1,10 @@
+<!--
+Source:    https://docs.lemonsqueezy.com/help
+Also:      https://docs.lemonsqueezy.com/api
+Topic:     Going live — store approval, test to live mode, API keys
+Retrieved: 2026-10-28 (date added to this repo; no scrape timestamp was recorded)
+-->
+
 # Lemon Squeezy Go-Live Integration Guide
 
 This guide details how to switch the **Nexus Radar** extension from **Test Mode** (during development) to **Live Mode** (to collect real payments) once your Lemon Squeezy store gets approved.
