@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// OBSOLETE as of 2026-10-30. The suite is free and MIT, the server no longer
+// resolves licence keys, and there are no SKUs to sync. Kept only as a record of
+// the ids that once existed; nothing in the repo calls it.
+//
 // Read the Suite SKUs out of Lemon Squeezy and print the ids the server needs.
 //
 //   LEMONSQUEEZY_API_KEY=... LEMONSQUEEZY_STORE_ID=... node scripts/sync-lemon-squeezy-ids.mjs

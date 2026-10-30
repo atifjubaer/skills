@@ -87,4 +87,4 @@ class QuickPayGateway extends BasePaymentMethod
 - **Compatibility Note:** No external dependencies required. Works offline with any markdown-capable agent.
 
 ## Step 5: Pricing
-- **Pricing Model:** Free ($0) — recommended for maximum developer adoption and funneling to the $19/mo Fastr MCP Suite.
+- **Pricing Model:** Free ($0). The companion MCP server and all of its tools are free and MIT-licensed too.

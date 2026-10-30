@@ -95,4 +95,4 @@ export async function handleWebhook(req, res) {
 - **Compatibility Note:** Works offline with any markdown-capable agent.
 
 ## Step 5: Pricing
-- **Pricing Model:** Free ($0) — drives developer awareness and funnels subscribers to the $19/mo Fastr MCP Suite.
+- **Pricing Model:** Free ($0). The companion MCP server and all of its tools are free and MIT-licensed too.

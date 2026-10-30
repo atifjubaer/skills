@@ -313,7 +313,7 @@ class QuickPayGateway extends BasePaymentMethod
 - **Compatibility Note:** No external dependencies required. Works offline with any markdown-capable agent.
 
 ## Step 5: Pricing
-- **Pricing Model:** Free ($0) — recommended for maximum developer adoption and funneling to the $19/mo Fastr MCP Suite.
+- **Pricing Model:** Free ($0). The companion MCP server and all of its tools are free and MIT-licensed too.
 `;
 
 writeFileSync(join(outDir, 'fluentcart-developer-submission.md'), fcSubmission);
@@ -416,7 +416,7 @@ export async function handleWebhook(req, res) {
 - **Compatibility Note:** Works offline with any markdown-capable agent.
 
 ## Step 5: Pricing
-- **Pricing Model:** Free ($0) — drives developer awareness and funnels subscribers to the $19/mo Fastr MCP Suite.
+- **Pricing Model:** Free ($0). The companion MCP server and all of its tools are free and MIT-licensed too.
 `;
 
 writeFileSync(join(outDir, 'lemonsqueezy-developer-submission.md'), lsSubmission);
