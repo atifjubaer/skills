@@ -2,7 +2,7 @@ import { createMcpExpressApp } from '@modelcontextprotocol/express';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import dotenv from 'dotenv';
-import { authenticateRequest } from './auth.js';
+import { fullAccess } from './auth.js';
 import { createServerInstance } from './server.js';
 
 dotenv.config();
@@ -15,10 +15,10 @@ const app = createMcpExpressApp({
   allowedHosts
 });
 
-// Per-request factory creates a fresh server instance bound to the caller's tier
-const handler = createMcpHandler(async ctx => {
-  const auth = await authenticateRequest(ctx.requestInfo);
-  return await createServerInstance(auth);
+// Per-request factory: a fresh server instance per call. Nothing about the
+// request changes what is registered — every caller gets the whole suite.
+const handler = createMcpHandler(async () => {
+  return await createServerInstance(fullAccess('http'));
 });
 
 const node = toNodeHandler(handler);
@@ -35,6 +35,8 @@ app.get('/health', (req, res) => {
     server: 'fastr-dev-suite',
     version: '1.0.0',
     protocol: '2026-07-28',
+    licence: 'MIT',
+    price: 'free',
     cards: [
       'fluentcart-developer',
       'lemonsqueezy-developer'

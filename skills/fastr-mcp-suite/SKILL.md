@@ -1,9 +1,9 @@
 ---
 name: "fastr-mcp-suite"
-description: "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — executable FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; when a Pro tool is missing; or when a license key does not unlock a card."
-summary: "Setup and tool guide for the Fastr MCP Suite: install commands for every MCP client, the eight tools and their arguments, tier gating, and fixes for the failures people actually hit."
-version: "1.0.0"
-license: "BSL-1.1"
+description: "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — free, MIT-licensed FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; or when a tool call fails."
+summary: "Setup and tool guide for the Fastr MCP Suite: install commands for every MCP client, all ten tools and their arguments, and fixes for the failures people actually hit. Every tool is free."
+version: "2.0.0"
+license: "MIT"
 tags:
   - mcp
   - model-context-protocol
@@ -20,8 +20,8 @@ keywords:
 use_cases:
   - Connecting the Fastr MCP Suite to an MCP client
   - Choosing the right fc_ or ls_ tool for a question
-  - Unlocking and troubleshooting Pro tier tools
   - Running the suite locally, over stdio, or as a hosted HTTP service
+  - Diagnosing a failing tool call
 ---
 
 # Fastr MCP Suite — Setup & Tool Guide
@@ -32,7 +32,8 @@ The MCP server turns the two knowledge-base skills into **callable tools**, so a
 - **npm package:** `fastr-mcp-suite` (bin: `fastr-mcp`)
 - **Runtime:** Node.js **22 or newer**
 - **Transports:** `stdio` (local clients), Streamable HTTP (hosted / marketplace)
-- **Tools:** 8 total — 5 always available, 3 behind a license key
+- **Tools:** 10 total — all free, all registered for every caller
+- **Licence:** MIT. No key, no account, no quota.
 
 > This is a knowledge and verification server. It does not connect to a WordPress database and does not modify a FluentCart store. The one tool that reaches the network is `ls_validate_license`, which calls the Lemon Squeezy licensing API.
 
@@ -48,12 +49,6 @@ Pick exactly one path. Do not mix a global install with an `npx` config.
 claude mcp add fastr-suite -- npx -y fastr-mcp-suite
 ```
 
-With a Pro key:
-
-```bash
-claude mcp add fastr-suite -e PRO_LICENSE_KEY=your-license-key -- npx -y fastr-mcp-suite
-```
-
 ### Claude Desktop, Cursor, Windsurf, Cline, Zed
 
 Add to the client's MCP config file (`claude_desktop_config.json`, `.cursor/mcp.json`, `mcp_config.json`, …):
@@ -63,10 +58,7 @@ Add to the client's MCP config file (`claude_desktop_config.json`, `.cursor/mcp.
   "mcpServers": {
     "fastr-suite": {
       "command": "npx",
-      "args": ["-y", "fastr-mcp-suite"],
-      "env": {
-        "PRO_LICENSE_KEY": "your-license-key"
-      }
+      "args": ["-y", "fastr-mcp-suite"]
     }
   }
 }
@@ -80,7 +72,7 @@ On Windows, if `npx` is not on the client's PATH, use `"command": "cmd"` with `"
 cd server
 npm ci
 npm run build     # tsc + bundles both card skill folders into dist/skills
-npm run verify    # 27 protocol assertions; all must pass
+npm run verify    # boots the built server; all checks must pass
 ```
 
 ```json
@@ -104,14 +96,14 @@ cd server && npm run build && node dist/http.js   # http://0.0.0.0:8080/mcp
 - `GET /health` — liveness probe
 - `PORT` — override the default `8080`
 
-Send the license key per request: `Authorization: Bearer <license-key>`. When the server runs behind a marketplace gateway that authenticates the call itself, the gateway's credential occupies `Authorization` and the license key goes in `X-MCP-License-Key` — the server reads that header first, then falls back to `Authorization`. A hosted deployment also accepts marketplace gateway secrets (`MCPIZE_GATEWAY_SECRET`, `AGENSI_GATEWAY_SECRET`) and an operator allowlist (`VALID_LICENSE_KEYS`, comma-separated).
+No `Authorization` header is required. A gateway in front of the server may authenticate callers for its own purposes, but the server ignores that credential and registers the same ten tools either way.
 
 ---
 
 ## 2. Confirm the connection before doing real work
 
-1. List the tools the client sees. Expect **7** on a free session, **8–10** with a key.
-2. Call `suite_get_pro_info` with `{"card": "all"}`. It returns which Pro tools are unlocked, which are locked, and why.
+1. List the tools the client sees. Expect **10**.
+2. Call `suite_get_info` with `{}`. It reports the transport, the tools per card, and the licence.
 3. Call one cheap read tool, e.g. `fc_search_hooks` with `{"query": "order_created"}`.
 
 If any of those three fail, fix the connection first — no amount of prompt wording repairs a misconfigured server.
@@ -128,16 +120,16 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | Lemon Squeezy webhook signatures, checkout payloads, subscription states, license endpoints | `ls_search_docs` |
 | The exact JSON:API body for a Lemon Squeezy endpoint | `ls_get_schema` |
 | A Lemon Squeezy guide read in full or by section | `ls_get_reference` |
-| What is locked and how to unlock it | `suite_get_pro_info` |
-| Generating a full FluentCart gateway class | `fc_generate_payment_gateway_boilerplate` *(Pro)* |
-| Checking an HMAC signature against a raw payload | `ls_verify_webhook` *(Pro)* |
-| Validating a customer's license key live | `ls_validate_license` *(Pro)* |
+| What this server contains and how it is licensed | `suite_get_info` |
+| Generating a full FluentCart gateway class | `fc_generate_payment_gateway_boilerplate` |
+| Checking an HMAC signature against a raw payload | `ls_verify_webhook` |
+| Validating a customer's license key live | `ls_validate_license` |
 
-If a Pro tool is not registered, do **not** substitute a hand-written answer and present it as verified. Say which card is locked, and either use the free search tools or ask for a key.
+If a tool is not registered, the server is running an old build — reinstall (see §6). Do **not** substitute a hand-written answer and present it as verified.
 
 ---
 
-## 4. Core tools (always available)
+## 4. Tools
 
 ### `fc_search_hooks`
 
@@ -171,6 +163,18 @@ Use it for everything `fc_search_hooks` and `fc_get_db_schema` do not answer: RE
 
 An unknown file name that matches one real file loosely is resolved for you; anything ambiguous returns the candidate list rather than a guess. Path traversal is rejected, so pass a plain file name.
 
+### `fc_generate_payment_gateway_boilerplate`
+
+```json
+{
+  "gatewaySlug": "quickpay",
+  "gatewayTitle": "QuickPay",
+  "supportsSubscriptions": false
+}
+```
+
+`gatewaySlug` must be lowercase with underscores. Returns a complete PHP gateway: the `fluent_cart/payment_methods` registration, the gateway class, the settings schema, and the webhook listener. It is a starting point — the remote API calls, credentials, and status mapping still need the gateway's own documentation.
+
 ### `ls_search_docs`
 
 ```json
@@ -201,31 +205,7 @@ Same contract as `fc_get_reference`, over the 7 Lemon Squeezy reference files: `
 
 Omit both arguments to list them; pass `file` for the whole document; add `section` for one heading. Reach for it when `ls_search_docs` returns a snippet that stops short of what the user needs.
 
-### `suite_get_pro_info`
-
-```json
-{ "card": "all" }
-```
-
-`card` is `all` (default), `fluentcart`, or `lemonsqueezy`. Read-only. This is the authoritative answer to "why can't I see that tool" — call it before speculating about a client bug.
-
----
-
-## 5. Pro tools (require a license key)
-
-### `fc_generate_payment_gateway_boilerplate` — Card 1
-
-```json
-{
-  "gatewaySlug": "quickpay",
-  "gatewayTitle": "QuickPay",
-  "supportsSubscriptions": false
-}
-```
-
-`gatewaySlug` must be lowercase with underscores. Returns a complete PHP gateway: the `fluent_cart/payment_methods` registration, the gateway class, the settings schema, and the webhook listener. It is a starting point — the remote API calls, credentials, and status mapping still need the gateway's own documentation.
-
-### `ls_verify_webhook` — Card 2
+### `ls_verify_webhook`
 
 ```json
 {
@@ -237,7 +217,7 @@ Omit both arguments to list them; pass `file` for the whole document; add `secti
 
 Compares an HMAC-SHA256 digest against the header in constant time. `rawBody` must be the **unparsed** request body — a re-serialized object will fail even when the signature is genuine. The secret belongs in an environment variable; never paste it into a conversation that will be stored.
 
-### `ls_validate_license` — Card 2
+### `ls_validate_license`
 
 ```json
 { "licenseKey": "XXXX-XXXX-XXXX-XXXX", "instanceId": "optional-instance-id" }
@@ -245,61 +225,49 @@ Compares an HMAC-SHA256 digest against the header in constant time. `rawBody` mu
 
 Calls `https://api.lemonsqueezy.com/v1/licenses/validate` and returns the raw response, including `valid`, `license_key.status`, `meta.product_id`, and `meta.store_id`. Omit `instanceId` to check the key itself; include it to check one activated machine or domain.
 
----
+Results are cached for 60 seconds and bounded to 32 concurrent calls, so repeated checks during one investigation are cheap.
 
-## 6. Tiers and license keys
+### `suite_get_info`
 
-A **card** is one product. A session gets the Pro tools of the cards its key is entitled to.
+```json
+{ "card": "all" }
+```
 
-| Session | Tools registered | Checkout URL |
-| --- | --- | --- |
-| No key (`core`) | The 7 core tools + the skills catalog | Free |
-| Card 1 key ($12/mo) | All core tools + `fc_generate_payment_gateway_boilerplate` | <https://fastrsoft.lemonsqueezy.com/fluentcart-pro-agent> |
-| Card 2 key ($12/mo) | All core tools + `ls_verify_webhook`, `ls_validate_license` | <https://fastrsoft.lemonsqueezy.com/lemon-squeezy-developer-agent> |
-| All-Access key ($19/mo) | All 10 tools | <https://fastrsoft.lemonsqueezy.com/all-access-suite> |
-
-How the key is presented depends on the transport:
-
-- **stdio** — `PRO_LICENSE_KEY` in the environment.
-- **HTTP** — `Authorization: Bearer <key>` on each request.
-- **Behind MCPize** — MCPize authenticates every hosted call at its edge and forwards its
-  own credential in `Authorization`, so the license key has to ride alongside it in
-  `X-MCP-License-Key`. Both headers are required; with only the MCPize credential the
-  session stays `core` and `suite_get_pro_info` reports
-  `gateway session authenticated, but no X-MCP-License-Key was supplied`.
-
-  ```bash
-  claude mcp add --transport http fastr-mcp-suite https://fastr-mcp-suite.mcpize.run \
-    --header "Authorization: Bearer <mcpize-token>" \
-    --header "X-MCP-License-Key: <lemonsqueezy-key>"
-  ```
-
-Validation results are cached for 10 minutes. A revoked key therefore keeps working for up to 10 minutes, and a newly purchased key is picked up immediately on the next cache miss.
-
-`PRO_CARDS` exists so a local session can be narrowed to one card for testing (`PRO_CARDS=fluentcart`). An unrecognised value fails closed to `core`.
+`card` is `all` (default), `fluentcart`, or `lemonsqueezy`. Read-only. Reports the transport this call arrived on, the tool list per card, the licence (MIT), and the price (`free`).
 
 ---
 
-## 7. Troubleshooting
+## 5. Free means free
+
+There is no tier, no licence key, no purchase, and no request cap. Every tool above is registered for every client on both transports, including the three that used to sit behind a key (`fc_generate_payment_gateway_boilerplate`, `ls_verify_webhook`, `ls_validate_license`).
+
+If a config still carries `PRO_LICENSE_KEY` or `PRO_CARDS` from an older install, delete them — they are ignored, and leaving them behind makes the next reader think a gate exists.
+
+The server and these skills are MIT. Fork the repo, run your own copy, and open a pull request for anything you want upstream.
+
+---
+
+## 6. Troubleshooting
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| Pro tool "not found" | Pro tools are never registered on a locked session — the schema is not sent to the client | `suite_get_pro_info` to confirm the tier, then check `PRO_LICENSE_KEY` / the `X-MCP-License-Key` or Bearer header |
-| Key is valid but only some cards unlock | The key's `meta.product_id` maps to a single card | Expected. Use an All-Access key for both |
-| `license inactive, unknown, or wrong store` | Key revoked, expired, or from a different store | `LS_STORE_ID` overrides the expected store; the default is the FastrSoft store |
-| `license validation unavailable` | Lemon Squeezy API unreachable or timed out (5 s) | Fails closed to core by design; retry, and check outbound network |
+| A tool is "not found" | An older build predates it, or the client cached an old tool list | Reinstall (`npx -y fastr-mcp-suite`) and restart the client so it re-runs `tools/list` |
+| Client sees zero tools | Wrong command or working directory in the config | Run the exact command from the config in a terminal first |
 | `fc_get_db_schema` says "not found" | Unknown table name | Re-run with `orders`, `customers`, `subscriptions`, `order_items`, `licenses`, or `coupons` |
+| `fc_get_reference` returns a candidate list | The file name matched more than one file | Re-run with one of the names it printed |
+| Reference text looks truncated | The whole-document read is capped at 14,000 characters | Re-run with `section` to pull one heading |
+| `license validation unavailable` | Lemon Squeezy API unreachable or timed out (5 s) | Retry; nothing else in the suite depends on it |
+| `Lemon Squeezy validation concurrency limit reached` | More than 32 validations in flight | Retry in a moment |
 | Server exits immediately under `npx` on Windows | Piped stdin is not a real MCP client session; `npx` swallows stdio | Not a server bug — test through an actual client, or install into a temp dir and spawn `node node_modules/fastr-mcp-suite/dist/index.js` |
 | `Cannot find module` after a global install | Node older than 22, or a stale global cache | `node -v`, then `npm cache clean --force` and reinstall |
-| Client sees zero tools | Wrong command or working directory in the config | Run the exact command from the config in a terminal first |
 
 ---
 
-## 8. Rules for the agent
+## 7. Rules for the agent
 
 1. **Search before answering.** For any FluentCart hook or table, or any Lemon Squeezy endpoint, call the tool first. A remembered answer is not evidence.
 2. **One tool, one question.** Pass a short query, read the snippet, then call again with a tighter term if the result missed.
 3. **Quote hook names and payload skeletons verbatim** from tool output. Do not reformat them.
-4. **Never fabricate a Pro result.** If a locked tool is missing, call `suite_get_pro_info` and share the exact Lemon Squeezy checkout link returned (`https://fastrsoft.lemonsqueezy.com/...`) so the user can purchase a license key.
-5. **Report tool errors as they are.** If a tool returns `isError`, surface the message and the fix — do not paper over it with a guess.
-6. **Keep secrets out of transcripts.** License keys and webhook signing secrets go in environment variables, not in tool arguments that a chat log will persist.
+4. **Report tool errors as they are.** If a tool returns `isError`, surface the message and the fix — do not paper over it with a guess.
+5. **Keep secrets out of transcripts.** Webhook signing secrets and customer licence keys go in environment variables, not in tool arguments that a chat log will persist.
+6. **Never invent a tool that is missing.** If the client does not list a tool the user asked for, say the installed build is out of date and give the reinstall command.

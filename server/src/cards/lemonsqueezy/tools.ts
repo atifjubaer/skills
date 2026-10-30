@@ -3,16 +3,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { hasCard, type AuthContext } from '../../auth.js';
 import { skillRefs } from '../../paths.js';
 import { listReferences, readReference } from '../../reference-reader.js';
 
 const LS_VALIDATE_ENDPOINT = 'https://api.lemonsqueezy.com/v1/licenses/validate';
 
 /**
- * `ls_validate_license` reaches out to Lemon Squeezy on every call, and it is a
- * Pro tool, so a single buyer can drive unlimited requests into the API through
- * this server. Three bounds, all process-wide — a cache declared inside
+ * `ls_validate_license` reaches out to Lemon Squeezy on every call, and it is
+ * free for every caller — including anonymous traffic on a public hosted
+ * deploy — so this server must not become an unbounded relay into their API.
+ * Three bounds, all process-wide: a cache declared inside
  * `registerLemonSqueezyTools` would be rebuilt per request and never hit.
  *
  * A validation is a point-in-time answer rather than an entitlement, so the TTL
@@ -36,11 +36,11 @@ function cacheValidation(key: string, body: unknown): void {
   validationCache.set(key, { body, expiresAt: Date.now() + VALIDATION_CACHE_TTL_MS });
 }
 
-export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext): void {
+export function registerLemonSqueezyTools(server: McpServer): void {
   const LS_REFS_DIR = skillRefs('lemonsqueezy-developer');
 
   // ==========================================
-  // CORE PROFILE TOOLS (Available in Free Tier)
+  // Read tools — doc search, schema lookup, reference reader
   // ==========================================
 
   server.registerTool(
@@ -258,16 +258,12 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
   );
 
   // ==========================================
-  // PRO PROFILE TOOLS (Unlocked for Paid Tier)
-  // Registration — not just a description — is what the paywall controls:
-  // a core-tier client never sees these schemas, let alone calls them.
+  // Verification tools — free like everything else in the suite
   // ==========================================
-  if (!hasCard(auth, 'lemonsqueezy')) return;
-
   server.registerTool(
     'ls_verify_webhook',
     {
-      description: '[PRO CARD] Perform timing-safe HMAC-SHA256 signature verification on an incoming Lemon Squeezy webhook payload.',
+      description: 'Perform timing-safe HMAC-SHA256 signature verification on an incoming Lemon Squeezy webhook payload.',
       inputSchema: {
         rawBody: z.string().describe('The raw unparsed request body string'),
         signatureHeader: z.string().describe('The value of the X-Signature HTTP request header'),
@@ -304,7 +300,7 @@ export function registerLemonSqueezyTools(server: McpServer, auth: AuthContext):
   server.registerTool(
     'ls_validate_license',
     {
-      description: '[PRO CARD] Validate a live Lemon Squeezy software license key directly against the official API.',
+      description: 'Validate a live Lemon Squeezy software license key directly against the official API.',
       inputSchema: {
         licenseKey: z.string().describe('The customer license key string'),
         instanceId: z.string().optional().describe('The instance ID if checking a specific activated machine/domain')

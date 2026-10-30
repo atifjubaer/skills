@@ -1,7 +1,7 @@
 // Guards the published tarball.
 //
-// The root package is MIT and public. `server/` is BSL-1.1 commercial code and
-// must never end up in it — and neither should a second product's skill. Both
+// The root package ships one skill. `server/` is a separate npm package and must
+// never end up in this one — and neither should a second product's skill. Both
 // are one forgotten `files` entry away from shipping.
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -18,7 +18,7 @@ const errors = [];
 const forbidden = [
   {
     matches: p => p.startsWith('server/'),
-    why: 'server/ is BSL-1.1 commercial code and must not ship in the public MIT package'
+    why: 'server/ is its own published package and must not ship in the skills package'
   },
   {
     matches: p => p.startsWith('skills/') && !p.startsWith('skills/fluentcart-developer/'),
