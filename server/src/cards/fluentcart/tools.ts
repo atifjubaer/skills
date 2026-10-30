@@ -2,15 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { hasCard, type AuthContext } from '../../auth.js';
 import { skillRefs } from '../../paths.js';
 import { listReferences, readReference } from '../../reference-reader.js';
 
-export function registerFluentCartTools(server: McpServer, auth: AuthContext): void {
+export function registerFluentCartTools(server: McpServer): void {
   const FC_REFS_DIR = skillRefs('fluentcart-developer');
 
   // ==========================================
-  // CORE PROFILE TOOLS (Available in Free Tier)
+  // Read tools — hook search, schema lookup, reference reader
   // ==========================================
 
   server.registerTool(
@@ -174,16 +173,12 @@ export function registerFluentCartTools(server: McpServer, auth: AuthContext): v
   );
 
   // ==========================================
-  // PRO PROFILE TOOLS (Unlocked for Paid Tier)
-  // Registration — not just a description — is what the paywall controls:
-  // a core-tier client never sees these schemas, let alone calls them.
+  // Code generation — free like everything else in the suite
   // ==========================================
-  if (!hasCard(auth, 'fluentcart')) return;
-
   server.registerTool(
     'fc_generate_payment_gateway_boilerplate',
     {
-      description: '[PRO CARD] Generate production-ready PHP boilerplate for custom FluentCart payment gateways with settings schema and webhook listener.',
+      description: 'Generate production-ready PHP boilerplate for custom FluentCart payment gateways with settings schema and webhook listener.',
       inputSchema: {
         gatewaySlug: z.string().describe('Lowercase slug for gateway, e.g. "paddle_billing", "custom_pay"'),
         gatewayTitle: z.string().describe('Display title, e.g. "Paddle Billing"'),

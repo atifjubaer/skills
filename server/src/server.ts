@@ -10,10 +10,10 @@ type SkillCatalog = Awaited<ReturnType<typeof loadSkills>>;
 
 /**
  * The skills catalog is static: it is read from disk and never depends on the
- * caller's tier. Building it costs ~20 ms (64 files, 1.6 MB) — 99% of a
- * per-request server, since the HTTP handler builds a fresh McpServer for every
- * call. So it is loaded once per process and the same catalogue is attached to
- * each request's server; attaching a built catalogue costs ~0.03 ms.
+ * caller. Building it costs ~20 ms (64 files, 1.6 MB) — 99% of a per-request
+ * server, since the HTTP handler builds a fresh McpServer for every call. So it
+ * is loaded once per process and the same catalogue is attached to each
+ * request's server; attaching a built catalogue costs ~0.03 ms.
  *
  * A failed load is not cached: the next request tries again rather than leaving
  * the process without a catalogue until it restarts.
@@ -43,24 +43,25 @@ export async function createServerInstance(auth: AuthContext): Promise<McpServer
     console.error(`[Warning] Could not attach skills catalog: ${err.message}`);
   }
 
-  // 2. Register Playing Card 1: FluentCart Pro Agent
-  registerFluentCartTools(server, auth);
+  // 2. Register Playing Card 1: FluentCart Developer Agent
+  registerFluentCartTools(server);
 
   // 3. Register Playing Card 2: Lemon Squeezy Developer Agent
-  registerLemonSqueezyTools(server, auth);
+  registerLemonSqueezyTools(server);
 
-  // 4. Conversion surface: always readable, tells a core client what Pro adds.
+  // 4. Session introspection: which transport this call arrived on, and what
+  //    the suite costs. Free is a claim the server should be able to prove.
   server.registerTool(
-    'suite_get_pro_info',
+    'suite_get_info',
     {
-      description: 'List the Pro-only tools in this suite and how to unlock them for the current session.',
+      description: 'Report what this suite contains, which tools serve which card, and how it is licensed. Every tool is free.',
       inputSchema: {
-        card: z.enum(['all', 'fluentcart', 'lemonsqueezy']).default('all').describe('Limit the list to one Playing Card')
+        card: z.enum(['all', 'fluentcart', 'lemonsqueezy']).default('all').describe('Limit the tool list to one Playing Card')
       },
       annotations: { readOnlyHint: true }
     },
     async ({ card }) => ({
-      content: [{ type: 'text', text: JSON.stringify(proInfo(auth, card), null, 2) }]
+      content: [{ type: 'text', text: JSON.stringify(suiteInfo(auth, card), null, 2) }]
     })
   );
 
@@ -69,70 +70,42 @@ export async function createServerInstance(auth: AuthContext): Promise<McpServer
 
 type CardFilter = 'all' | 'fluentcart' | 'lemonsqueezy';
 
-const CHECKOUT_URLS = {
-  allAccess: 'https://fastrsoft.lemonsqueezy.com/all-access-suite',
-  fluentcart: 'https://fastrsoft.lemonsqueezy.com/fluentcart-pro-agent',
-  lemonsqueezy: 'https://fastrsoft.lemonsqueezy.com/lemon-squeezy-developer-agent'
-} as const;
+const CARD_TOOLS: Record<Exclude<CardFilter, 'all'>, string[]> = {
+  fluentcart: [
+    'fc_search_hooks',
+    'fc_get_db_schema',
+    'fc_get_reference',
+    'fc_generate_payment_gateway_boilerplate'
+  ],
+  lemonsqueezy: [
+    'ls_search_docs',
+    'ls_get_schema',
+    'ls_get_reference',
+    'ls_verify_webhook',
+    'ls_validate_license'
+  ]
+};
 
-interface ProTool {
-  card: string;
-  cardId: Exclude<CardFilter, 'all'>;
-  tool: string;
-  gives: string;
-  price: string;
-  checkoutUrl: string;
-}
+const ALL_TOOLS = [...CARD_TOOLS.fluentcart, ...CARD_TOOLS.lemonsqueezy];
 
-const PRO_TOOLS: ProTool[] = [
-  {
-    card: 'FluentCart Pro Agent',
-    cardId: 'fluentcart',
-    tool: 'fc_generate_payment_gateway_boilerplate',
-    gives: 'Production-ready PHP payment gateway class with settings schema and webhook entry point',
-    price: '$12/mo',
-    checkoutUrl: CHECKOUT_URLS.fluentcart
-  },
-  {
-    card: 'Lemon Squeezy Developer Agent',
-    cardId: 'lemonsqueezy',
-    tool: 'ls_verify_webhook',
-    gives: 'Timing-safe HMAC-SHA256 signature verification for incoming webhooks',
-    price: '$12/mo',
-    checkoutUrl: CHECKOUT_URLS.lemonsqueezy
-  },
-  {
-    card: 'Lemon Squeezy Developer Agent',
-    cardId: 'lemonsqueezy',
-    tool: 'ls_validate_license',
-    gives: 'Live license key validation against the Lemon Squeezy API',
-    price: '$12/mo',
-    checkoutUrl: CHECKOUT_URLS.lemonsqueezy
-  }
-];
-
-function proInfo(auth: AuthContext, card: CardFilter = 'all') {
-  const entitled = new Set(auth.cards);
-  const visible = card === 'all' ? PRO_TOOLS : PRO_TOOLS.filter(t => t.cardId === card);
-  const proTools = visible.map(t => ({ ...t, unlocked: entitled.has(t.cardId) }));
-  const locked = proTools.filter(t => !t.unlocked);
+function suiteInfo(auth: AuthContext, card: CardFilter = 'all') {
+  const cards = card === 'all' ? (Object.keys(CARD_TOOLS) as Array<keyof typeof CARD_TOOLS>) : [card];
 
   return {
-    tier: auth.tier,
-    cards: auth.cards,
-    reason: auth.reason,
-    proTools,
-    checkoutUrls: CHECKOUT_URLS,
-    unlock:
-      visible.length === 0
-        ? 'No Pro tools match that card filter.'
-        : locked.length === 0
-          ? 'Every Pro tool listed here is registered and callable in this session.'
-          : `Not registered in this session: ${locked.map(t => t.tool).join(', ')}. ` +
-            `To unlock, purchase a license key on Lemon Squeezy:\n` +
-            `- All-Access Suite ($19/mo, all tools): ${CHECKOUT_URLS.allAccess}\n` +
-            (card === 'fluentcart' || card === 'all' ? `- Card 1: FluentCart Pro ($12/mo): ${CHECKOUT_URLS.fluentcart}\n` : '') +
-            (card === 'lemonsqueezy' || card === 'all' ? `- Card 2: Lemon Squeezy Pro ($12/mo): ${CHECKOUT_URLS.lemonsqueezy}\n` : '') +
-            `After purchase, set PRO_LICENSE_KEY=your-key in your MCP client environment or pass X-MCP-License-Key.`
+    suite: 'fastr-dev-suite',
+    version: '1.0.0',
+    licence: 'MIT',
+    price: 'free',
+    limits: 'none — unlimited tool calls, no account, no key, no subscription',
+    session: { tier: auth.tier, transport: auth.source, reason: auth.reason },
+    tools: {
+      total: ALL_TOOLS.length + 1,
+      registeredInThisSession: [...ALL_TOOLS, 'suite_get_info'],
+      byCard: cards.map(name => ({ card: name, tools: CARD_TOOLS[name] }))
+    },
+    note:
+      'Every tool is registered for every caller. There is nothing to unlock and ' +
+      'no purchase link to follow: the server and the skills are MIT-licensed, so ' +
+      'the fastest path to a change is a pull request.'
   };
 }

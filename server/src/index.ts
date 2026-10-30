@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
-import { resolveLocalAuth } from './auth.js';
+import { fullAccess } from './auth.js';
 import { createServerInstance } from './server.js';
 
-const auth = resolveLocalAuth();
+const auth = fullAccess('stdio');
 
 serveStdio(async () => {
   return await createServerInstance(auth);

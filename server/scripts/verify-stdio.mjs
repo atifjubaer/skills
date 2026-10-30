@@ -1,6 +1,10 @@
 // End-to-end stdio protocol probe. Boots the built server exactly the way an
-// MCP client does and asserts: handshake, tier gating, skills catalog, tool
-// calls, and the 2026-07-28 (modern era) discovery path.
+// MCP client does and asserts: handshake, the complete free toolset, skills
+// catalog, tool calls, and the 2026-07-28 (modern era) discovery path.
+//
+// The suite is free, so there is no tier matrix to probe. What replaces it is
+// the opposite assertion: an anonymous session must see every tool, and the
+// retired PRO_* variables must be inert rather than fatal.
 import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import path from 'node:path';
@@ -82,18 +86,21 @@ const MODERN_META = {
   'io.modelcontextprotocol/clientCapabilities': {}
 };
 
-const CORE = [
+/** Every tool the suite ships. A free session must see all of them. */
+const TOOLS = [
   'ls_search_docs',
   'ls_get_schema',
   'ls_get_reference',
+  'ls_verify_webhook',
+  'ls_validate_license',
   'fc_search_hooks',
   'fc_get_db_schema',
   'fc_get_reference',
-  'suite_get_pro_info'
+  'fc_generate_payment_gateway_boilerplate',
+  'suite_get_info'
 ];
-const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_gateway_boilerplate'];
 
-// ---------------------------------------------------------------- core tier
+// -------------------------------------------------------------- free session
 {
   const s = openSession();
   try {
@@ -102,36 +109,34 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
       capabilities: {},
       clientInfo: { name: 'fastr-verify', version: '0.0.0' }
     });
-    check('legacy: initialize', Boolean(init.result?.serverInfo), `${init.result?.serverInfo?.name}@${init.result?.serverInfo?.version}`);
+    check('free: initialize', Boolean(init.result?.serverInfo), `${init.result?.serverInfo?.name}@${init.result?.serverInfo?.version}`);
     s.notify('notifications/initialized');
 
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
-    check('core: core tools present', CORE.every(t => names.includes(t)), `${names.length} tools`);
-    check('core: pro tools withheld', !PRO.some(t => names.includes(t)), PRO.filter(t => names.includes(t)).join(', ') || 'none leaked');
-
-    const denied = await s.request('tools/call', { name: 'ls_verify_webhook', arguments: { rawBody: '{}', signatureHeader: 'x', signingSecret: 'y' } });
-    check('core: pro tool call rejected', Boolean(denied.error) || denied.result?.isError === true, denied.error?.message ?? 'isError');
+    const missing = TOOLS.filter(t => !names.includes(t));
+    check('free: all 10 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
+    check('free: no duplicate registration', names.length === TOOLS.length, `${names.length} of ${TOOLS.length}`);
 
     const skills = await s.request('skills/list');
     const skillList = skills.result?.skills ?? [];
-    check('core: skills/list', skillList.length === 2, `${skillList.length} skills`);
+    check('free: skills/list', skillList.length === 2, `${skillList.length} skills`);
 
     const search = await s.request('tools/call', { name: 'ls_search_docs', arguments: { query: 'signature', category: 'webhooks' } });
-    check('core: ls_search_docs', (search.result?.content?.[0]?.text ?? '').length > 100);
+    check('free: ls_search_docs', (search.result?.content?.[0]?.text ?? '').length > 100);
 
     const hooks = await s.request('tools/call', { name: 'fc_search_hooks', arguments: { query: 'order' } });
-    check('core: fc_search_hooks', (hooks.result?.content?.[0]?.text ?? '').length > 100);
+    check('free: fc_search_hooks', (hooks.result?.content?.[0]?.text ?? '').length > 100);
 
     const schema = await s.request('tools/call', { name: 'fc_get_db_schema', arguments: { table: 'orders' } });
-    check('core: fc_get_db_schema', !schema.result?.isError && (schema.result?.content?.[0]?.text ?? '').length > 50);
+    check('free: fc_get_db_schema', !schema.result?.isError && (schema.result?.content?.[0]?.text ?? '').length > 50);
 
     // Both reference readers must reach a file no other tool exposes — the
     // point of adding them was that ~30 reference files were unreachable.
     const fcRefs = await s.request('tools/call', { name: 'fc_get_reference', arguments: {} });
     const fcRefsText = fcRefs.result?.content?.[0]?.text ?? '';
     check(
-      'core: fc_get_reference lists files',
+      'free: fc_get_reference lists files',
       fcRefsText.includes('rest-api-subscriptions.md') && fcRefsText.includes('models-complete-index.md'),
       `${fcRefsText.split('\n').length} lines`
     );
@@ -142,7 +147,7 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
     });
     const fcSectionText = fcSection.result?.content?.[0]?.text ?? '';
     check(
-      'core: fc_get_reference section',
+      'free: fc_get_reference section',
       fcSectionText.startsWith('### Void Renewal Invoice'),
       `${fcSectionText.length} chars`
     );
@@ -151,7 +156,7 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
       name: 'fc_get_reference',
       arguments: { file: '../paths.ts' }
     });
-    check('core: fc_get_reference rejects traversal', traversal.result?.isError === true);
+    check('free: fc_get_reference rejects traversal', traversal.result?.isError === true);
 
     const lsRefs = await s.request('tools/call', {
       name: 'ls_get_reference',
@@ -159,32 +164,32 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
     });
     const lsRefsText = lsRefs.result?.content?.[0]?.text ?? '';
     check(
-      'core: ls_get_reference section',
+      'free: ls_get_reference section',
       lsRefsText.includes('subscription_payment_refunded'),
       `${lsRefsText.length} chars`
     );
 
-    const info = await s.request('tools/call', { name: 'suite_get_pro_info', arguments: {} });
-    const infoText = info.result?.content?.[0]?.text ?? '';
-    check('core: pro info tool', infoText.includes('"tier": "core"'), `${infoText.length} chars`);
-  } catch (err) {
-    check('core session', false, err.message);
-  } finally {
-    s.close();
-  }
-}
+    const info = await s.request('tools/call', { name: 'suite_get_info', arguments: {} });
+    const parsed = JSON.parse(info.result?.content?.[0]?.text ?? '{}');
+    check(
+      'free: suite_get_info reports free',
+      parsed.session?.tier === 'free' && parsed.price === 'free' && parsed.licence === 'MIT',
+      `${parsed.price}/${parsed.licence}`
+    );
+    check('free: suite_get_info counts every tool', parsed.tools?.total === TOOLS.length, `${parsed.tools?.total} tools`);
 
-// ----------------------------------------------------------------- pro tier
-{
-  const s = openSession({ PRO_LICENSE_KEY: 'verify-probe-key-1234567890' });
-  try {
-    await s.request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'fastr-verify', version: '0.0.0' } });
-    s.notify('notifications/initialized');
+    const scoped = await s.request('tools/call', { name: 'suite_get_info', arguments: { card: 'fluentcart' } });
+    const scopedParsed = JSON.parse(scoped.result?.content?.[0]?.text ?? '{}');
+    const fcOnly = scopedParsed.tools?.byCard?.[0]?.tools ?? [];
+    check(
+      'free: suite_get_info card filter',
+      scopedParsed.tools?.byCard?.length === 1 &&
+        fcOnly.includes('fc_generate_payment_gateway_boilerplate') &&
+        !fcOnly.some(t => t.startsWith('ls_')),
+      fcOnly.join(', ')
+    );
 
-    const tools = await s.request('tools/list');
-    const names = (tools.result?.tools ?? []).map(t => t.name);
-    check('pro: all tools registered', PRO.every(t => names.includes(t)), `${names.length} tools`);
-
+    // The two tools that used to sit behind a key are now callable anonymously.
     const secret = 'whsec_test_secret';
     const body = JSON.stringify({ meta: { event_name: 'order_created' } });
     const signature = crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex');
@@ -193,80 +198,48 @@ const PRO = ['ls_verify_webhook', 'ls_validate_license', 'fc_generate_payment_ga
       name: 'ls_verify_webhook',
       arguments: { rawBody: body, signatureHeader: signature, signingSecret: secret }
     });
-    const verifyText = verify.result?.content?.[0]?.text ?? '';
-    check('pro: valid HMAC accepted', verifyText.includes('"valid": true'));
+    check('free: valid HMAC accepted', (verify.result?.content?.[0]?.text ?? '').includes('"valid": true'));
 
     const tampered = await s.request('tools/call', {
       name: 'ls_verify_webhook',
       arguments: { rawBody: body + ' ', signatureHeader: signature, signingSecret: secret }
     });
-    check('pro: tampered body rejected', (tampered.result?.content?.[0]?.text ?? '').includes('"valid": false'));
+    check('free: tampered body rejected', (tampered.result?.content?.[0]?.text ?? '').includes('"valid": false'));
 
     const boiler = await s.request('tools/call', {
       name: 'fc_generate_payment_gateway_boilerplate',
       arguments: { gatewaySlug: 'paddle_billing', gatewayTitle: 'Paddle Billing', supportsSubscriptions: true }
     });
     const php = boiler.result?.content?.[0]?.text ?? '';
-    check('pro: gateway boilerplate', php.includes('class PaddleBillingGateway') && php.includes("'subscriptions'"));
+    check('free: gateway boilerplate', php.includes('class PaddleBillingGateway') && php.includes("'subscriptions'"));
   } catch (err) {
-    check('pro session', false, err.message);
+    check('free session', false, err.message);
   } finally {
     s.close();
   }
 }
 
-// -------------------------------------------------- per-card entitlement split
-// Cards are sold separately, so one key must not unlock the other card's Pro
-// tools. PRO_CARDS narrows a local key the same way the Lemon Squeezy product
-// mapping narrows an HTTP licence, and lets this probe exercise both halves
-// without a live licence.
-const CARD_PRO = {
-  fluentcart: ['fc_generate_payment_gateway_boilerplate'],
-  lemonsqueezy: ['ls_verify_webhook', 'ls_validate_license']
-};
-const PROBE_KEY = 'verify-probe-key-[PHONE_REDACTED]';
-
-for (const card of Object.keys(CARD_PRO)) {
-  const other = Object.keys(CARD_PRO).find(c => c !== card);
-  const s = openSession({ PRO_LICENSE_KEY: PROBE_KEY, PRO_CARDS: card });
-  try {
-    await s.request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'fastr-verify', version: '0.0.0' } });
-    s.notify('notifications/initialized');
-
-    const tools = await s.request('tools/list');
-    const names = (tools.result?.tools ?? []).map(t => t.name);
-    check(`card ${card}: own pro tools registered`, CARD_PRO[card].every(t => names.includes(t)), CARD_PRO[card].join(', '));
-    check(`card ${card}: ${other} pro tools withheld`, !CARD_PRO[other].some(t => names.includes(t)), CARD_PRO[other].filter(t => names.includes(t)).join(', ') || 'none leaked');
-    check(`card ${card}: core tools still present`, CORE.every(t => names.includes(t)), `${names.length} tools`);
-
-    const info = await s.request('tools/call', { name: 'suite_get_pro_info', arguments: {} });
-    const parsed = JSON.parse(info.result?.content?.[0]?.text ?? '{}');
-    check(`card ${card}: pro info reports one card`, parsed.tier === 'pro' && parsed.cards?.length === 1 && parsed.cards[0] === card, JSON.stringify(parsed.cards));
-    const locked = (parsed.proTools ?? []).filter(t => !t.unlocked);
-    check(`card ${card}: only the other card is locked`, locked.length > 0 && locked.every(t => t.cardId === other), locked.map(t => t.tool).join(', '));
-  } catch (err) {
-    check(`card ${card} session`, false, err.message);
-  } finally {
-    s.close();
-  }
-}
-
-// An unrecognised PRO_CARDS value must fail closed rather than unlock everything.
+// ------------------------------------------------- retired env vars are inert
+// Clients installed while the suite was sold still carry PRO_LICENSE_KEY and
+// PRO_CARDS in their MCP config. Those must be silently ignored: a stale key is
+// not a licence error any more, and a junk PRO_CARDS must not narrow anything.
 {
-  const s = openSession({ PRO_LICENSE_KEY: PROBE_KEY, PRO_CARDS: 'notacard' });
+  const s = openSession({ PRO_LICENSE_KEY: 'retired-probe-key', PRO_CARDS: 'notacard' });
   try {
     await s.request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'fastr-verify', version: '0.0.0' } });
     s.notify('notifications/initialized');
 
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
-    check('card unknown: pro tools withheld', !PRO.some(t => names.includes(t)), PRO.filter(t => names.includes(t)).join(', ') || 'none leaked');
+    const missing = TOOLS.filter(t => !names.includes(t));
+    check('retired env: all tools still registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
 
-    const info = await s.request('tools/call', { name: 'suite_get_pro_info', arguments: {} });
-    const infoText = info.result?.content?.[0]?.text ?? '';
-    check('card unknown: reported as core', infoText.includes('"tier": "core"') && infoText.includes('names no known card'));
+    const info = await s.request('tools/call', { name: 'suite_get_info', arguments: {} });
+    const parsed = JSON.parse(info.result?.content?.[0]?.text ?? '{}');
+    check('retired env: still reported free', parsed.session?.tier === 'free' && parsed.price === 'free', parsed.session?.transport);
+    check('retired env: no crash on stderr', s.stderr.join('').trim() === '', s.stderr.join('').trim().slice(0, 120) || 'clean');
   } catch (err) {
-    check('card unknown session', false, err.message);
+    check('retired env session', false, err.message);
   } finally {
     s.close();
   }
@@ -282,7 +255,8 @@ for (const card of Object.keys(CARD_PRO)) {
 
     const tools = await s.request('tools/list', { _meta: MODERN_META });
     const names = (tools.result?.tools ?? []).map(t => t.name);
-    check('modern: stateless tools/list', CORE.every(t => names.includes(t)), `${names.length} tools`);
+    const missing = TOOLS.filter(t => !names.includes(t));
+    check('modern: stateless tools/list', missing.length === 0, missing.join(', ') || `${names.length} tools`);
   } catch (err) {
     check('modern session', false, err.message);
   } finally {
