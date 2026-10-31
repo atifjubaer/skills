@@ -110,6 +110,7 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [customer-dashboard-endpoints.md](references/customer-dashboard-endpoints.md) — Adding custom pages/tabs to the Vue 3 customer dashboard via `fluent_cart_api()->addCustomerDashboardEndpoint()`, hybrid routing tricks, reserved slugs, and customer session resolution.
 - [storage-drivers-module.md](references/storage-drivers-module.md) — Storage drivers architecture (`BaseStorageDriver`, `BaseStorageInterface`, `FileManager`), creating custom cloud drivers (S3, Wasabi, R2), and signed download URLs.
 - [shipping-module-guide.md](references/shipping-module-guide.md) — Shipping module architecture, shipping zones, dynamic carrier rate calculation (`fluent_cart/shipping/methods`), and shipping classes.
+- [order-bump-module.md](references/order-bump-module.md) — Order Bump module (Pro): `OrderPromotion` model, condition engine, display positions, cart application filter (`fluent_cart/apply_order_bump`), and impression analytics.
 #### Runnable Code Examples & Project Boilerplates (`examples/`)
 - [examples/README.md](examples/README.md) — Inventory and developer guide for ready-to-use sample plugins and templates.
 - [sample-custom-addon/fluentcart-custom-addon.php](examples/sample-custom-addon/fluentcart-custom-addon.php) — Complete starter plugin with hook handlers, custom order meta, system logging, fee filters, and custom REST API endpoint.
