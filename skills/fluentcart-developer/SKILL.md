@@ -102,6 +102,9 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [payment-gateway-integration.md](references/payment-gateway-integration.md) — Payment Methods module architecture, custom gateway development (gateway class, settings, API, webhooks), registration, processing flow, testing.
 - [paddle-gateway-case-study.md](references/paddle-gateway-case-study.md) — Paddle payment gateway case study, settings field schema, real-world gateway implementation example.
 - [software-licensing-sdk.md](references/software-licensing-sdk.md) — Official FluentCart Software Licensing SDK (`fluent-cart/software-licensing-sdk`): client-side plugin updates, `FluentLicensing`, `LicenseSettings`, `PluginUpdater`, remote endpoints (`?fluent-cart=activate_license`), and filter hooks.
+- [customer-dashboard-endpoints.md](references/customer-dashboard-endpoints.md) — Adding custom pages/tabs to the Vue 3 customer dashboard via `fluent_cart_api()->addCustomerDashboardEndpoint()`, hybrid routing tricks, reserved slugs, and customer session resolution.
+- [storage-drivers-module.md](references/storage-drivers-module.md) — Storage drivers architecture (`BaseStorageDriver`, `BaseStorageInterface`, `FileManager`), creating custom cloud drivers (S3, Wasabi, R2), and signed download URLs.
+- [shipping-module-guide.md](references/shipping-module-guide.md) — Shipping module architecture, shipping zones, dynamic carrier rate calculation (`fluent_cart/shipping/methods`), and shipping classes.
 #### Runnable Code Examples & Project Boilerplates (`examples/`)
 - [examples/README.md](examples/README.md) — Inventory and developer guide for ready-to-use sample plugins and templates.
 - [sample-custom-addon/fluentcart-custom-addon.php](examples/sample-custom-addon/fluentcart-custom-addon.php) — Complete starter plugin with hook handlers, custom order meta, system logging, fee filters, and custom REST API endpoint.
