@@ -338,4 +338,124 @@ function ${slug.replace(/-/g, '_')}_is_license_active(): bool
       };
     }
   );
+
+  server.registerTool(
+    'fc_generate_customer_endpoint_boilerplate',
+    {
+      description:
+        'Generate production-ready PHP boilerplate for adding custom server-rendered pages and tabs to the FluentCart Vue 3 customer dashboard via fluent_cart_api()->addCustomerDashboardEndpoint(), with authenticated customer session resolution, multi-segment sub-path routing, and design system variables.',
+      inputSchema: {
+        endpointSlug: z.string().describe('Unique URL slug for the endpoint, e.g. "acme-wallet" (do not use reserved slugs like order, subscription, dashboard)'),
+        tabTitle: z.string().describe('Display title for the tab in customer dashboard sidebar, e.g. "My Wallet"'),
+        iconSvg: z.string().optional().describe('Raw SVG markup for the tab icon (20x20 viewBox, currentColor)'),
+        subRoutes: z.array(z.string()).optional().describe('Optional sub-path actions, e.g. ["history", "settings"]')
+      }
+    },
+    async ({ endpointSlug, tabTitle, iconSvg, subRoutes }) => {
+      const cleanSlug = endpointSlug.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-|-$/g, '');
+      const funcPrefix = cleanSlug.replace(/[^a-z0-9_]/g, '_');
+      const defaultSvg =
+        iconSvg ||
+        `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" fill="currentColor"/></svg>`;
+
+      const subRouteCases = (subRoutes || ['history', 'settings'])
+        .map(
+          (route) => `            case '${route}':
+                echo '<div class="fct-custom-subpage">';
+                echo '<h4>' . esc_html__('${route.charAt(0).toUpperCase() + route.slice(1)}', 'my-addon') . '</h4>';
+                echo '<p>' . esc_html__('Custom content for ${route} sub-route.', 'my-addon') . '</p>';
+                echo '</div>';
+                break;`
+        )
+        .join('\n');
+
+      const code = `<?php
+defined('ABSPATH') || exit;
+
+use FluentCart\\Api\\Resource\\CustomerResource;
+
+/**
+ * Register Custom Customer Dashboard Tab in FluentCart Vue 3 Portal
+ * Endpoint: /account/${cleanSlug}
+ */
+add_action('fluent_cart/init', function () {
+    if (!function_exists('fluent_cart_api')) {
+        return;
+    }
+
+    fluent_cart_api()->addCustomerDashboardEndpoint('${cleanSlug}', [
+        'title'           => __('${tabTitle}', 'my-addon'),
+        'icon_svg'        => '${defaultSvg.replace(/'/g, "\\'")}',
+        'render_callback' => '${funcPrefix}_render_customer_dashboard_tab'
+    ]);
+});
+
+/**
+ * Render Callback for Customer Dashboard Tab
+ * Core wraps this output inside the portal layout shell (nav, header, avatar, logout).
+ */
+function ${funcPrefix}_render_customer_dashboard_tab(): void
+{
+    // 1. Resolve currently authenticated FluentCart customer (memoized, zero-overhead)
+    $customer = CustomerResource::getCurrentCustomer();
+    if (!$customer) {
+        echo '<div class="fct-endpoint-notice">';
+        echo '<p>' . esc_html__('Please log in to access this page.', 'my-addon') . '</p>';
+        echo '</div>';
+        return;
+    }
+
+    // 2. Parse multi-segment sub-routes from $wp->request
+    global $wp;
+    $requestPath = trim($wp->request ?? '', '/');
+    $segments = explode('/', $requestPath);
+    // Path structure: {account_slug}/{endpoint_slug}/{sub_action}
+    $endpointIndex = array_search('${cleanSlug}', $segments, true);
+    $subAction = ($endpointIndex !== false && isset($segments[$endpointIndex + 1])) ? sanitize_key($segments[$endpointIndex + 1]) : 'index';
+
+    // 3. Render content matching the customer portal design system
+    ?>
+    <div class="fct-customer-dashboard-custom-page" style="
+        color: var(--fct-customer-dashboard-text-color, #374151);
+        border: 1px solid var(--fct-customer-dashboard-border-color, #e5e7eb);
+        border-radius: 8px;
+        padding: 24px;
+        background: #ffffff;
+    ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: var(--fct-customer-dashboard-title-color, #111827); font-size: 1.5rem;">
+                <?php echo esc_html__('${tabTitle}', 'my-addon'); ?>
+            </h2>
+            <div class="fct-sub-nav" style="display: flex; gap: 12px;">
+                <a href="<?php echo esc_url(site_url('/account/${cleanSlug}')); ?>" style="text-decoration: none; font-weight: <?php echo $subAction === 'index' ? '600' : '400'; ?>;">
+                    <?php esc_html_e('Overview', 'my-addon'); ?>
+                </a>
+                <a href="<?php echo esc_url(site_url('/account/${cleanSlug}/history')); ?>" style="text-decoration: none; font-weight: <?php echo $subAction === 'history' ? '600' : '400'; ?>;">
+                    <?php esc_html_e('History', 'my-addon'); ?>
+                </a>
+            </div>
+        </div>
+
+        <?php
+        switch ($subAction) {
+${subRouteCases}
+            case 'index':
+            default:
+                echo '<div class="fct-overview">';
+                echo '<p>' . esc_html(sprintf(__('Welcome back, %s (%s)!', 'my-addon'), $customer->full_name, $customer->email)) . '</p>';
+                echo '<!-- Render your customer dashboard widget or shortcode here -->';
+                echo '</div>';
+                break;
+        }
+        ?>
+    </div>
+    <?php
+}
+`;
+
+      return {
+        content: [{ type: 'text', text: code }]
+      };
+    }
+  );
 }

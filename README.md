@@ -26,7 +26,7 @@ This repository provides ready-to-use configurations, reference manuals, and cod
 
 - **`Fastr MCP Suite`** ([`fastr-mcp-suite`](skills/fastr-mcp-suite/SKILL.md)):
   - **Install Guide:** Exact config for Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, plus the hosted Streamable HTTP transport.
-  - **Tool Reference:** All eleven `fc_*`, `ls_*`, and `suite_*` tools with their arguments, return shapes, and when to reach for each.
+  - **Tool Reference:** All twelve `fc_*`, `ls_*`, and `suite_*` tools with their arguments, return shapes, and when to reach for each.
   - **No Gate:** Every tool is free for every client — no licence key, account, or request quota.
   - **Troubleshooting:** The failures people actually hit — unknown table names, unreachable reference files, and the Windows `npx` stdio artifact.
 
@@ -38,11 +38,11 @@ Skills tell the model what to do. The MCP server in [`server/`](./server/README.
 
 | Card | Tools |
 | --- | --- |
-| **Card 1 — FluentCart Developer Agent** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate` |
+| **Card 1 — FluentCart Developer Agent** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate`, `fc_generate_customer_endpoint_boilerplate` |
 | **Card 2 — Lemon Squeezy Developer Agent** | `ls_search_docs`, `ls_get_schema`, `ls_get_reference`, `ls_verify_webhook`, `ls_validate_license` |
 | **Suite** | `suite_get_info` |
 
-Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base. `fc_get_reference` and `ls_get_reference` open any file under a skill's `references/` folder by name, or a single heading inside it — that is how the 49 FluentCart and 7 Lemon Squeezy reference files reach an MCP client that never loads them wholesale.
+Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base. `fc_get_reference` and `ls_get_reference` open any file under a skill's `references/` folder by name, or a single heading inside it — that is how the 52 FluentCart and 7 Lemon Squeezy reference files reach an MCP client that never loads them wholesale.
 
 ```bash
 npx -y fastr-mcp-suite    # stdio: no install, no build — published as fastr-mcp-suite
@@ -52,7 +52,7 @@ node dist/index.js        # stdio: Claude Code, Cursor, Windsurf, Smithery CLI
 node dist/http.js         # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
 ```
 
-All eleven tools are registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach the server can call everything it ships. Deployment and transport details are documented in [`server/README.md`](./server/README.md).
+All twelve tools are registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach the server can call everything it ships. Deployment and transport details are documented in [`server/README.md`](./server/README.md).
 
 **Licensing:** everything in this repository — the skills under `skills/` and the server under `server/` — is MIT. See [`server/LICENSE.md`](./server/LICENSE.md). Fork it, host it, sell support around it; the only ask is that you keep the copyright notice.
 
