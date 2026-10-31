@@ -1,25 +1,30 @@
 ---
 name: "fluentcart-developer"
-description: "Comprehensive developer knowledge base for FluentCart e-commerce plugin development. Covers theme compatibility, template system, classic & block themes, action & filter hooks, Facebook Meta Pixel & GA4 tracking, Elementor, Gutenberg & Bricks integration, custom payment gateways, dynamic shipping carriers, database models, REST API, fee surcharges, ghost products, subscriptions, and WP-CLI."
-summary: "Developer knowledge base and architecture manual for FluentCart WordPress e-commerce: hooks, database schemas, REST APIs, custom payment gateways, and shipping integrations."
-version: "1.0.0"
+description: "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks."
+summary: "Developer architecture manual and code generator for FluentCart WordPress e-commerce: custom add-ons, themes, software licensing SDK, payment gateways, and shipping integrations."
+version: "1.2.0"
 license: "MIT"
 tags:
   - wordpress
   - ecommerce
   - fluentcart
   - payments
+  - licensing
   - php
 keywords:
   - fluentcart
   - wordpress e-commerce
+  - software licensing sdk
   - payment gateways
   - custom shipping
+  - customer dashboard
   - hook listener
 use_cases:
-  - Building custom FluentCart payment gateways
-  - Developing FluentCart shipping carriers and fee surcharges
-  - Querying FluentCart database tables and REST endpoints
+  - Monetizing and licensing WordPress plugins & themes via FluentCart Pro
+  - Building custom FluentCart payment gateways with subscriptions and webhooks
+  - Extending the customer dashboard portal with custom server-rendered tabs
+  - Developing custom shipping carriers and dynamic cart fee surcharges
+  - Querying FluentCart Eloquent database models and REST API endpoints
 ---
 
 # FluentCart Developer Skill
@@ -198,3 +203,228 @@ add_action('fluent_cart/order_paid_done', function ($data) {
     );
 }, 10, 1);
 ```
+
+### 4. Custom Payment Gateway Boilerplate
+```php
+<?php
+defined('ABSPATH') || exit;
+
+use FluentCart\App\Services\Gateways\AbstractPaymentGateway;
+use FluentCart\App\Services\Gateways\BaseGatewaySettings;
+
+class CustomPayGateway extends AbstractPaymentGateway
+{
+    protected string $gateway = 'custom_pay';
+    protected string $title   = 'CustomPay';
+
+    public function init(): void
+    {
+        // Declare feature capabilities (products, refunds, subscriptions)
+        $this->supports = ['products', 'refunds', 'subscriptions'];
+    }
+
+    public function handlePayment(array $orderData): array
+    {
+        $orderId     = $orderData['id'];
+        $amountCents = $orderData['total']; // Amount in cents
+
+        // Call external processor API to create checkout session
+        $redirectUrl = 'https://checkout.example.com/pay/' . $orderId;
+
+        return [
+            'status'       => 'pending',
+            'redirect_url' => $redirectUrl,
+            'message'      => __('Redirecting to payment provider...', 'my-gateway')
+        ];
+    }
+
+    public function handleWebhook(): void
+    {
+        $payload = file_get_contents('php://input');
+        // Validate webhook signature and update order status via:
+        // do_action('fluent_cart/order_status_updated', $orderId, 'paid');
+    }
+}
+
+// Register gateway in FluentCart
+add_action('fluent_cart/loaded', function () {
+    add_filter('fluent_cart/payment_methods', function (array $gateways): array {
+        $gateways['custom_pay'] = new CustomPayGateway();
+        return $gateways;
+    });
+});
+```
+
+### 5. Monetizing Software: Licensing SDK & Automatic Updates
+Integrate the official FluentCart Software Licensing SDK (`fluent-cart/software-licensing-sdk`) into commercial WordPress plugins or themes for remote license key activation and one-click updates directly in `wp-admin/plugins.php`:
+
+```php
+<?php
+defined('ABSPATH') || exit;
+
+add_action('plugins_loaded', function () {
+    if (!class_exists('\MyPlugin\FluentLicensing')) {
+        require_once plugin_dir_path(__FILE__) . 'updater/FluentLicensing.php';
+    }
+
+    $licenseManager = new \MyPlugin\FluentLicensing();
+
+    // 1. Register with your FluentCart store
+    $licenseManager->register([
+        'version'           => '1.0.0',                      // Current plugin version
+        'item_id'           => 42,                           // FluentCart Pro Product/Item ID
+        'basename'          => plugin_basename(__FILE__),    // Plugin basename
+        'api_url'           => 'https://mystore.example.com/', // FluentCart store URL
+        'plugin_title'      => 'My Commercial Plugin Pro',   // Plugin title
+        'purchase_url'      => 'https://mystore.example.com/checkout/?item_id=42',
+        'activate_url'      => admin_url('tools.php?page=my-plugin-license'),
+        'show_check_update' => true,
+        'settings_key'      => '__my_plugin_license_config'
+    ]);
+
+    // 2. Attach Turnkey Admin Settings UI
+    if (is_admin() && class_exists('\MyPlugin\LicenseSettings')) {
+        $settings = new \MyPlugin\LicenseSettings();
+        $settings->register($licenseManager);
+
+        $settings->setConfig([
+            'title'       => __('My Plugin License', 'my-plugin'),
+            'heading'     => __('Activate License Key', 'my-plugin'),
+            'description' => __('Enter your FluentCart license key to receive one-click automatic updates.', 'my-plugin')
+        ]);
+
+        $settings->addPage([
+            'type'        => 'submenu',
+            'parent_slug' => 'tools.php',
+            'page_title'  => __('License Settings', 'my-plugin'),
+            'menu_title'  => __('Plugin License', 'my-plugin'),
+            'capability'  => 'manage_options',
+            'menu_slug'   => 'my-plugin-license'
+        ]);
+    }
+});
+
+// 3. Conditional Feature Gating Helper
+function my_plugin_is_licensed(): bool
+{
+    if (!class_exists('\MyPlugin\FluentLicensing')) {
+        return false;
+    }
+    $manager = \MyPlugin\FluentLicensing::getInstance();
+    $status = $manager ? $manager->getStatus() : null;
+    return !is_wp_error($status) && isset($status['status']) && $status['status'] === 'valid';
+}
+```
+
+### 6. Theme & Child Theme Development
+Enable FluentCart theme compatibility and override default templates cleanly:
+
+```php
+// In child theme functions.php
+add_action('after_setup_theme', function () {
+    // Declare explicit FluentCart theme support
+    add_theme_support('fluent_cart');
+});
+```
+
+#### Template Override Hierarchy:
+To customize frontend checkout or receipt views without editing core:
+1. Create a `fluent-cart/` directory in your active theme or child theme.
+2. Copy the template from FluentCart core (`app/Views/`):
+   - `your-theme/fluent-cart/checkout.php` — Custom checkout container.
+   - `your-theme/fluent-cart/receipt.php` — Custom thank-you / receipt layout.
+   - `your-theme/fluent-cart/shop.php` — Product catalog grid wrapper.
+
+### 7. Customer Dashboard Extensibility (`addCustomerDashboardEndpoint`)
+Add custom server-rendered pages and navigation tabs to the Vue 3 customer dashboard without compiling Vue or flushing permalinks:
+
+```php
+<?php
+defined('ABSPATH') || exit;
+
+use FluentCart\Api\Resource\CustomerResource;
+
+add_action('fluent_cart/init', function () {
+    if (!function_exists('fluent_cart_api')) {
+        return;
+    }
+
+    fluent_cart_api()->addCustomerDashboardEndpoint('my-custom-portal', [
+        'title'           => __('VIP Portal', 'my-addon'),
+        'icon_svg'        => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" fill="currentColor"/></svg>',
+        'render_callback' => function () {
+            // 1. Resolve logged-in customer (memoized, free)
+            $customer = CustomerResource::getCurrentCustomer();
+            if (!$customer) {
+                echo '<p>' . esc_html__('Please log in.', 'my-addon') . '</p>';
+                return;
+            }
+
+            // 2. Render HTML matching portal design system
+            echo '<div class="fct-custom-tab-box" style="padding: 24px; background: #fff; border: 1px solid var(--fct-customer-dashboard-border-color, #e5e7eb); border-radius: 8px;">';
+            echo '<h2>' . esc_html(sprintf(__('Hello, %s!', 'my-addon'), $customer->full_name)) . '</h2>';
+            echo '<p>' . esc_html__('Welcome to your custom account portal.', 'my-addon') . '</p>';
+            echo '</div>';
+        }
+    ]);
+});
+```
+
+### 8. Dynamic Shipping Carrier Rate Filter
+Inject real-time shipping options or carrier calculations into checkout:
+
+```php
+add_filter('fluent_cart/shipping/methods', function (array $methods, $cart, array $address): array {
+    if (!$cart->needsShipping()) {
+        return $methods;
+    }
+
+    $methods[] = [
+        'id'          => 'custom_express_air',
+        'title'       => __('Express Air Delivery', 'my-addon'),
+        'cost'        => 1800, // $18.00 in cents
+        'description' => __('Arrives in 1-2 business days', 'my-addon'),
+        'meta'        => ['carrier' => 'SkyPost', 'days' => 2]
+    ];
+
+    return $methods;
+}, 10, 3);
+```
+
+### 9. Ghost Products / Dynamic Line Items
+Sell arbitrary services, custom quotes, or event tickets dynamically without creating permanent database products:
+
+```php
+// Inject custom dynamic cart line item
+add_filter('fluent_cart/cart_items', function (array $items, $cart) {
+    if (isset($_GET['custom_donation'])) {
+        $amountCents = absint($_GET['custom_donation']) * 100;
+        $items[] = [
+            'id'             => 'ghost_donation_' . $amountCents,
+            'title'          => __('Community Donation', 'my-addon'),
+            'unit_price'     => $amountCents,
+            'quantity'       => 1,
+            'taxable'        => false,
+            'is_virtual'     => true,
+            'line_total'     => $amountCents
+        ];
+    }
+    return $items;
+}, 10, 2);
+```
+
+---
+
+## ⚡ Fastr MCP Server Tools Guidance
+
+When paired with the **Fastr MCP Suite**, AI coding assistants must use these 6 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
+
+| Tool | Purpose | Typical User Query |
+|---|---|---|
+| `fc_search_hooks` | Instant search across 680+ action and filter hooks with exact parameters and file anchors. | *"What hook fires after an order is completed?"* |
+| `fc_get_db_schema` | Look up exact column definitions, primary keys, and Eloquent model for any `wp_fct_*` table. | *"What columns are on the subscriptions table?"* |
+| `fc_get_reference` | Read any of the 52 comprehensive reference manuals in full or by specific section heading. | *"Show me the Void Renewal Invoice section of the REST API."* |
+| `fc_generate_payment_gateway_boilerplate` | Generate production-ready PHP boilerplate for custom payment gateways with webhook listeners. | *"Generate a payment gateway for Paddle Billing."* |
+| `fc_generate_licensing_boilerplate` | Generate client-side integration boilerplate for the official FluentCart Software Licensing SDK. | *"How do I add FluentCart licensing to my premium plugin?"* |
+| `fc_generate_customer_endpoint_boilerplate` | Generate PHP code for custom server-rendered tabs and sub-pages in the Vue 3 customer dashboard. | *"Add a Wallet tab to the FluentCart customer portal."* |
+
