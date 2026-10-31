@@ -66,7 +66,7 @@ Ten tools, all free. `suite_get_info` reports the same list at runtime, scoped b
 | --- | --- | --- |
 | FluentCart | `fc_search_hooks` | A hook name, when it fires, its arguments |
 | FluentCart | `fc_get_db_schema` | A `wp_fct_*` table, its columns, the Eloquent model |
-| FluentCart | `fc_get_reference` | Any of the 52 reference files, whole or by heading |
+| FluentCart | `fc_get_reference` | Any of the 53 reference files, whole or by heading |
 | FluentCart | `fc_generate_payment_gateway_boilerplate` | A complete PHP gateway class, settings schema and webhook entry point |
 | FluentCart | `fc_generate_licensing_boilerplate` | Complete FluentCart Software Licensing SDK integration with automatic updates and admin UI |
 | FluentCart | `fc_generate_customer_endpoint_boilerplate` | Custom server-rendered tabs and sub-pages in the Vue 3 customer dashboard with session resolution |
