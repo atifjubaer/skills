@@ -23,6 +23,7 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **Subscriptions Lifecycle:** State transitions, pausing, cancellations, dunning retries, and hosted customer portal URLs.
   - **Software Licensing:** Public `/activate`, `/validate`, and `/deactivate` endpoints for desktop software and plugins.
   - **Dynamic Checkouts & Lemon.js:** API checkout generation, in-app modal overlays, and custom metadata tracking.
+  - **3 Runnable Example Projects:** Next.js App Router webhook route, WordPress licensing integration plugin, and standalone Lemon.js checkout overlay.
 
 - **`Fastr MCP Suite`** ([`fastr-mcp-suite`](skills/fastr-mcp-suite/SKILL.md)):
   - **Install Guide:** Exact config for Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, plus the hosted Streamable HTTP transport.
