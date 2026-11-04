@@ -125,6 +125,7 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | Generating FluentCart Software Licensing SDK integration boilerplate | `fc_generate_licensing_boilerplate` |
 | Generating custom Vue 3 Customer Dashboard tab boilerplate | `fc_generate_customer_endpoint_boilerplate` |
 | Licensing a desktop app, Chrome extension, VST or CLI tool | `fc_generate_device_licensing_boilerplate` |
+| Making a free trial one-per-machine instead of one-per-email | `fc_generate_trial_guard_boilerplate` |
 | Checking an HMAC signature against a raw payload | `ls_verify_webhook` |
 | Validating a customer's license key live | `ls_validate_license` |
 
@@ -218,6 +219,21 @@ Generates production-ready PHP boilerplate for adding custom server-rendered pag
 `platform` is one of `tauri_rust`, `chrome_extension`, `python`, `cpp_vst`. Returns a complete client implementation that activates and re-validates a FluentCart license using a `device://<uuid>` identifier in the `site_url` field, persists that id in the OS credential store, and guards against a backwards system clock with the server's `server_time_unix` plus the pre-computed `expires_in_days`.
 
 Use this whenever the product is **not** a WordPress plugin: desktop apps, MV3 extensions, audio plugins, CLI tools. For WordPress plugins, `fc_generate_licensing_boilerplate` is the right tool instead.
+
+### `fc_generate_trial_guard_boilerplate`
+
+```json
+{
+  "platform": "tauri_rust",
+  "storeUrl": "https://store.example.com/",
+  "productId": 42,
+  "appName": "Acme Studio"
+}
+```
+
+`platform` is one of `tauri_rust`, `python`, `chrome_extension`. Returns client code that fingerprints the machine, asks `?fluent-cart=fastr_trial_eligibility` before the trial is offered, sends `device_fingerprint` on activation and on every heartbeat, and maps the three refusal codes (`trial_already_used`, `trial_fingerprint_required`, `trial_device_mismatch`) to client behaviour.
+
+Requires the **Fastr Devices for FluentCart** add-on on the store. FluentCart's own trial is account-scoped (`other_info.trial_days` plus `subscriptions.status = 'trialing'`); this tool is what binds it to the machine. Full contract: `fluentcart-developer/references/trial-abuse-prevention.md`.
 
 ### `ls_search_docs`
 

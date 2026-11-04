@@ -2,7 +2,7 @@
 name: "fluentcart-developer"
 description: "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks."
 summary: "Developer architecture manual and code generator for FluentCart WordPress e-commerce: custom add-ons, themes, software licensing SDK, payment gateways, and shipping integrations."
-version: "1.3.0"
+version: "1.4.0"
 license: "MIT"
 tags:
   - wordpress
@@ -112,6 +112,7 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [shipping-module-guide.md](references/shipping-module-guide.md) — Shipping module architecture, shipping zones, dynamic carrier rate calculation (`fluent_cart/shipping/methods`), and shipping classes.
 - [order-bump-module.md](references/order-bump-module.md) — Order Bump module (Pro): `OrderPromotion` model, condition engine, display positions, cart application filter (`fluent_cart/apply_order_bump`), and impression analytics.
 - [device-licensing-and-hardware-tracking.md](references/device-licensing-and-hardware-tracking.md) — Universal licensing for non-WordPress software: `device://<uuid>` identifiers in `fct_license_sites`, activation payloads, `server_time_unix` clock-tamper defence, pre-computed `expires_in_days`, Fastr Devices admin display, and self-service deactivation.
+- [trial-abuse-prevention.md](references/trial-abuse-prevention.md) — One trial per machine: the `wp_fastr_trial_registry` table, the activation / heartbeat / pre-checkout gates, fingerprint tiers per platform, `trial_already_used` and `trial_device_mismatch` contracts, single-use eligibility tokens, risk scoring, WP-CLI operations, and the 12-case test checklist.
 #### Runnable Code Examples & Project Boilerplates (`examples/`)
 - [examples/README.md](examples/README.md) — Inventory and developer guide for ready-to-use sample plugins and templates.
 - [sample-custom-addon/fluentcart-custom-addon.php](examples/sample-custom-addon/fluentcart-custom-addon.php) — Complete starter plugin with hook handlers, custom order meta, system logging, fee filters, and custom REST API endpoint.
@@ -527,19 +528,50 @@ def validate(license_key: str, stored: dict) -> bool:
     return data.get("status") in ("valid", "active") and (days is None or days >= 0)
 ```
 
+### 11. Trial Abuse Prevention (one trial per machine)
+
+FluentCart's trial is account-scoped: `other_info.trial_days` on the variation plus `subscriptions.status = 'trialing'`. A new email gets a new trial. To bind a trial to the **machine**, install the Fastr Devices add-on and drive three gates.
+
+| Gate | Hook | Stops |
+|---|---|---|
+| Eligibility | `fluent_cart_action_fastr_trial_eligibility` | Reaching payment before learning a trial was already used |
+| Activation | `fluent_cart/license/activate_license_response` (priority 20) | Second trial from a new account on the same machine |
+| Heartbeat | `fluent_cart/license/check_license_response` (priority 20) | Copying a key to another machine mid-trial |
+
+Clients send `device_fingerprint` alongside `site_url`:
+
+```text
+device_fingerprint = v1|MACHINEID=<machine guid>|UUID=<smbios uuid>|DISK=<disk serial>|CPU=<brand>
+```
+
+The server stores only `hash_hmac('sha256', $raw, wp_salt('auth'))` in `wp_fastr_trial_registry`, keyed uniquely on `(fingerprint_hash, scope_key)`. `scope_key` is the product ID, or `0` for global scope — a nullable unique column would break the constraint, because MySQL treats every `NULL` as distinct.
+
+Refusals are HTTP 422 with `success: false`:
+
+| `error_type` | Meaning |
+|---|---|
+| `trial_already_used` | Machine consumed its trial |
+| `trial_fingerprint_required` | Trial sent no fingerprint |
+| `trial_device_mismatch` | Key checked from a machine that never claimed it |
+
+FluentCart's `sendSuccessResponse()` sets `success = true` **after** the response filter returns, so a filter callback must terminate with `wp_send_json($payload, 422)` to express a hard failure. Returning an array cannot.
+
+Full schema, fingerprint tiers, token verification, scoring weights, and test checklist: [trial-abuse-prevention.md](references/trial-abuse-prevention.md).
+
 ---
 
 ## ⚡ Fastr MCP Server Tools Guidance
 
-When paired with the **Fastr MCP Suite**, AI coding assistants must use these 7 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
+When paired with the **Fastr MCP Suite**, AI coding assistants must use these 8 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
 
 | Tool | Purpose | Typical User Query |
 |---|---|---|
 | `fc_search_hooks` | Instant search across 680+ action and filter hooks with exact parameters and file anchors. | *"What hook fires after an order is completed?"* |
 | `fc_get_db_schema` | Look up exact column definitions, primary keys, and Eloquent model for any `wp_fct_*` table. | *"What columns are on the subscriptions table?"* |
-| `fc_get_reference` | Read any of the 54 comprehensive reference manuals in full or by specific section heading. | *"Show me the Void Renewal Invoice section of the REST API."* |
+| `fc_get_reference` | Read any of the 56 comprehensive reference manuals in full or by specific section heading. | *"Show me the Void Renewal Invoice section of the REST API."* |
 | `fc_generate_payment_gateway_boilerplate` | Generate production-ready PHP boilerplate for custom payment gateways with webhook listeners. | *"Generate a payment gateway for Paddle Billing."* |
 | `fc_generate_licensing_boilerplate` | Generate client-side integration boilerplate for the official FluentCart Software Licensing SDK. | *"How do I add FluentCart licensing to my premium plugin?"* |
 | `fc_generate_customer_endpoint_boilerplate` | Generate PHP code for custom server-rendered tabs and sub-pages in the Vue 3 customer dashboard. | *"Add a Wallet tab to the FluentCart customer portal."* |
 | `fc_generate_device_licensing_boilerplate` | Generate client licensing code for non-WordPress software (Tauri/Rust, Chrome MV3, Python, C++/JUCE) using `device://` ids and clock-tamper guards. | *"Add FluentCart licensing to my Tauri desktop app."* |
+| `fc_generate_trial_guard_boilerplate` | Generate fingerprinting, pre-checkout eligibility, and activation code that enforces one free trial per machine through the Fastr Devices add-on. | *"Stop people from getting a second trial with a new email."* |
 

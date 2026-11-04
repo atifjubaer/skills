@@ -102,6 +102,7 @@ const TOOLS = [
   'fc_generate_licensing_boilerplate',
   'fc_generate_customer_endpoint_boilerplate',
   'fc_generate_device_licensing_boilerplate',
+  'fc_generate_trial_guard_boilerplate',
   'suite_get_info'
 ];
 
@@ -127,7 +128,7 @@ const TOOLS = [
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
     const missing = TOOLS.filter(t => !names.includes(t));
-    check('free: all 13 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
+    check('free: all 14 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
     check('free: no duplicate registration', names.length === TOOLS.length, `${names.length} of ${TOOLS.length}`);
 
     const skills = await s.request('skills/list');
@@ -279,6 +280,28 @@ const TOOLS = [
           deviceCode.includes('store.example.com') &&
           /server_time_unix|serverTime|server_time/.test(deviceCode) &&
           deviceCode.length > 800
+      );
+    }
+    // The trial guard must carry the fingerprint field, the eligibility verb,
+    // and the three refusal codes on every platform.
+    for (const platform of ['tauri_rust', 'python', 'chrome_extension']) {
+      const trialBoiler = await s.request('tools/call', {
+        name: 'fc_generate_trial_guard_boilerplate',
+        arguments: {
+          platform,
+          storeUrl: 'https://store.example.com/',
+          productId: 42,
+          appName: 'Acme Studio'
+        }
+      });
+      const trialCode = trialBoiler.result?.content?.[0]?.text ?? '';
+      check(
+        `free: trial guard boilerplate (${platform})`,
+        trialCode.includes('device_fingerprint') &&
+          trialCode.includes('fastr_trial_eligibility') &&
+          trialCode.includes('trial_already_used') &&
+          trialCode.includes('trial_device_mismatch') &&
+          trialCode.length > 800
       );
     }
   } catch (err) {
