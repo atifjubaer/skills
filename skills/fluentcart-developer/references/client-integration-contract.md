@@ -69,7 +69,7 @@ POST /?fluent-cart=fastr_trial_eligibility
 
 If `eligible` is false, **do not show a trial button**. `reason` is one of `trial_already_used`, `high_risk`, `rate_limited`, `invalid_request`.
 
-The returned `token` is a single-use receipt for your checkout flow. It expires in 30 minutes.
+The returned `token` is a single-use receipt for your checkout flow, verified **server-side in PHP** with `Fastr_Trial_Eligibility::verify_token()`. There is no client-side verification endpoint; do not attempt to validate it in a desktop app.
 
 ### 2.2 Activate — first run, or after the user enters a key
 
@@ -106,6 +106,8 @@ Success:
 
 Persist: `activation_hash`, `license_token`, `license_token_expires_at`, `entitlements`.
 
+`grace_period_days` (15 by default) is how long the **licence** stays usable after `expiration_date` — a renewal safety margin enforced by the store. It is not the token grace in §4; the two are independent.
+
 ### 2.3 Heartbeat — every launch and every 12 hours
 
 ```http
@@ -119,6 +121,8 @@ POST /?fluent-cart=check_license
 Returns the same shape as activation. Use it to refresh `license_token` and `entitlements`, and to learn about revocation.
 
 **The offline token is renewed by any successful heartbeat.** Refresh when less than 24 hours of token life remain, or on every launch — whichever is cheaper for your app.
+
+If the merchant marked the licence **floating**, the seat is reclaimed when no heartbeat arrives within its TTL. Heartbeat well inside it; 12 hours is the recommended default. `fastr_capabilities` returns `heartbeat.recommended_seconds`.
 
 ### 2.4 Release a seat — when the user uninstalls or moves machines
 
@@ -148,6 +152,14 @@ When current: `{"update": false, "version": "1.4.0", "latest_version": "1.4.0"}`
 
 Download the URL **within five minutes**; it is bound to the release and the licence. Verify `sha256` before installing.
 
+### 2.6 Transfer a licence to a new owner (merchant-side)
+
+```bash
+wp fastr-license transfer <license> --to-email=newowner@example.com --clear-activations
+```
+
+Transferring without `--clear-activations` leaves the previous owner's machines licensed. Use it on a resale or team change: the old machines' next heartbeat returns `invalid_activation` (HTTP 200, `success:true`) and they must activate again under the new owner.
+
 ---
 
 ## 3. Error handling — read this twice
@@ -169,6 +181,8 @@ Most failures are `HTTP 4xx` with `success: false` and an `error_type`. **Two Fl
 | `invalid_activation` | **200** | **true** | No activation for this `site_url` — activate first |
 
 **The rule that survives both conventions:** treat the licence as valid only when `status == "valid"`. Do not branch on `success` alone, and do not branch on the HTTP status alone.
+
+Other codes you may see: `license_not_found` (422, key unknown to FluentCart), `no_release` (404, nothing published for that platform), `file_missing` (404, the artifact vanished from storage), `invalid_request` (422, a required parameter is missing), `invalid_period` (422, period not `YYYY-MM`), `quantity_too_large` (422, usage above 1,000,000 in one call), `registry_unavailable` (503, a plugin table is missing — load wp-admin once), `license_unavailable` (403, FluentCart licensing could not load).
 
 ---
 

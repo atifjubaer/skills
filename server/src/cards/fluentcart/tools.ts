@@ -483,7 +483,10 @@ ${subRouteCases}
         `Device ID:    device://<uuid> sent as the "site_url" field on every call`,
         `Endpoints:    ?fluent-cart=activate_license | check_license | deactivate_license`,
         `Clock guard:  compare local time against the server's "server_time_unix" reply;`,
-        `              never trust a local clock for expiry.`
+        `              never trust a local clock for expiry.`,
+        `Missing:      device_fingerprint — this template predates the trial registry,`,
+        `              so trials are refused and the device panel has no fingerprint.`,
+        `              For trials use fc_generate_trial_guard_boilerplate instead.`
       ].join('\n');
 
       const header = (title: string, file: string) =>
@@ -605,7 +608,7 @@ pub fn activate(license_key: &str) -> Result<LicenseState, String> {
             ("item_id", ITEM_ID.to_string()),
             ("site_url", device.clone()),
             ("platform", std::env::consts::OS.to_string()),
-            ("app_version", env!("CARGO_PKG_VERSION").to_string()),
+            ("server_version", env!("CARGO_PKG_VERSION").to_string()),
         ],
     )?;
 
@@ -762,7 +765,7 @@ export async function activate(licenseKey) {
     item_id: String(ITEM_ID),
     site_url: deviceId,
     platform: 'chrome-extension',
-    app_version: chrome.runtime.getManifest().version,
+    server_version: chrome.runtime.getManifest().version,
   });
 
   const status = data.status || '';
@@ -935,7 +938,7 @@ def activate(license_key: str) -> dict[str, Any]:
             "item_id": str(ITEM_ID),
             "site_url": device_id(),
             "platform": sys.platform,
-            "app_version": "1.0.0",
+            "server_version": "1.0.0",
         },
     )
     status = str(data.get("status", ""))
