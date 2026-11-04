@@ -458,4 +458,831 @@ ${subRouteCases}
       };
     }
   );
+
+  server.registerTool(
+    'fc_generate_device_licensing_boilerplate',
+    {
+      description:
+        'Generate production-ready client licensing code for non-WordPress software (desktop apps, browser extensions, audio plugins, CLI tools) that activates and validates a FluentCart Pro license using device:// identifiers, with server-time clock-tamper guards and offline grace caching.',
+      inputSchema: {
+        platform: z
+          .enum(['tauri_rust', 'chrome_extension', 'python', 'cpp_vst'])
+          .describe('Client platform to generate code for'),
+        storeUrl: z.string().describe('Base URL of the FluentCart store, e.g. "https://store.example.com/"'),
+        productId: z.number().describe('FluentCart product (item) ID the license belongs to'),
+        appName: z.string().describe('Product name, e.g. "Acme Studio"')
+      }
+    },
+    async ({ platform, storeUrl, productId, appName }) => {
+      const base = storeUrl.endsWith('/') ? storeUrl : `${storeUrl}/`;
+      const service = appName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      const shared = [
+        `Store:        ${base}`,
+        `Item ID:      ${productId}`,
+        `Device ID:    device://<uuid> sent as the "site_url" field on every call`,
+        `Endpoints:    ?fluent-cart=activate_license | check_license | deactivate_license`,
+        `Clock guard:  compare local time against the server's "server_time_unix" reply;`,
+        `              never trust a local clock for expiry.`
+      ].join('\n');
+
+      const header = (title: string, file: string) =>
+        `// ${appName} — FluentCart device licensing (${title})\n// File: ${file}\n${shared
+          .split('\n')
+          .map((l) => `// ${l}`)
+          .join('\n')}\n`;
+
+      let code = '';
+
+      if (platform === 'tauri_rust') {
+        code = `${header('Tauri / Rust', 'src/licensing.rs')}
+//
+// Cargo.toml
+//   reqwest  = { version = "0.12", features = ["blocking", "json"] }
+//   serde    = { version = "1", features = ["derive"] }
+//   serde_json = "1"
+//   keyring  = "3"
+//   uuid     = { version = "1", features = ["v4"] }
+//
+// All functions are blocking: call them from tauri::async_runtime::spawn_blocking.
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+const STORE_URL: &str = "${base}";
+const ITEM_ID: u64 = ${productId};
+const SERVICE: &str = "${service}";
+const ACCOUNT_LICENSE: &str = "license-state";
+const ACCOUNT_DEVICE: &str = "device-id";
+
+/// Tolerance (seconds) for legitimate clock drift between checks. Anything
+/// larger than this means the machine's clock was moved, so the cached
+/// entitlement is no longer trustworthy.
+const CLOCK_TOLERANCE_SECS: i64 = 300;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct LicenseState {
+    pub license_key: String,
+    pub device_id: String,
+    pub status: String,
+    pub variation_title: String,
+    pub expires: String,
+    /// Server clock at the moment of this check — the only time source we trust.
+    pub server_time_unix: i64,
+    /// Local clock at that same moment, used to detect a clock that moved back.
+    pub checked_at_local: i64,
+    /// Pre-computed by the server so the client never does date math.
+    pub expires_in_days: Option<i64>,
+    pub activation_hash: String,
+}
+
+#[derive(Deserialize)]
+struct RawResponse {
+    status: Option<String>,
+    license_key: Option<String>,
+    variation_title: Option<String>,
+    expires: Option<String>,
+    activation_hash: Option<String>,
+    server_time_unix: Option<i64>,
+    expires_in_days: Option<i64>,
+    message: Option<String>,
+}
+
+fn now_unix() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0)
+}
+
+/// A stable per-install identifier, kept in the OS keychain. The UUID is what
+/// FluentCart stores as device://<uuid>, so it must survive app restarts.
+pub fn device_id() -> Result<String, String> {
+    let entry = keyring::Entry::new(SERVICE, ACCOUNT_DEVICE).map_err(|e| e.to_string())?;
+    if let Ok(existing) = entry.get_password() {
+        if !existing.is_empty() {
+            return Ok(existing);
+        }
+    }
+    let fresh = format!("device://{}", uuid::Uuid::new_v4());
+    entry.set_password(&fresh).map_err(|e| e.to_string())?;
+    Ok(fresh)
+}
+
+pub fn load_state() -> Option<LicenseState> {
+    let entry = keyring::Entry::new(SERVICE, ACCOUNT_LICENSE).ok()?;
+    let raw = entry.get_password().ok()?;
+    serde_json::from_str(&raw).ok()
+}
+
+fn store_state(state: &LicenseState) -> Result<(), String> {
+    let entry = keyring::Entry::new(SERVICE, ACCOUNT_LICENSE).map_err(|e| e.to_string())?;
+    entry
+        .set_password(&serde_json::to_string(state).map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())
+}
+
+fn post(endpoint: &str, params: &[(&str, String)]) -> Result<RawResponse, String> {
+    let url = format!("{}?fluent-cart={}", STORE_URL, endpoint);
+    let body: HashMap<&str, String> = params.iter().cloned().collect();
+
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let res = client.post(&url).form(&body).send().map_err(|e| e.to_string())?;
+    res.json::<RawResponse>().map_err(|e| e.to_string())
+}
+
+pub fn activate(license_key: &str) -> Result<LicenseState, String> {
+    let device = device_id()?;
+    let raw = post(
+        "activate_license",
+        &[
+            ("license_key", license_key.trim().to_string()),
+            ("item_id", ITEM_ID.to_string()),
+            ("site_url", device.clone()),
+            ("platform", std::env::consts::OS.to_string()),
+            ("app_version", env!("CARGO_PKG_VERSION").to_string()),
+        ],
+    )?;
+
+    let status = raw.status.unwrap_or_default();
+    if status != "valid" && status != "active" {
+        return Err(raw.message.unwrap_or_else(|| format!("Activation failed: {}", status)));
+    }
+
+    let state = LicenseState {
+        license_key: license_key.trim().to_string(),
+        device_id: device,
+        status,
+        variation_title: raw.variation_title.unwrap_or_default(),
+        expires: raw.expires.unwrap_or_else(|| "lifetime".into()),
+        server_time_unix: raw.server_time_unix.unwrap_or_else(now_unix),
+        checked_at_local: now_unix(),
+        expires_in_days: raw.expires_in_days,
+        activation_hash: raw.activation_hash.unwrap_or_default(),
+    };
+    store_state(&state)?;
+    Ok(state)
+}
+
+/// Re-validates against the store. Returns Ok(false) when the license is no
+/// longer valid but the call itself worked.
+pub fn validate() -> Result<bool, String> {
+    let mut state = load_state().ok_or("No license stored on this device")?;
+
+    let raw = post(
+        "check_license",
+        &[
+            ("license_key", state.license_key.clone()),
+            ("item_id", ITEM_ID.to_string()),
+            ("site_url", state.device_id.clone()),
+        ],
+    )?;
+
+    let status = raw.status.unwrap_or_default();
+    let valid = status == "valid" || status == "active";
+
+    state.status = status;
+    state.expires = raw.expires.unwrap_or(state.expires);
+    state.expires_in_days = raw.expires_in_days.or(state.expires_in_days);
+    state.server_time_unix = raw.server_time_unix.unwrap_or_else(now_unix);
+    state.checked_at_local = now_unix();
+    store_state(&state)?;
+
+    Ok(valid)
+}
+
+/// True when the machine's clock has not been moved backwards since the last
+/// successful check. A backwards jump is how users try to outlive an expiry.
+pub fn clock_is_sane() -> bool {
+    match load_state() {
+        Some(state) if state.checked_at_local > 0 => {
+            let elapsed = now_unix() - state.checked_at_local;
+            elapsed >= -CLOCK_TOLERANCE_SECS
+        }
+        _ => true,
+    }
+}
+
+/// The entitlement decision the app should gate on. Offline is tolerated for a
+/// short grace window, but a tampered clock is not.
+pub fn is_licensed() -> bool {
+    let Some(state) = load_state() else { return false };
+    if state.status != "valid" && state.status != "active" {
+        return false;
+    }
+    if !clock_is_sane() {
+        return false;
+    }
+    match state.expires_in_days {
+        // Server-computed remaining days — never derived from the local clock.
+        Some(days) => days >= 0,
+        None => true, // lifetime
+    }
+}
+
+pub fn deactivate() -> Result<(), String> {
+    let state = load_state().ok_or("No license stored on this device")?;
+    let _ = post(
+        "deactivate_license",
+        &[
+            ("license_key", state.license_key),
+            ("item_id", ITEM_ID.to_string()),
+            ("site_url", state.device_id),
+        ],
+    );
+    if let Ok(entry) = keyring::Entry::new(SERVICE, ACCOUNT_LICENSE) {
+        let _ = entry.delete_credential();
+    }
+    Ok(())
+}
+
+// Tauri wiring (src/main.rs):
+//   #[tauri::command]
+//   async fn license_activate(key: String) -> Result<bool, String> {
+//       tauri::async_runtime::spawn_blocking(move || licensing::activate(&key).map(|_| true))
+//           .await.map_err(|e| e.to_string())?
+//   }
+`;
+      }
+
+      if (platform === 'chrome_extension') {
+        code = `${header('Chrome MV3 extension', 'background.js')}
+//
+// manifest.json needs:
+//   "permissions": ["storage", "alarms"],
+//   "host_permissions": ["${base}*"],
+//   "background": { "service_worker": "background.js", "type": "module" }
+//
+// A service worker is killed after ~30s idle, so nothing may live in a module
+// variable. Device id, license state and the last check all live in
+// chrome.storage.local, and the 12-hour alarm is what re-checks while asleep.
+
+const STORE_URL = '${base}';
+const ITEM_ID = ${productId};
+const KEYS = { device: 'fc_device_id', state: 'fc_license_state' };
+const CLOCK_TOLERANCE_MS = 5 * 60 * 1000;
+const CHECK_ALARM = 'fc-license-check';
+
+async function getDeviceId() {
+  const stored = await chrome.storage.local.get(KEYS.device);
+  if (stored[KEYS.device]) return stored[KEYS.device];
+  // randomUUID is available in the MV3 service worker context.
+  const deviceId = 'device://' + crypto.randomUUID();
+  await chrome.storage.local.set({ [KEYS.device]: deviceId });
+  return deviceId;
+}
+
+async function post(endpoint, params) {
+  const body = new URLSearchParams(params);
+  const res = await fetch(STORE_URL + '?fluent-cart=' + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function saveState(patch) {
+  const prev = (await chrome.storage.local.get(KEYS.state))[KEYS.state] || {};
+  const next = Object.assign({}, prev, patch);
+  await chrome.storage.local.set({ [KEYS.state]: next });
+  return next;
+}
+
+export async function activate(licenseKey) {
+  const deviceId = await getDeviceId();
+  const data = await post('activate_license', {
+    license_key: licenseKey.trim(),
+    item_id: String(ITEM_ID),
+    site_url: deviceId,
+    platform: 'chrome-extension',
+    app_version: chrome.runtime.getManifest().version,
+  });
+
+  const status = data.status || '';
+  const valid = status === 'valid' || status === 'active';
+  const state = await saveState({
+    license_key: licenseKey.trim(),
+    device_id: deviceId,
+    status: status,
+    expires: data.expires || 'lifetime',
+    expires_in_days: typeof data.expires_in_days === 'number' ? data.expires_in_days : null,
+    server_time_unix: data.server_time_unix || Math.floor(Date.now() / 1000),
+    checked_at_local: Date.now(),
+    variation_title: data.variation_title || '',
+  });
+
+  if (!valid) throw new Error(data.message || 'Activation failed: ' + status);
+  return state;
+}
+
+export async function validate() {
+  const stored = await chrome.storage.local.get(KEYS.state);
+  const state = stored[KEYS.state];
+  if (!state || !state.license_key) return { valid: false, reason: 'no-license' };
+
+  const data = await post('check_license', {
+    license_key: state.license_key,
+    item_id: String(ITEM_ID),
+    site_url: state.device_id,
+  });
+
+  const status = data.status || '';
+  const valid = status === 'valid' || status === 'active';
+  await saveState({
+    status: status,
+    expires: data.expires || state.expires,
+    expires_in_days: typeof data.expires_in_days === 'number' ? data.expires_in_days : state.expires_in_days,
+    server_time_unix: data.server_time_unix || Math.floor(Date.now() / 1000),
+    checked_at_local: Date.now(),
+  });
+
+  return { valid: valid, reason: status };
+}
+
+// The server's clock is the only one that counts. If the machine's clock is
+// now behind the moment of the last check by more than the tolerance, it moved.
+function clockIsSane(state) {
+  if (!state || !state.checked_at_local) return true;
+  return Date.now() - state.checked_at_local >= -CLOCK_TOLERANCE_MS;
+}
+
+export async function isLicensed() {
+  const stored = await chrome.storage.local.get(KEYS.state);
+  const state = stored[KEYS.state];
+  if (!state) return false;
+  if (state.status !== 'valid' && state.status !== 'active') return false;
+  if (!clockIsSane(state)) return false;
+  if (typeof state.expires_in_days === 'number' && state.expires_in_days < 0) return false;
+  return true;
+}
+
+export async function deactivate() {
+  const stored = await chrome.storage.local.get(KEYS.state);
+  const state = stored[KEYS.state];
+  if (state && state.license_key) {
+    try {
+      await post('deactivate_license', {
+        license_key: state.license_key,
+        item_id: String(ITEM_ID),
+        site_url: state.device_id,
+      });
+    } catch (e) {
+      // Deactivation is best-effort: the device is forgotten locally anyway.
+    }
+  }
+  await chrome.storage.local.remove(KEYS.state);
+}
+
+// Re-check every 12 hours, and once whenever the browser starts.
+chrome.alarms.create(CHECK_ALARM, { periodInMinutes: 720 });
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== CHECK_ALARM) return;
+  try {
+    await validate();
+  } catch (e) {
+    // Offline: keep the cached verdict until the next alarm.
+  }
+});
+chrome.runtime.onStartup.addListener(() => { validate().catch(() => {}); });
+chrome.runtime.onInstalled.addListener(() => { validate().catch(() => {}); });
+
+// Popup / options page usage:
+//   const licensed = await chrome.runtime.sendMessage({ type: 'fc:is-licensed' });
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg && msg.type === 'fc:is-licensed') {
+    isLicensed().then((v) => sendResponse(v));
+    return true; // keep the channel open for the async reply
+  }
+});
+`;
+      }
+
+      if (platform === 'python') {
+        code = `${header('Python (CLI / desktop)', 'licensing.py')}
+#
+# pip install httpx keyring
+#
+# Usage:
+#   python licensing.py activate ABCD-1234-EFGH-5678
+#   python licensing.py status
+#   python licensing.py deactivate
+
+from __future__ import annotations
+
+import json
+import sys
+import time
+import uuid
+from pathlib import Path
+from typing import Any, Optional
+
+import httpx
+import keyring
+
+STORE_URL = "${base}"
+ITEM_ID = ${productId}
+APP_NAME = "${appName}"
+SERVICE = "${service}"
+CLOCK_TOLERANCE_SECS = 300
+STATE_FILE = Path.home() / ".config" / SERVICE.replace("-", "_") / "license.json"
+
+
+def now_unix() -> int:
+    return int(time.time())
+
+
+def device_id() -> str:
+    """Stable per-install id; FluentCart stores it as device://<uuid>."""
+    existing = keyring.get_password(SERVICE, "device-id")
+    if existing:
+        return existing
+    fresh = f"device://{uuid.uuid4()}"
+    keyring.set_password(SERVICE, "device-id", fresh)
+    return fresh
+
+
+def load_state() -> Optional[dict[str, Any]]:
+    try:
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def save_state(state: dict[str, Any]) -> None:
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
+def _post(endpoint: str, params: dict[str, str]) -> dict[str, Any]:
+    with httpx.Client(timeout=15.0) as client:
+        res = client.post(f"{STORE_URL}?fluent-cart={endpoint}", data=params)
+        res.raise_for_status()
+        return res.json()
+
+
+def activate(license_key: str) -> dict[str, Any]:
+    data = _post(
+        "activate_license",
+        {
+            "license_key": license_key.strip(),
+            "item_id": str(ITEM_ID),
+            "site_url": device_id(),
+            "platform": sys.platform,
+            "app_version": "1.0.0",
+        },
+    )
+    status = str(data.get("status", ""))
+    if status not in ("valid", "active"):
+        raise RuntimeError(data.get("message") or f"Activation failed: {status}")
+
+    state = {
+        "license_key": license_key.strip(),
+        "device_id": device_id(),
+        "status": status,
+        "expires": data.get("expires", "lifetime"),
+        "expires_in_days": data.get("expires_in_days"),
+        "server_time_unix": int(data.get("server_time_unix") or now_unix()),
+        "checked_at_local": now_unix(),
+        "variation_title": data.get("variation_title", ""),
+        "activation_hash": data.get("activation_hash", ""),
+    }
+    save_state(state)
+    return state
+
+
+def validate() -> bool:
+    state = load_state()
+    if not state:
+        return False
+
+    data = _post(
+        "check_license",
+        {
+            "license_key": state["license_key"],
+            "item_id": str(ITEM_ID),
+            "site_url": state["device_id"],
+        },
+    )
+    status = str(data.get("status", ""))
+    state.update(
+        {
+            "status": status,
+            "expires": data.get("expires", state.get("expires", "lifetime")),
+            "expires_in_days": data.get("expires_in_days", state.get("expires_in_days")),
+            "server_time_unix": int(data.get("server_time_unix") or now_unix()),
+            "checked_at_local": now_unix(),
+        }
+    )
+    save_state(state)
+    return status in ("valid", "active")
+
+
+def clock_is_sane(state: Optional[dict[str, Any]]) -> bool:
+    """Reject a machine whose clock was moved backwards since the last check."""
+    if not state or not state.get("checked_at_local"):
+        return True
+    return now_unix() - int(state["checked_at_local"]) >= -CLOCK_TOLERANCE_SECS
+
+
+def is_licensed() -> bool:
+    state = load_state()
+    if not state:
+        return False
+    if state.get("status") not in ("valid", "active"):
+        return False
+    if not clock_is_sane(state):
+        return False
+    days = state.get("expires_in_days")
+    if isinstance(days, int) and days < 0:
+        return False
+    return True
+
+
+def deactivate() -> None:
+    state = load_state()
+    if state:
+        try:
+            _post(
+                "deactivate_license",
+                {
+                    "license_key": state.get("license_key", ""),
+                    "item_id": str(ITEM_ID),
+                    "site_url": state.get("device_id", ""),
+                },
+            )
+        except httpx.HTTPError:
+            pass  # best effort; the device forgets the key regardless
+    try:
+        STATE_FILE.unlink()
+    except OSError:
+        pass
+
+
+if __name__ == "__main__":
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
+    if cmd == "activate":
+        if len(sys.argv) < 3:
+            sys.exit("usage: python licensing.py activate <license-key>")
+        print(json.dumps(activate(sys.argv[2]), indent=2))
+    elif cmd == "deactivate":
+        deactivate()
+        print("deactivated")
+    elif cmd == "status":
+        print("licensed" if is_licensed() else "not licensed")
+    else:
+        sys.exit(f"unknown command: {cmd}")
+`;
+      }
+
+      if (platform === 'cpp_vst') {
+        code = `${header('C++ / JUCE (VST3, AU, AAX)', 'LicensingManager.h + .cpp')}
+//
+// Add to your juce_module dependencies: juce_core, juce_data_structures.
+// Enable JUCE_WEB_BROWSER=0 is fine — juce::URL handles the POST itself.
+//
+// ── LicensingManager.h ─────────────────────────────────────────────────────
+#pragma once
+
+#include <JuceHeader.h>
+
+class LicensingManager : public juce::Thread
+{
+public:
+    LicensingManager();
+    ~LicensingManager() override;
+
+    /** Kicks off a background check. Never blocks the audio thread. */
+    void refreshAsync();
+
+    /** Cached verdict, safe to read from the message/audio thread. */
+    bool isLicensed() const;
+
+    juce::String getStatusText() const;
+    juce::String getExpiryText() const;
+
+    void activate (const juce::String& licenseKey);
+    void deactivate();
+
+    /** Fired on the message thread whenever the verdict changes. */
+    std::function<void (bool licensed)> onLicenseChanged;
+
+private:
+    void run() override;
+    void setState (const juce::var& json);
+    juce::var post (const juce::String& endpoint,
+                    const juce::StringPairArray& params);
+
+    static juce::String deviceId();
+
+    juce::CriticalSection lock;
+    bool licensed = false;
+    juce::String statusText { "unlicensed" };
+    juce::String expiryText;
+    std::unique_ptr<juce::PropertiesFile> props;
+};
+
+// ── LicensingManager.cpp ───────────────────────────────────────────────────
+#include "LicensingManager.h"
+
+namespace
+{
+    constexpr const char* kStoreUrl  = "${base}";
+    constexpr int         kItemId    = ${productId};
+    constexpr juce::int64 kClockToleranceMs = 5 * 60 * 1000;
+
+    juce::PropertiesFile::Options optionsFor (const juce::String& appName)
+    {
+        juce::PropertiesFile::Options o;
+        o.applicationName     = appName;
+        o.filenameSuffix      = ".licence";
+        o.osxLibrarySubFolder = "Application Support";
+        return o;
+    }
+}
+
+LicensingManager::LicensingManager()
+    : juce::Thread ("FluentCart licensing"),
+      props (new juce::PropertiesFile (
+          optionsFor ("${service}"),
+          juce::PropertiesFile::storeAsXML))
+{
+}
+
+LicensingManager::~LicensingManager() { stopThread (3000); }
+
+juce::String LicensingManager::deviceId()
+{
+    auto& p = *juce::PropertiesFile::createDefaultAppPropertiesFile (
+        "${service}", ".licence", "Application Support", true);
+    auto existing = p.getValue ("fc_device_id");
+    if (existing.isNotEmpty())
+        return existing;
+
+    auto fresh = "device://" + juce::Uuid().toString();
+    p.setValue ("fc_device_id", fresh);
+    p.saveIfNeeded();
+    return fresh;
+}
+
+juce::var LicensingManager::post (const juce::String& endpoint,
+                                  const juce::StringPairArray& params)
+{
+    juce::String body;
+    for (int i = 0; i < params.size(); ++i)
+        body << (i ? "&" : "")
+             << juce::URL::addEscapeChars (params.getAllKeys()[i], false) << "="
+             << juce::URL::addEscapeChars (params.getAllValues()[i], false);
+
+    juce::URL url (juce::String (kStoreUrl) + "?fluent-cart=" + endpoint);
+    url = url.withPOSTData (body);
+
+    int statusCode = 0;
+    auto stream = url.createInputStream (
+        juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inPostData)
+            .withConnectionTimeoutMs (15000)
+            .withExtraHeaders ("Content-Type: application/x-www-form-urlencoded")
+            .withStatusCode (&statusCode));
+
+    if (stream == nullptr)
+        return {};
+
+    return juce::JSON::parse (stream->readEntireStreamAsString());
+}
+
+void LicensingManager::setState (const juce::var& json)
+{
+    auto* obj = json.getDynamicObject();
+    if (obj == nullptr)
+        return;
+
+    auto status = obj->getProperty ("status").toString();
+    auto valid  = (status == "valid" || status == "active");
+
+    // The server's clock is authoritative. Remember the matching local time so
+    // a clock moved backwards between checks can be detected.
+    auto serverTime = (juce::int64) (double) obj->getProperty ("server_time_unix");
+
+    {
+        const juce::ScopedLock sl (lock);
+        licensed   = valid;
+        statusText = status.isNotEmpty() ? status : "unknown";
+        expiryText = obj->getProperty ("expires").toString();
+    }
+
+    if (serverTime > 0)
+        props->setValue ("fc_server_time", juce::String (serverTime));
+    props->setValue ("fc_checked_at_local", juce::String (juce::Time::currentTimeMillis()));
+    props->saveIfNeeded();
+
+    auto changed = onLicenseChanged;
+    if (changed != nullptr)
+        juce::MessageManager::callAsync ([changed, valid] { changed (valid); });
+}
+
+bool LicensingManager::isLicensed() const
+{
+    const juce::ScopedLock sl (lock);
+    if (! licensed)
+        return false;
+
+    // Pre-computed by the server; the client never does date math.
+    auto days = props->getIntValue ("fc_expires_in_days", -1);
+    if (days >= 0 && days == 0)
+        return false;
+
+    auto checkedAt = props->getValue ("fc_checked_at_local").getLargeIntValue();
+    if (checkedAt > 0 && juce::Time::currentTimeMillis() - checkedAt < -kClockToleranceMs)
+        return false; // clock moved backwards — treat as tampered
+
+    return true;
+}
+
+juce::String LicensingManager::getStatusText() const
+{
+    const juce::ScopedLock sl (lock);
+    return statusText;
+}
+
+juce::String LicensingManager::getExpiryText() const
+{
+    const juce::ScopedLock sl (lock);
+    return expiryText;
+}
+
+void LicensingManager::refreshAsync()
+{
+    if (! isThreadRunning())
+        startThread();
+}
+
+void LicensingManager::run()
+{
+    auto& p = *props;
+    auto key = p.getValue ("fc_license_key");
+    if (key.isEmpty())
+        return;
+
+    juce::StringPairArray params;
+    params.set ("license_key", key);
+    params.set ("item_id", juce::String (kItemId));
+    params.set ("site_url", p.getValue ("fc_device_id"));
+
+    setState (post ("check_license", params));
+}
+
+void LicensingManager::activate (const juce::String& licenseKey)
+{
+    juce::StringPairArray params;
+    params.set ("license_key", licenseKey.trim());
+    params.set ("item_id", juce::String (kItemId));
+    params.set ("site_url", deviceId());
+    params.set ("platform", juce::SystemStats::getOperatingSystemName());
+
+    auto json = post ("activate_license", params);
+    auto* obj = json.getDynamicObject();
+    if (obj != nullptr)
+    {
+        props->setValue ("fc_license_key", licenseKey.trim());
+        props->setValue ("fc_expires_in_days",
+                         juce::String ((int) (double) obj->getProperty ("expires_in_days")));
+    }
+    setState (json);
+    props->saveIfNeeded();
+}
+
+void LicensingManager::deactivate()
+{
+    juce::StringPairArray params;
+    params.set ("license_key", props->getValue ("fc_license_key"));
+    params.set ("item_id", juce::String (kItemId));
+    params.set ("site_url", props->getValue ("fc_device_id"));
+    post ("deactivate_license", params);
+
+    props->removeValue ("fc_license_key");
+    props->saveIfNeeded();
+
+    const juce::ScopedLock sl (lock);
+    licensed = false;
+    statusText = "unlicensed";
+}
+
+// In your AudioProcessor constructor:
+//   licensing.refreshAsync();          // background thread, no UI stall
+// Never call isLicensed() from the audio callback — cache it on the message
+// thread and read an atomic in processBlock().
+`;
+      }
+
+      return {
+        content: [{ type: 'text', text: code }]
+      };
+    }
+  );
 }

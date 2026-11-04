@@ -101,6 +101,7 @@ const TOOLS = [
   'fc_generate_payment_gateway_boilerplate',
   'fc_generate_licensing_boilerplate',
   'fc_generate_customer_endpoint_boilerplate',
+  'fc_generate_device_licensing_boilerplate',
   'suite_get_info'
 ];
 
@@ -126,7 +127,7 @@ const TOOLS = [
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
     const missing = TOOLS.filter(t => !names.includes(t));
-    check('free: all 12 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
+    check('free: all 13 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
     check('free: no duplicate registration', names.length === TOOLS.length, `${names.length} of ${TOOLS.length}`);
 
     const skills = await s.request('skills/list');
@@ -258,6 +259,28 @@ const TOOLS = [
         endpointPhp.includes('CustomerResource::getCurrentCustomer()') &&
         endpointPhp.includes('acme-wallet')
     );
+
+    // Device licensing must emit a device:// identifier and a clock guard on
+    // every platform — those are the two things the tool exists to get right.
+    for (const platform of ['tauri_rust', 'chrome_extension', 'python', 'cpp_vst']) {
+      const deviceBoiler = await s.request('tools/call', {
+        name: 'fc_generate_device_licensing_boilerplate',
+        arguments: {
+          platform,
+          storeUrl: 'https://store.example.com/',
+          productId: 42,
+          appName: 'Acme Studio'
+        }
+      });
+      const deviceCode = deviceBoiler.result?.content?.[0]?.text ?? '';
+      check(
+        `free: device licensing boilerplate (${platform})`,
+        deviceCode.includes('device://') &&
+          deviceCode.includes('store.example.com') &&
+          /server_time_unix|serverTime|server_time/.test(deviceCode) &&
+          deviceCode.length > 800
+      );
+    }
   } catch (err) {
     check('free session', false, err.message);
   } finally {
