@@ -80,7 +80,8 @@ const CARD_TOOLS: Record<Exclude<CardFilter, 'all'>, string[]> = {
     'fc_generate_licensing_boilerplate',
     'fc_generate_customer_endpoint_boilerplate',
     'fc_generate_device_licensing_boilerplate',
-    'fc_generate_trial_guard_boilerplate'
+    'fc_generate_trial_guard_boilerplate',
+    'fc_generate_client_sdk'
   ],
   lemonsqueezy: [
     'ls_search_docs',

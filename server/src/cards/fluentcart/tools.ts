@@ -1712,4 +1712,528 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       };
     }
   );
+  server.registerTool(
+    'fc_generate_client_sdk',
+    {
+      description:
+        'Generate a licence client for Node/Electron, .NET, Go or Kotlin: activation and heartbeat calls against FluentCart Pro, RS256 verification of the offline licence token, and the status=="valid" rule that survives FluentCart\'s two 200-with-success errors.',
+      inputSchema: {
+        platform: z
+          .enum(['node', 'dotnet', 'go', 'kotlin'])
+          .describe('Client platform to generate code for'),
+        storeUrl: z.string().describe('Base URL of the FluentCart store, e.g. "https://store.example.com/"'),
+        productId: z.number().describe('FluentCart product (item) ID'),
+        appName: z.string().describe('Product name, e.g. "Acme Studio"')
+      }
+    },
+    async ({ platform, storeUrl, productId, appName }) => {
+      const base = storeUrl.endsWith('/') ? storeUrl : storeUrl + '/';
+      const slug = appName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const header = (title: string, file: string) =>
+        `// ${appName} - FluentCart licence client (${title})\n` +
+        `// File: ${file}\n` +
+        `// Store: ${base}   Product: ${productId}\n` +
+        `// Contract: activate, check, deactivate + RS256 offline token.\n`;
+
+      if (platform === 'node') {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `${header('Node / Electron', 'src/license.ts')}
+import { createVerify } from "node:crypto";
+
+const STORE = "${base}";
+const PRODUCT_ID = ${productId};
+
+export type LicenseState = {
+  status: string;
+  token?: string;
+  entitlements?: number[];
+  expiresInDays?: number;
+  errorType?: string;
+};
+
+async function call(verb: string, body: Record<string, string>) {
+  const res = await fetch(STORE + "?fluent-cart=" + verb, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(body).toString()
+  });
+  return { http: res.status, json: await res.json() };
+}
+
+export async function activate(licenseKey: string, instanceId: string, fingerprint: string, email: string): Promise<LicenseState> {
+  const { json } = await call("activate_license", {
+    item_id: String(PRODUCT_ID),
+    license_key: licenseKey,
+    site_url: instanceId,
+    device_fingerprint: fingerprint,
+    device_name: process.env.COMPUTERNAME || "desktop",
+    device_type: "Desktop (Node)",
+    os: process.platform + " " + process.arch,
+    email,
+    server_version: "1.0.0"
+  });
+
+  // FluentCart returns key_mismatch / invalid_activation as HTTP 200 with
+  // success=true. Only status === "valid" means licensed.
+  return {
+    status: json.status,
+    token: json.license_token,
+    entitlements: json.entitlements,
+    expiresInDays: json.expires_in_days,
+    errorType: json.error_type
+  };
+}
+
+export async function check(licenseKey: string, instanceId: string, fingerprint: string): Promise<LicenseState> {
+  const { json } = await call("check_license", {
+    item_id: String(PRODUCT_ID),
+    license_key: licenseKey,
+    site_url: instanceId,
+    device_fingerprint: fingerprint
+  });
+  return { status: json.status, token: json.license_token, entitlements: json.entitlements };
+}
+
+export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const verifier = createVerify("RSA-SHA256");
+  verifier.update(parts[0] + "." + parts[1]);
+  if (!verifier.verify(publicKeyPem, Buffer.from(parts[2], "base64url"))) return null;
+  const claims = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+  if (typeof claims.exp === "number" && claims.exp < Math.floor(Date.now() / 1000)) return null;
+  return claims;
+}
+`
+            }
+          ]
+        };
+      }
+
+      if (platform === 'dotnet') {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `${header('.NET (WPF / MAUI / console)', 'License.cs')}
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+public sealed class LicenseState
+{
+    public string Status { get; set; } = "";
+    public string? Token { get; set; }
+    public List<int> Entitlements { get; set; } = new();
+    public string? ErrorType { get; set; }
+}
+
+public static class FastrLicense
+{
+    private const string Store = "${base}";
+    private const int ProductId = ${productId};
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    private static async Task<JsonElement> CallAsync(string verb, Dictionary<string, string> body)
+    {
+        var res = await Http.PostAsync(Store + "?fluent-cart=" + verb, new FormUrlEncodedContent(body));
+        var text = await res.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(text);
+        return doc.RootElement.Clone();
+    }
+
+    public static async Task<LicenseState> ActivateAsync(string licenseKey, string instanceId, string fingerprint, string email)
+    {
+        var json = await CallAsync("activate_license", new Dictionary<string, string>
+        {
+            ["item_id"] = ProductId.ToString(),
+            ["license_key"] = licenseKey,
+            ["site_url"] = instanceId,
+            ["device_fingerprint"] = fingerprint,
+            ["device_name"] = Environment.MachineName,
+            ["device_type"] = "Desktop (.NET)",
+            ["os"] = Environment.OSVersion.ToString(),
+            ["email"] = email,
+            ["server_version"] = "1.0.0"
+        });
+
+        // key_mismatch and invalid_activation arrive as HTTP 200 with success=true.
+        var state = new LicenseState
+        {
+            Status = json.TryGetProperty("status", out var s) ? s.GetString() ?? "" : "",
+            Token = json.TryGetProperty("license_token", out var t) ? t.GetString() : null,
+            ErrorType = json.TryGetProperty("error_type", out var e) ? e.GetString() : null
+        };
+
+        if (json.TryGetProperty("entitlements", out var ent) && ent.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var id in ent.EnumerateArray()) state.Entitlements.Add(id.GetInt32());
+        }
+
+        return state;
+    }
+
+    public static async Task<LicenseState> CheckAsync(string licenseKey, string instanceId, string fingerprint)
+    {
+        var json = await CallAsync("check_license", new Dictionary<string, string>
+        {
+            ["item_id"] = ProductId.ToString(),
+            ["license_key"] = licenseKey,
+            ["site_url"] = instanceId,
+            ["device_fingerprint"] = fingerprint
+        });
+
+        var state = new LicenseState
+        {
+            Status = json.TryGetProperty("status", out var s) ? s.GetString() ?? "" : "",
+            Token = json.TryGetProperty("license_token", out var t) ? t.GetString() : null,
+            ErrorType = json.TryGetProperty("error_type", out var e) ? e.GetString() : null
+        };
+
+        if (json.TryGetProperty("entitlements", out var ent) && ent.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var id in ent.EnumerateArray()) state.Entitlements.Add(id.GetInt32());
+        }
+
+        return state;
+    }
+
+    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)
+    {
+        claims = default;
+        var parts = token.Split('.');
+        if (parts.Length != 3) return false;
+
+        using var rsa = RSA.Create();
+        rsa.ImportFromPem(publicKeyPem);
+
+        var data = Encoding.ASCII.GetBytes(parts[0] + "." + parts[1]);
+        var signature = Base64UrlDecode(parts[2]);
+
+        if (!rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1)) return false;
+
+        using var doc = JsonDocument.Parse(Base64UrlDecode(parts[1]));
+        claims = doc.RootElement.Clone();
+        return true;
+    }
+
+    private static byte[] Base64UrlDecode(string value)
+    {
+        var padded = value.Replace('-', '+').Replace('_', '/');
+        padded += new string('=', (4 - padded.Length % 4) % 4);
+        return Convert.FromBase64String(padded);
+    }
+}
+`
+            }
+          ]
+        };
+      }
+
+      if (platform === 'go') {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `${header('Go (CLI / service)', 'license/license.go')}
+package license
+
+import (
+	"crypto"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"errors"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"runtime"
+	"strings"
+	"time"
+)
+
+const (
+	Store     = "${base}"
+	ProductID = "${productId}"
+)
+
+type State struct {
+	Status       string
+	Token        string
+	Entitlements []int
+	ErrorType    string
+}
+
+func call(verb string, body url.Values) (map[string]any, error) {
+	res, err := http.PostForm(Store+"?fluent-cart="+verb, body)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	raw, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func Activate(key, instanceID, fingerprint, email string) (State, error) {
+	host, _ := os.Hostname()
+
+	out, err := call("activate_license", url.Values{
+		"item_id":            {ProductID},
+		"license_key":        {key},
+		"site_url":           {instanceID},
+		"device_fingerprint": {fingerprint},
+		"device_name":        {host},
+		"device_type":        {"CLI (Go)"},
+		"os":                 {runtime.GOOS + " " + runtime.GOARCH},
+		"email":              {email},
+		"server_version":     {"1.0.0"},
+	})
+	if err != nil {
+		return State{}, err
+	}
+
+	// key_mismatch and invalid_activation come back as HTTP 200 success=true.
+	state := State{
+		Status:    asString(out["status"]),
+		Token:     asString(out["license_token"]),
+		ErrorType: asString(out["error_type"]),
+	}
+
+	if list, ok := out["entitlements"].([]any); ok {
+		for _, v := range list {
+			if f, ok := v.(float64); ok {
+				state.Entitlements = append(state.Entitlements, int(f))
+			}
+		}
+	}
+
+	return state, nil
+}
+
+func Check(key, instanceID, fingerprint string) (State, error) {
+	out, err := call("check_license", url.Values{
+		"item_id":            {ProductID},
+		"license_key":        {key},
+		"site_url":           {instanceID},
+		"device_fingerprint": {fingerprint},
+	})
+	if err != nil {
+		return State{}, err
+	}
+
+	state := State{
+		Status:    asString(out["status"]),
+		Token:     asString(out["license_token"]),
+		ErrorType: asString(out["error_type"]),
+	}
+
+	if list, ok := out["entitlements"].([]any); ok {
+		for _, v := range list {
+			if f, ok := v.(float64); ok {
+				state.Entitlements = append(state.Entitlements, int(f))
+			}
+		}
+	}
+
+	return state, nil
+}
+
+// VerifyToken checks an RS256 licence token against the store's public key.
+func VerifyToken(token, publicKeyPEM string) (map[string]any, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, errors.New("malformed token")
+	}
+
+	block, _ := pem.Decode([]byte(publicKeyPEM))
+	if block == nil {
+		return nil, errors.New("bad public key")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	rsaPub, ok := pub.(*rsa.PublicKey)
+	if !ok {
+		return nil, errors.New("not an RSA key")
+	}
+
+	sig, err := base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		return nil, err
+	}
+
+	digest := sha256.Sum256([]byte(parts[0] + "." + parts[1]))
+	if err := rsa.VerifyPKCS1v15(rsaPub, crypto.SHA256, digest[:], sig); err != nil {
+		return nil, err
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, err
+	}
+
+	var claims map[string]any
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil, err
+	}
+
+	if exp, ok := claims["exp"].(float64); ok && int64(exp) < time.Now().Unix() {
+		return nil, errors.New("token expired")
+	}
+
+	return claims, nil
+}
+
+func asString(v any) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+`
+            }
+          ]
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `${header('Kotlin / JVM', 'LicenseClient.kt')}
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
+import org.json.JSONObject
+
+const val STORE = "${base}"
+const val PRODUCT_ID = ${productId}
+
+data class LicenseState(
+    val status: String,
+    val token: String?,
+    val entitlements: List<Int>,
+    val errorType: String?
+)
+
+fun call(verb: String, body: Map<String, String>): JSONObject {
+    val url = URL(STORE + "?fluent-cart=" + verb)
+    val conn = url.openConnection() as HttpURLConnection
+    conn.requestMethod = "POST"
+    conn.doOutput = true
+    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+    val form = body.entries.joinToString("&") { e ->
+        java.net.URLEncoder.encode(e.key, "UTF-8") + "=" + java.net.URLEncoder.encode(e.value, "UTF-8")
+    }
+    conn.outputStream.use { it.write(form.toByteArray()) }
+    return JSONObject(conn.inputStream.bufferedReader().readText())
+}
+
+fun activate(key: String, instanceId: String, fingerprint: String, email: String): LicenseState {
+    val json = call("activate_license", mapOf(
+        "item_id" to PRODUCT_ID.toString(),
+        "license_key" to key,
+        "site_url" to instanceId,
+        "device_fingerprint" to fingerprint,
+        "device_name" to (System.getenv("COMPUTERNAME") ?: "desktop"),
+        "device_type" to "Desktop (JVM)",
+        "os" to System.getProperty("os.name") + " " + System.getProperty("os.arch"),
+        "email" to email,
+        "server_version" to "1.0.0"
+    ))
+
+    // key_mismatch and invalid_activation arrive as HTTP 200 with success=true.
+    val ents = mutableListOf<Int>()
+    json.optJSONArray("entitlements")?.let { arr ->
+        for (i in 0 until arr.length()) ents.add(arr.getInt(i))
+    }
+
+    return LicenseState(
+        status = json.optString("status"),
+        token = json.optString("license_token").ifEmpty { null },
+        entitlements = ents,
+        errorType = json.optString("error_type").ifEmpty { null }
+    )
+}
+
+fun check(key: String, instanceId: String, fingerprint: String): LicenseState {
+    val json = call("check_license", mapOf(
+        "item_id" to PRODUCT_ID.toString(),
+        "license_key" to key,
+        "site_url" to instanceId,
+        "device_fingerprint" to fingerprint
+    ))
+
+    val ents = mutableListOf<Int>()
+    json.optJSONArray("entitlements")?.let { arr ->
+        for (i in 0 until arr.length()) ents.add(arr.getInt(i))
+    }
+
+    return LicenseState(
+        status = json.optString("status"),
+        token = json.optString("license_token").ifEmpty { null },
+        entitlements = ents,
+        errorType = json.optString("error_type").ifEmpty { null }
+    )
+}
+
+fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
+    val parts = token.split(".")
+    if (parts.size != 3) return null
+
+    val pem = publicKeyPem
+        .replace("-----BEGIN PUBLIC KEY-----", "")
+        .replace("-----END PUBLIC KEY-----", "")
+        .replace("\\s".toRegex(), "")
+
+    val keySpec = X509EncodedKeySpec(Base64.getDecoder().decode(pem))
+    val publicKey = KeyFactory.getInstance("RSA").generatePublic(keySpec)
+
+    val verifier = Signature.getInstance("SHA256withRSA")
+    verifier.initVerify(publicKey)
+    verifier.update((parts[0] + "." + parts[1]).toByteArray())
+
+    val signature = Base64.getUrlDecoder().decode(parts[2])
+    if (!verifier.verify(signature)) return null
+
+    val payload = String(Base64.getUrlDecoder().decode(parts[1]))
+    return JSONObject(payload)
+}
+`
+            }
+          ]
+        };
+    }
+  );
+
 }

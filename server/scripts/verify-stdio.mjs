@@ -103,6 +103,7 @@ const TOOLS = [
   'fc_generate_customer_endpoint_boilerplate',
   'fc_generate_device_licensing_boilerplate',
   'fc_generate_trial_guard_boilerplate',
+  'fc_generate_client_sdk',
   'suite_get_info'
 ];
 
@@ -128,7 +129,7 @@ const TOOLS = [
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
     const missing = TOOLS.filter(t => !names.includes(t));
-    check('free: all 14 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
+    check('free: all 15 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
     check('free: no duplicate registration', names.length === TOOLS.length, `${names.length} of ${TOOLS.length}`);
 
     const skills = await s.request('skills/list');
@@ -302,6 +303,23 @@ const TOOLS = [
           trialCode.includes('trial_already_used') &&
           trialCode.includes('trial_device_mismatch') &&
           trialCode.length > 800
+      );
+    }
+    // SDK generators must carry the endpoints, the token field and the
+    // status rule that survives FluentCart's 200-with-success errors.
+    for (const platform of ['node', 'dotnet', 'go', 'kotlin']) {
+      const sdk = await s.request('tools/call', {
+        name: 'fc_generate_client_sdk',
+        arguments: { platform, storeUrl: 'https://store.example.com/', productId: 42, appName: 'Acme Studio' }
+      });
+      const sdkCode = sdk.result?.content?.[0]?.text ?? '';
+      check(
+        `free: client sdk (${platform})`,
+        sdkCode.includes('activate_license') &&
+          sdkCode.includes('check_license') &&
+          sdkCode.includes('license_token') &&
+          sdkCode.includes('entitlements') &&
+          sdkCode.length > 1200
       );
     }
   } catch (err) {

@@ -126,6 +126,7 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | Generating custom Vue 3 Customer Dashboard tab boilerplate | `fc_generate_customer_endpoint_boilerplate` |
 | Licensing a desktop app, Chrome extension, VST or CLI tool | `fc_generate_device_licensing_boilerplate` |
 | Making a free trial one-per-machine instead of one-per-email | `fc_generate_trial_guard_boilerplate` |
+| A licence client in Node/Electron, .NET, Go or Kotlin | `fc_generate_client_sdk` |
 | Checking an HMAC signature against a raw payload | `ls_verify_webhook` |
 | Validating a customer's license key live | `ls_validate_license` |
 
@@ -234,6 +235,21 @@ Use this whenever the product is **not** a WordPress plugin: desktop apps, MV3 e
 `platform` is one of `tauri_rust`, `python`, `chrome_extension`. Returns client code that fingerprints the machine, asks `?fluent-cart=fastr_trial_eligibility` before the trial is offered, sends `device_fingerprint` on activation and on every heartbeat, and maps the three refusal codes (`trial_already_used`, `trial_fingerprint_required`, `trial_device_mismatch`) to client behaviour.
 
 Requires the **Fastr Devices for FluentCart** add-on on the store. FluentCart's own trial is account-scoped (`other_info.trial_days` plus `subscriptions.status = 'trialing'`); this tool is what binds it to the machine. Full contract: `fluentcart-developer/references/trial-abuse-prevention.md`.
+
+### `fc_generate_client_sdk`
+
+```json
+{
+  "platform": "node",
+  "storeUrl": "https://store.example.com/",
+  "productId": 42,
+  "appName": "Acme Studio"
+}
+```
+
+`platform` is one of `node`, `dotnet`, `go`, `kotlin`. Returns a client that activates with `device://` ids and a hardware fingerprint, heartbeats on `check_license`, verifies the RS256 offline token, and treats a licence as valid only when `status == "valid"` — FluentCart returns `key_mismatch` and `invalid_activation` as HTTP 200 with `success: true`.
+
+Pairs with `fluentcart-developer/references/client-integration-contract.md`.
 
 ### `ls_search_docs`
 
