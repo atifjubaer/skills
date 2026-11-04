@@ -1,7 +1,7 @@
 ---
 name: "fastr-mcp-suite"
 description: "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — free, MIT-licensed FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; or when a tool call fails."
-summary: "Setup and tool guide for the Fastr MCP Suite: install commands for every MCP client, all thirteen tools and their arguments, and fixes for the failures people actually hit. Every tool is free."
+summary: "Setup and tool guide for the Fastr MCP Suite: install commands for every MCP client, all sixteen tools and their arguments, and fixes for the failures people actually hit. Every tool is free."
 version: "2.0.0"
 license: "MIT"
 tags:
@@ -32,7 +32,7 @@ The MCP server turns the two knowledge-base skills into **callable tools**, so a
 - **npm package:** `fastr-mcp-suite` (bin: `fastr-mcp`)
 - **Runtime:** Node.js **22 or newer**
 - **Transports:** `stdio` (local clients), Streamable HTTP (hosted / marketplace)
-- **Tools:** 10 total — all free, all registered for every caller
+- **Tools:** 16 total — 10 FluentCart, 5 Lemon Squeezy, 1 suite. All free, all registered for every caller
 - **Licence:** MIT. No key, no account, no quota.
 
 > This is a knowledge and verification server. It does not connect to a WordPress database and does not modify a FluentCart store. The one tool that reaches the network is `ls_validate_license`, which calls the Lemon Squeezy licensing API.
@@ -96,7 +96,7 @@ cd server && npm run build && node dist/http.js   # http://0.0.0.0:8080/mcp
 - `GET /health` — liveness probe
 - `PORT` — override the default `8080`
 
-No `Authorization` header is required. A gateway in front of the server may authenticate callers for its own purposes, but the server ignores that credential and registers the same ten tools either way.
+No `Authorization` header is required. A gateway in front of the server may authenticate callers for its own purposes, but the server ignores that credential and registers the same sixteen tools either way.
 
 ---
 

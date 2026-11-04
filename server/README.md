@@ -2,7 +2,7 @@
 
 One MCP server that ships the Playing Cards — **FluentCart Developer Agent** and **Lemon Squeezy Developer Agent** — as executable tools plus a skills catalog, so an agent pulls only the slice of documentation it needs instead of loading 239 KB of markdown into the context window.
 
-**Free and MIT-licensed.** All ten tools are registered for every caller on every transport: no licence key, no account, no subscription, no request quota. Nothing in this server validates a purchase, because there is nothing to purchase.
+**Free and MIT-licensed.** All sixteen tools are registered for every caller on every transport: no licence key, no account, no subscription, no request quota. Nothing in this server validates a purchase, because there is nothing to purchase.
 
 Protocol: MCP `2026-07-28` (stateless, per-request `_meta` envelope) with a `2025-11-25` legacy fallback. Transports: `stdio` for local clients, Streamable HTTP for marketplaces and hosted deploys.
 
@@ -60,7 +60,7 @@ Point a client at the built file:
 
 ## Tools
 
-Ten tools, all free. `suite_get_info` reports the same list at runtime, scoped by card.
+Sixteen tools: ten FluentCart, five Lemon Squeezy, one suite. All free. `suite_get_info` reports the same list at runtime, scoped by card.
 
 | Card | Tool | Answers |
 | --- | --- | --- |
@@ -100,7 +100,7 @@ Any host that accepts a long-running HTTP process works — Railway, Render, Fly
 
 ### MCPize
 
-[`mcpize.yaml`](../mcpize.yaml) at the repository root is the deployment manifest; `npx mcpize deploy` builds and publishes from there. MCPize authenticates callers at its own edge, but that credential no longer changes what the server registers — a caller with or without it sees the same ten tools.
+[`mcpize.yaml`](../mcpize.yaml) at the repository root is the deployment manifest; `npx mcpize deploy` builds and publishes from there. MCPize authenticates callers at its own edge, but that credential no longer changes what the server registers — a caller with or without it sees the same sixteen tools.
 
 ## Not affiliated
 
