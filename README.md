@@ -1,5 +1,6 @@
 # Atif Jubaer's Agent Skills Repository
 
+[![fastr-mcp-suite MCP server](https://mcprush.com/badge/fastr-mcp-suite/card.svg)](https://mcprush.com/to/fastr-mcp-suite?ref=badge)
 [![npm version](https://img.shields.io/npm/v/fluentcart-developer.svg)](https://www.npmjs.com/package/fluentcart-developer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
