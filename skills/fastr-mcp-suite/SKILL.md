@@ -127,6 +127,7 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | Licensing a desktop app, Chrome extension, VST or CLI tool | `fc_generate_device_licensing_boilerplate` |
 | Making a free trial one-per-machine instead of one-per-email | `fc_generate_trial_guard_boilerplate` |
 | A licence client in Node/Electron, .NET, Go or Kotlin | `fc_generate_client_sdk` |
+| A licence client in Swift, Unity/C#, Java, PHP or C | `fc_generate_native_client` |
 | Checking an HMAC signature against a raw payload | `ls_verify_webhook` |
 | Validating a customer's license key live | `ls_validate_license` |
 
@@ -248,6 +249,21 @@ Requires the **Fastr Devices for FluentCart** add-on on the store. FluentCart's 
 ```
 
 `platform` is one of `node`, `dotnet`, `go`, `kotlin`. Returns a client that activates with `device://` ids and a hardware fingerprint, heartbeats on `check_license`, verifies the RS256 offline token, and treats a licence as valid only when `status == "valid"` — FluentCart returns `key_mismatch` and `invalid_activation` as HTTP 200 with `success: true`.
+
+Pairs with `fluentcart-developer/references/client-integration-contract.md`.
+
+### `fc_generate_native_client`
+
+```json
+{
+  "platform": "swift",
+  "storeUrl": "https://store.example.com/",
+  "productId": 42,
+  "appName": "Acme Studio"
+}
+```
+
+`platform` is one of `swift`, `unity_csharp`, `java`, `php`, `c`. Each template is a complete client, not a fragment: activation with `device://` ids and a hardware fingerprint, heartbeat, deactivation, RS256 verification of the offline licence token, `fastr_release_latest` for updates and `fastr_usage_report` for metering. Every one treats a licence as valid only when `status == "valid"`.
 
 Pairs with `fluentcart-developer/references/client-integration-contract.md`.
 

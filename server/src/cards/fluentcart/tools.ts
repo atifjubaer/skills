@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { skillRefs } from '../../paths.js';
 import { listReferences, readReference } from '../../reference-reader.js';
+import { nativeClientTemplate } from './templates-native.js';
 
 export function registerFluentCartTools(server: McpServer): void {
   const FC_REFS_DIR = skillRefs('fluentcart-developer');
@@ -2239,4 +2240,26 @@ fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
     }
   );
 
+  server.registerTool(
+    'fc_generate_native_client',
+    {
+      description:
+        'Generate a complete licence client for Swift, Unity/C#, Java, PHP or C: activation, heartbeat, deactivation, RS256 verification of the offline licence token, release checking and usage reporting.',
+      inputSchema: {
+        platform: z
+          .enum(['swift', 'unity_csharp', 'java', 'php', 'c'])
+          .describe('Client platform to generate code for'),
+        storeUrl: z.string().describe('Base URL of the FluentCart store, e.g. "https://store.example.com/"'),
+        productId: z.number().describe('FluentCart product (item) ID'),
+        appName: z.string().describe('Product name, e.g. "Acme Studio"')
+      }
+    },
+    async ({ platform, storeUrl, productId, appName }) => {
+      const base = storeUrl.endsWith('/') ? storeUrl : storeUrl + '/';
+
+      return {
+        content: [{ type: 'text', text: nativeClientTemplate(platform, base, productId, appName) }]
+      };
+    }
+  );
 }

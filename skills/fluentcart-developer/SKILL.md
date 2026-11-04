@@ -2,7 +2,7 @@
 name: "fluentcart-developer"
 description: "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks."
 summary: "Developer architecture manual and code generator for FluentCart WordPress e-commerce: custom add-ons, themes, software licensing SDK, payment gateways, and shipping integrations."
-version: "1.5.0"
+version: "1.6.0"
 license: "MIT"
 tags:
   - wordpress
@@ -563,7 +563,7 @@ Full schema, fingerprint tiers, token verification, scoring weights, and test ch
 
 ## ⚡ Fastr MCP Server Tools Guidance
 
-When paired with the **Fastr MCP Suite**, AI coding assistants must use these 9 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
+When paired with the **Fastr MCP Suite**, AI coding assistants must use these 10 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
 
 | Tool | Purpose | Typical User Query |
 |---|---|---|
@@ -576,4 +576,5 @@ When paired with the **Fastr MCP Suite**, AI coding assistants must use these 9 
 | `fc_generate_device_licensing_boilerplate` | Generate client licensing code for non-WordPress software (Tauri/Rust, Chrome MV3, Python, C++/JUCE) using `device://` ids and clock-tamper guards. | *"Add FluentCart licensing to my Tauri desktop app."* |
 | `fc_generate_trial_guard_boilerplate` | Generate fingerprinting, pre-checkout eligibility, and activation code that enforces one free trial per machine through the Fastr Devices add-on. | *"Stop people from getting a second trial with a new email."* |
 | `fc_generate_client_sdk` | Generate a licence client for Node/Electron, .NET, Go or Kotlin: activation, heartbeat, RS256 token verification, and the status rule that survives FluentCart 200-with-success errors. | *"Integrate FluentCart licensing into my Electron app."* |
+| `fc_generate_native_client` | Generate a complete licence client for Swift, Unity/C#, Java, PHP or C: activation, heartbeat, deactivation, RS256 token verification, release checks and usage reporting. | *"Integrate FluentCart licensing into my iOS app."* |
 

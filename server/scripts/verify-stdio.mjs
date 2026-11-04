@@ -104,6 +104,7 @@ const TOOLS = [
   'fc_generate_device_licensing_boilerplate',
   'fc_generate_trial_guard_boilerplate',
   'fc_generate_client_sdk',
+  'fc_generate_native_client',
   'suite_get_info'
 ];
 
@@ -129,7 +130,7 @@ const TOOLS = [
     const tools = await s.request('tools/list');
     const names = (tools.result?.tools ?? []).map(t => t.name);
     const missing = TOOLS.filter(t => !names.includes(t));
-    check('free: all 15 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
+    check('free: all 16 tools registered', missing.length === 0, missing.join(', ') || `${names.length} tools`);
     check('free: no duplicate registration', names.length === TOOLS.length, `${names.length} of ${TOOLS.length}`);
 
     const skills = await s.request('skills/list');
@@ -320,6 +321,24 @@ const TOOLS = [
           sdkCode.includes('license_token') &&
           sdkCode.includes('entitlements') &&
           sdkCode.length > 1200
+      );
+    }
+    // Native generators must cover the whole contract, not just activation.
+    for (const platform of ['swift', 'unity_csharp', 'java', 'php', 'c']) {
+      const native = await s.request('tools/call', {
+        name: 'fc_generate_native_client',
+        arguments: { platform, storeUrl: 'https://store.example.com/', productId: 42, appName: 'Acme Studio' }
+      });
+      const nativeCode = native.result?.content?.[0]?.text ?? '';
+      check(
+        `free: native client (${platform})`,
+        nativeCode.includes('activate_license') &&
+          nativeCode.includes('check_license') &&
+          nativeCode.includes('deactivate_license') &&
+          nativeCode.includes('license_token') &&
+          nativeCode.includes('fastr_release_latest') &&
+          nativeCode.includes('fastr_usage_report') &&
+          nativeCode.length > 2000
       );
     }
   } catch (err) {
