@@ -34,11 +34,32 @@ if (skills.length === 0) {
 }
 
 // Wipe first: a skill removed from `skills/` must not survive in dist/ from an
-// earlier build.
-fs.rmSync(targetRoot, { recursive: true, force: true });
+// earlier build. On Windows a file can be locked (EPERM) even when the folder is
+// writable, so fall back to overwriting in place and prune stale entries after.
+try {
+  fs.rmSync(targetRoot, { recursive: true, force: true });
+} catch (error) {
+  if (error.code !== 'EPERM') throw error;
+  console.warn(`[copy-skills] Could not wipe ${targetRoot} (${error.code}); overwriting in place.`);
+}
 
 for (const skill of skills) {
-  fs.cpSync(path.join(sourceRoot, skill), path.join(targetRoot, skill), { recursive: true });
+  fs.cpSync(path.join(sourceRoot, skill), path.join(targetRoot, skill), {
+    recursive: true,
+    force: true
+  });
+}
+
+if (fs.existsSync(targetRoot)) {
+  const keep = new Set(skills);
+  for (const entry of fs.readdirSync(targetRoot)) {
+    if (keep.has(entry)) continue;
+    try {
+      fs.rmSync(path.join(targetRoot, entry), { recursive: true, force: true });
+    } catch (error) {
+      console.warn(`[copy-skills] Could not remove stale ${entry} (${error.code}).`);
+    }
+  }
 }
 
 console.log(`[copy-skills] Bundled ${skills.length} skill(s) into ${targetRoot}: ${skills.join(', ')}`);
