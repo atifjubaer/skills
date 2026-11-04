@@ -318,9 +318,12 @@ const TOOLS = [
         `free: client sdk (${platform})`,
         sdkCode.includes('activate_license') &&
           sdkCode.includes('check_license') &&
+          sdkCode.includes('deactivate_license') &&
           sdkCode.includes('license_token') &&
           sdkCode.includes('entitlements') &&
-          sdkCode.length > 1200
+          sdkCode.includes('fastr_release_latest') &&
+          sdkCode.includes('fastr_usage_report') &&
+          sdkCode.length > 1500
       );
     }
     // Native generators must cover the whole contract, not just activation.

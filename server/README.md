@@ -72,7 +72,7 @@ Ten tools, all free. `suite_get_info` reports the same list at runtime, scoped b
 | FluentCart | `fc_generate_customer_endpoint_boilerplate` | Custom server-rendered tabs and sub-pages in the Vue 3 customer dashboard with session resolution |
 | FluentCart | `fc_generate_device_licensing_boilerplate` | Client licensing for non-WordPress software — Tauri/Rust, Chrome MV3, Python, C++/JUCE — using `device://` ids and clock-tamper guards |
 | FluentCart | `fc_generate_trial_guard_boilerplate` | One trial per machine: fingerprinting, pre-checkout eligibility, and activation code for Tauri/Rust, Python and Chrome MV3 |
-| FluentCart | `fc_generate_client_sdk` | Licence client for Node/Electron, .NET, Go or Kotlin — activation, heartbeat, RS256 token verification, and the status rule |
+| FluentCart | `fc_generate_client_sdk` | Complete licence client for Node/Electron, .NET, Go or Kotlin — activation, heartbeat, deactivation, RS256 verification, release checks, usage reporting |
 | FluentCart | `fc_generate_native_client` | Complete licence client for Swift, Unity/C#, Java, PHP or C — activation, heartbeat, deactivation, RS256 verification, release checks, usage reporting |
 | Lemon Squeezy | `ls_search_docs` | Webhook signatures, checkout payloads, subscription states |
 | Lemon Squeezy | `ls_get_schema` | The exact JSON:API body for an endpoint |

@@ -1720,7 +1720,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     'fc_generate_client_sdk',
     {
       description:
-        'Generate a licence client for Node/Electron, .NET, Go or Kotlin: activation and heartbeat calls against FluentCart Pro, RS256 verification of the offline licence token, and the status=="valid" rule that survives FluentCart\'s two 200-with-success errors.',
+        'Generate a complete licence client for Node/Electron, .NET, Go or Kotlin: activation, heartbeat, deactivation, RS256 verification of the offline licence token, release checking, usage reporting, and the status=="valid" rule that survives FluentCart\'s two 200-with-success errors.',
       inputSchema: {
         platform: z
           .enum(['node', 'dotnet', 'go', 'kotlin'])
@@ -1805,7 +1805,38 @@ export async function check(licenseKey: string, instanceId: string, fingerprint:
   return { status: json.status, token: json.license_token, entitlements: json.entitlements };
 }
 
-export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {
+export async function deactivate(licenseKey: string, instanceId: string): Promise<void> {
+  await call("deactivate_license", {
+    item_id: String(PRODUCT_ID),
+    license_key: licenseKey,
+    site_url: instanceId
+  });
+}
+
+export async function latestRelease(licenseKey: string, currentVersion: string, platform = "any") {
+  const query = new URLSearchParams({
+    product_id: String(PRODUCT_ID),
+    platform,
+    current_version: currentVersion,
+    license_key: licenseKey
+  });
+  const res = await fetch(STORE + "?fluent-cart=fastr_release_latest&" + query.toString());
+  return res.json();
+}
+
+export async function reportUsage(licenseKey: string, metric: string, quantity: number, idempotencyKey: string) {
+  const { json } = await call("fastr_usage_report", {
+    license_key: licenseKey,
+    metric,
+    quantity: String(quantity),
+    idempotency_key: idempotencyKey
+  });
+  return json;
+}
+
+// After verifying, compare claims.ins and claims.fp with this install and
+// claims.prod / claims.ent with the product you are running.
+export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const verifier = createVerify("RSA-SHA256");
@@ -1913,7 +1944,42 @@ public static class FastrLicense
         return state;
     }
 
-    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)
+    public static async Task DeactivateAsync(string licenseKey, string instanceId)
+    {
+        await CallAsync("deactivate_license", new Dictionary<string, string>
+        {
+            ["item_id"] = ProductId.ToString(),
+            ["license_key"] = licenseKey,
+            ["site_url"] = instanceId
+        });
+    }
+
+    public static async Task<JsonElement> LatestReleaseAsync(string licenseKey, string currentVersion, string platform = "any")
+    {
+        var url = Store + "?fluent-cart=fastr_release_latest&product_id=" + ProductId
+                + "&platform=" + Uri.EscapeDataString(platform)
+                + "&current_version=" + Uri.EscapeDataString(currentVersion)
+                + "&license_key=" + Uri.EscapeDataString(licenseKey);
+
+        var text = await Http.GetStringAsync(url);
+        using var doc = JsonDocument.Parse(text);
+        return doc.RootElement.Clone();
+    }
+
+    public static Task<JsonElement> ReportUsageAsync(string licenseKey, string metric, int quantity, string idempotencyKey)
+    {
+        return CallAsync("fastr_usage_report", new Dictionary<string, string>
+        {
+            ["license_key"] = licenseKey,
+            ["metric"] = metric,
+            ["quantity"] = quantity.ToString(),
+            ["idempotency_key"] = idempotencyKey
+        });
+    }
+
+    // After verifying, compare claims ins/fp with this install and prod/ent
+    // with the product you are running.
+    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)
     {
         claims = default;
         var parts = token.Split('.');
@@ -1963,6 +2029,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"io"
+	"strconv"
 	"net/http"
 	"net/url"
 	"os"
@@ -2066,7 +2133,54 @@ func Check(key, instanceID, fingerprint string) (State, error) {
 	return state, nil
 }
 
-// VerifyToken checks an RS256 licence token against the store's public key.
+func Deactivate(key, instanceID string) error {
+	_, err := call("deactivate_license", url.Values{
+		"item_id":     {ProductID},
+		"license_key": {key},
+		"site_url":    {instanceID},
+	})
+	return err
+}
+
+func LatestRelease(key, currentVersion, platform string) (map[string]any, error) {
+	query := url.Values{
+		"product_id":      {ProductID},
+		"platform":        {platform},
+		"current_version": {currentVersion},
+		"license_key":     {key},
+	}
+
+	res, err := http.Get(Store + "?fluent-cart=fastr_release_latest&" + query.Encode())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	raw, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func ReportUsage(key, metric string, quantity int, idempotencyKey string) (map[string]any, error) {
+	return call("fastr_usage_report", url.Values{
+		"license_key":     {key},
+		"metric":          {metric},
+		"quantity":        {strconv.Itoa(quantity)},
+		"idempotency_key": {idempotencyKey},
+	})
+}
+
+// After verifying, compare claims["ins"] and claims["fp"] with this install
+// and claims["prod"] / claims["ent"] with the product you are running.
+// VerifyToken checks an RS256 licence token against the store's public key.// VerifyToken checks an RS256 licence token against the store's public key.
 func VerifyToken(token, publicKeyPEM string) (map[string]any, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
@@ -2211,7 +2325,38 @@ fun check(key: String, instanceId: String, fingerprint: String): LicenseState {
     )
 }
 
-fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
+fun deactivate(key: String, instanceId: String) {
+    call("deactivate_license", mapOf(
+        "item_id" to PRODUCT_ID.toString(),
+        "license_key" to key,
+        "site_url" to instanceId
+    ))
+}
+
+fun latestRelease(key: String, currentVersion: String, platform: String = "any"): JSONObject {
+    val query = "product_id=" + PRODUCT_ID +
+        "&platform=" + java.net.URLEncoder.encode(platform, "UTF-8") +
+        "&current_version=" + java.net.URLEncoder.encode(currentVersion, "UTF-8") +
+        "&license_key=" + java.net.URLEncoder.encode(key, "UTF-8")
+
+    val connection = java.net.URL(STORE + "?fluent-cart=fastr_release_latest&" + query)
+        .openConnection() as java.net.HttpURLConnection
+
+    return JSONObject(connection.inputStream.bufferedReader().readText())
+}
+
+fun reportUsage(key: String, metric: String, quantity: Int, idempotencyKey: String): JSONObject {
+    return call("fastr_usage_report", mapOf(
+        "license_key" to key,
+        "metric" to metric,
+        "quantity" to quantity.toString(),
+        "idempotency_key" to idempotencyKey
+    ))
+}
+
+// After verifying, compare claims.ins / claims.fp with this install and
+// claims.prod / claims.ent with the product you are running.
+fun verifyToken(token: String, publicKeyPem: String): JSONObject? {fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
     val parts = token.split(".")
     if (parts.size != 3) return null
 
