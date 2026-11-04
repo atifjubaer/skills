@@ -799,20 +799,22 @@ Stores software license keys.
 | id | BIGINT UNSIGNED *Auto Increment* | Primary key |
 | customer_id | BIGINT UNSIGNED NOT NULL | Reference to customer |
 | order_id | BIGINT UNSIGNED NOT NULL | Reference to order |
-| order_item_id | BIGINT UNSIGNED NULL | Reference to order item |
+| parent_id | BIGINT UNSIGNED NULL | Parent licence, for renewals |
 | product_id | BIGINT UNSIGNED NOT NULL | WordPress post ID |
 | variation_id | BIGINT UNSIGNED NULL | Variation ID |
 | subscription_id | BIGINT UNSIGNED NULL | Linked subscription |
 | license_key | VARCHAR(255) NOT NULL UNIQUE | Unique license key |
 | status | VARCHAR(20) NOT NULL DEFAULT 'active' | active, expired, disabled, revoked |
-| activation_limit | INT NOT NULL DEFAULT 1 | Max activations allowed |
+| limit | INT NOT NULL DEFAULT 1 | Max activations allowed |
 | activation_count | INT NOT NULL DEFAULT 0 | Current activations |
-| valid_for | INT NULL | Validity in days |
-| expires_at | DATETIME NULL | Expiration date |
+| config | LONGTEXT NULL | Serialised licence configuration |
+| expiration_date | DATETIME NULL | Expiration date |
 | created_at | DATETIME NULL | |
 | updated_at | DATETIME NULL | |
 
 **Indexes:** license_key, customer_id, order_id, product_id
+
+> Verified against FluentCart Pro 2.2.0 with `SHOW COLUMNS FROM wp_fct_licenses`. Earlier revisions of this page listed `activation_limit`, `expires_at` and `valid_for`, none of which exist in 2.2.0 — writing to them fails silently because Eloquent drops unknown attributes.
 
 ---
 
@@ -838,17 +840,22 @@ Tracks license activation instances.
 | Column | Type | Comment |
 |--------|------|---------|
 | id | BIGINT UNSIGNED *Auto Increment* | Primary key |
+| site_id | BIGINT UNSIGNED NOT NULL | Reference to fct_license_sites |
 | license_id | BIGINT UNSIGNED NOT NULL | Reference to license |
-| domain | VARCHAR(255) NOT NULL | Activated domain |
-| activation_key | VARCHAR(255) NULL | Activation key |
 | status | VARCHAR(20) NOT NULL DEFAULT 'active' | active, deactivated |
-| ip_address | VARCHAR(45) NULL | IP address |
-| user_agent | TEXT NULL | User agent |
-| activated_at | DATETIME NULL | Activation date |
-| deactivated_at | DATETIME NULL | Deactivation date |
+| is_local | TINYINT(1) NOT NULL DEFAULT 0 | Activation from a local or staging site |
+| product_id | BIGINT UNSIGNED NOT NULL | Product this activation belongs to |
+| variation_id | BIGINT UNSIGNED NULL | Variation |
+| activation_method | VARCHAR(50) NULL | How the activation was made |
+| activation_hash | VARCHAR(191) NULL | Hashed activation identity |
+| last_update_version | VARCHAR(50) NULL | Client version at last check |
+| last_update_date | DATETIME NULL | Last check-in |
 | created_at | DATETIME NULL | |
 | updated_at | DATETIME NULL | |
 
+> Verified against FluentCart Pro 2.2.0 with `SHOW COLUMNS FROM wp_fct_license_activations`. Earlier revisions listed `domain`, `activation_key`, `ip_address`, `user_agent`, `activated_at` and `deactivated_at`; none exist in 2.2.0.
+>
+> **`is_local` matters for any seat-limit work.** `License::recountActivations()` filters `where('is_local', '!=', 1)`, so a local activation is excluded from `activation_count` while still being a real row. Counting through the model therefore under-reports seats; count `LicenseActivation` directly instead.
 **Indexes:** license_id, domain
 
 ---
