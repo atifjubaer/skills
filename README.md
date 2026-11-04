@@ -1,7 +1,7 @@
 # Atif Jubaer's Agent Skills Repository
 
 [![fastr-mcp-suite MCP server](https://mcprush.com/badge/fastr-mcp-suite/card.svg)](https://mcprush.com/to/fastr-mcp-suite?ref=badge)
-[![npm version](https://img.shields.io/npm/v/fluentcart-developer.svg)](https://www.npmjs.com/package/fluentcart-developer)
+[![npm version](https://img.shields.io/npm/v/fastr-mcp-suite.svg)](https://www.npmjs.com/package/fastr-mcp-suite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive, platform-agnostic knowledge base, instruction set, and CLI toolkit for FluentCart theme, plugin, shipping, and payment gateway development.
