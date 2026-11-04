@@ -1836,7 +1836,7 @@ export async function reportUsage(licenseKey: string, metric: string, quantity: 
 
 // After verifying, compare claims.ins and claims.fp with this install and
 // claims.prod / claims.ent with the product you are running.
-export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {
+export function verifyToken(token: string, publicKeyPem: string): Record<string, unknown> | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const verifier = createVerify("RSA-SHA256");
@@ -1979,7 +1979,7 @@ public static class FastrLicense
 
     // After verifying, compare claims ins/fp with this install and prod/ent
     // with the product you are running.
-    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)
+    public static bool VerifyToken(string token, string publicKeyPem, out JsonElement claims)
     {
         claims = default;
         var parts = token.Split('.');
@@ -2356,7 +2356,7 @@ fun reportUsage(key: String, metric: String, quantity: Int, idempotencyKey: Stri
 
 // After verifying, compare claims.ins / claims.fp with this install and
 // claims.prod / claims.ent with the product you are running.
-fun verifyToken(token: String, publicKeyPem: String): JSONObject? {fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
+fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
     val parts = token.split(".")
     if (parts.size != 3) return null
 

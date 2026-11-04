@@ -534,10 +534,11 @@ public final class FastrLicense {
   }
 
   if (platform === 'php') {
-    return `${banner(appName, 'PHP (no WordPress)', 'FastrLicense.php', base, productId)}
-<?php
+    return `<?php
 
 declare(strict_types=1);
+
+${banner(appName, 'PHP (no WordPress)', 'FastrLicense.php', base, productId)}
 
 final class FastrLicense
 {
