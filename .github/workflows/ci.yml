@@ -76,3 +76,119 @@ jobs:
       - name: Container logs
         if: always()
         run: docker logs suite || true
+  sdk-compile:
+    name: Generated clients compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build the server
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+
+      # Presence checks cannot see a doubled declaration. This job compiles
+      # what the generators actually emit.
+      - name: Generate every client
+        run: node scripts/gen-samples.mjs
+
+      - name: Typecheck TypeScript
+        working-directory: server
+        run: npx tsc --noEmit --strict --target es2020 --module commonjs --moduleResolution node --skipLibCheck --types node samples-out/license.ts
+
+      - name: Compile .NET
+        run: |
+          mkdir -p /tmp/dotnet && cd /tmp/dotnet
+          dotnet new classlib -f net8.0 --force >/dev/null
+          rm -f Class1.cs
+          cp "$GITHUB_WORKSPACE/server/samples-out/LicenseClient.cs" .
+          dotnet build -c Release --nologo
+
+      - name: Compile Java
+        run: javac -Xlint:all -d /tmp/jout server/samples-out/FastrLicense.java
+
+      - name: Lint PHP
+        run: php -l server/samples-out/FastrLicense.php
+
+      - name: Compile Go
+        working-directory: server/samples-out
+        run: |
+          go mod init sample >/dev/null 2>&1 || true
+          go vet ./...
+          go build ./...
+
+      - name: Compile C
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libcurl4-openssl-dev libssl-dev
+          gcc -fsyntax-only -Wall -Wextra server/samples-out/fastr_license.c
+
+  sdk-compile-extra:
+    name: Generated clients compile (Kotlin, Swift)
+    runs-on: ${{ matrix.os }}
+    # Reported, not blocking: neither toolchain exists on the development
+    # machine, so these have never been compiled. Drop continue-on-error once
+    # each is green.
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            lang: kotlin
+          - os: macos-latest
+            lang: swift
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Build the server
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+
+      - name: Generate every client
+        run: node scripts/gen-samples.mjs
+
+      - name: Compile Kotlin
+        if: matrix.lang == 'kotlin'
+        run: |
+          curl -fsSL -o /tmp/kotlin.zip https://github.com/JetBrains/kotlin/releases/download/v2.0.21/kotlin-compiler-2.0.21.zip
+          unzip -q /tmp/kotlin.zip -d /tmp
+          curl -fsSL -o /tmp/json.jar https://repo1.maven.org/maven2/org/json/json/20240303/json-20240303.jar
+          /tmp/kotlinc/bin/kotlinc -classpath /tmp/json.jar -d /tmp/kout.jar server/samples-out/LicenseClient.kt
+
+      - name: Compile Swift
+        if: matrix.lang == 'swift'
+        run: swiftc -typecheck server/samples-out/LicenseClient.swift
