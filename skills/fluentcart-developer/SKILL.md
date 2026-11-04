@@ -2,7 +2,7 @@
 name: "fluentcart-developer"
 description: "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks."
 summary: "Developer architecture manual and code generator for FluentCart WordPress e-commerce: custom add-ons, themes, software licensing SDK, payment gateways, and shipping integrations."
-version: "1.2.0"
+version: "1.3.0"
 license: "MIT"
 tags:
   - wordpress
@@ -111,6 +111,7 @@ Do not guess hook names, parameter signatures, or schema columns. Open and inspe
 - [storage-drivers-module.md](references/storage-drivers-module.md) — Storage drivers architecture (`BaseStorageDriver`, `BaseStorageInterface`, `FileManager`), creating custom cloud drivers (S3, Wasabi, R2), and signed download URLs.
 - [shipping-module-guide.md](references/shipping-module-guide.md) — Shipping module architecture, shipping zones, dynamic carrier rate calculation (`fluent_cart/shipping/methods`), and shipping classes.
 - [order-bump-module.md](references/order-bump-module.md) — Order Bump module (Pro): `OrderPromotion` model, condition engine, display positions, cart application filter (`fluent_cart/apply_order_bump`), and impression analytics.
+- [device-licensing-and-hardware-tracking.md](references/device-licensing-and-hardware-tracking.md) — Universal licensing for non-WordPress software: `device://<uuid>` identifiers in `fct_license_sites`, activation payloads, `server_time_unix` clock-tamper defence, pre-computed `expires_in_days`, Fastr Devices admin display, and self-service deactivation.
 #### Runnable Code Examples & Project Boilerplates (`examples/`)
 - [examples/README.md](examples/README.md) — Inventory and developer guide for ready-to-use sample plugins and templates.
 - [sample-custom-addon/fluentcart-custom-addon.php](examples/sample-custom-addon/fluentcart-custom-addon.php) — Complete starter plugin with hook handlers, custom order meta, system logging, fee filters, and custom REST API endpoint.
@@ -414,18 +415,131 @@ add_filter('fluent_cart/cart_items', function (array $items, $cart) {
 }, 10, 2);
 ```
 
+### 10. Non-WordPress Software Licensing (`device://`)
+
+FluentCart licenses **desktop apps, browser extensions, audio plugins, and CLI tools** through the same endpoints a WordPress plugin uses. The trick: send a stable device identifier in the `site_url` field.
+
+```text
+site_url = device://550e8400-e29b-41d4-a716-446655440000
+```
+
+Generate the UUID **once per install**, persist it in the OS credential store, and never derive it from hardware serials or rotate it on update — rotation burns a customer's seat.
+
+Full contract, storage tables and test checklist: [device-licensing-and-hardware-tracking.md](references/device-licensing-and-hardware-tracking.md).
+
+#### 10.1 Tauri (Rust) — activation with clock guard
+
+```rust
+// Cargo: reqwest(blocking,json) serde serde_json keyring uuid
+fn activate(license_key: &str) -> Result<LicenseState, String> {
+    let device = format!("device://{}", uuid::Uuid::new_v4()); // persist this!
+    let raw: RawResponse = reqwest::blocking::Client::new()
+        .post(format!("{}?fluent-cart=activate_license", STORE_URL))
+        .form(&[("license_key", license_key.trim()), ("item_id", "42"), ("site_url", &device)])
+        .send().map_err(|e| e.to_string())?
+        .json().map_err(|e| e.to_string())?;
+
+    // The server's clock is the only one that counts.
+    Ok(LicenseState {
+        status: raw.status.unwrap_or_default(),
+        server_time_unix: raw.server_time_unix.unwrap_or(0),
+        checked_at_local: now_unix(),
+        expires_in_days: raw.expires_in_days, // pre-computed, never date math
+        device_id: device,
+        ..Default::default()
+    })
+}
+
+fn clock_is_sane(state: &LicenseState) -> bool {
+    // A backwards jump beyond 5 min is how a user tries to outlive an expiry.
+    now_unix() - state.checked_at_local >= -300
+}
+```
+
+#### 10.2 Chrome MV3 — service worker + `chrome.storage` + 12h alarm
+
+```javascript
+const STORE_URL = 'https://store.example.com/';
+const ITEM_ID = 42;
+
+async function getDeviceId() {
+  const { fc_device_id } = await chrome.storage.local.get('fc_device_id');
+  if (fc_device_id) return fc_device_id;
+  const id = 'device://' + crypto.randomUUID();   // service workers die; store it
+  await chrome.storage.local.set({ fc_device_id: id });
+  return id;
+}
+
+async function checkLicense() {
+  const { fc_license } = await chrome.storage.local.get('fc_license');
+  if (!fc_license?.license_key) return false;
+
+  const res = await fetch(STORE_URL + '?fluent-cart=check_license', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      license_key: fc_license.license_key,
+      item_id: String(ITEM_ID),
+      site_url: fc_license.device_id,
+    }),
+  });
+  const data = await res.json();
+
+  await chrome.storage.local.set({
+    fc_license: { ...fc_license, status: data.status, server_time_unix: data.server_time_unix, checked_at_local: Date.now() },
+  });
+  return data.status === 'valid' || data.status === 'active';
+}
+
+// A service worker is killed after ~30s idle: the alarm is what re-checks it.
+chrome.alarms.create('fc-license-check', { periodInMinutes: 720 });
+chrome.alarms.onAlarm.addListener(a => { if (a.name === 'fc-license-check') checkLicense().catch(() => {}); });
+```
+
+> Needs `"permissions": ["storage", "alarms"]` **and** the store origin in `host_permissions` — without the latter the fetch fails with a bare `TypeError: Failed to fetch`.
+
+#### 10.3 Python (CLI / desktop) — httpx + keyring
+
+```python
+import keyring, httpx, time, uuid
+
+STORE_URL, ITEM_ID = "https://store.example.com/", 42
+
+def device_id() -> str:
+    existing = keyring.get_password("acme-studio", "device-id")
+    if existing:
+        return existing
+    fresh = f"device://{uuid.uuid4()}"
+    keyring.set_password("acme-studio", "device-id", fresh)
+    return fresh
+
+def validate(license_key: str, stored: dict) -> bool:
+    data = httpx.post(f"{STORE_URL}?fluent-cart=check_license", data={
+        "license_key": license_key,
+        "item_id": str(ITEM_ID),
+        "site_url": stored["device_id"],
+    }, timeout=15).json()
+
+    # Server clock, not the machine's: refuse if time moved backwards.
+    if time.time() - stored["checked_at_local"] < -300:
+        return False
+    days = data.get("expires_in_days")
+    return data.get("status") in ("valid", "active") and (days is None or days >= 0)
+```
+
 ---
 
 ## ⚡ Fastr MCP Server Tools Guidance
 
-When paired with the **Fastr MCP Suite**, AI coding assistants must use these 6 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
+When paired with the **Fastr MCP Suite**, AI coding assistants must use these 7 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
 
 | Tool | Purpose | Typical User Query |
 |---|---|---|
 | `fc_search_hooks` | Instant search across 680+ action and filter hooks with exact parameters and file anchors. | *"What hook fires after an order is completed?"* |
 | `fc_get_db_schema` | Look up exact column definitions, primary keys, and Eloquent model for any `wp_fct_*` table. | *"What columns are on the subscriptions table?"* |
-| `fc_get_reference` | Read any of the 52 comprehensive reference manuals in full or by specific section heading. | *"Show me the Void Renewal Invoice section of the REST API."* |
+| `fc_get_reference` | Read any of the 54 comprehensive reference manuals in full or by specific section heading. | *"Show me the Void Renewal Invoice section of the REST API."* |
 | `fc_generate_payment_gateway_boilerplate` | Generate production-ready PHP boilerplate for custom payment gateways with webhook listeners. | *"Generate a payment gateway for Paddle Billing."* |
 | `fc_generate_licensing_boilerplate` | Generate client-side integration boilerplate for the official FluentCart Software Licensing SDK. | *"How do I add FluentCart licensing to my premium plugin?"* |
 | `fc_generate_customer_endpoint_boilerplate` | Generate PHP code for custom server-rendered tabs and sub-pages in the Vue 3 customer dashboard. | *"Add a Wallet tab to the FluentCart customer portal."* |
+| `fc_generate_device_licensing_boilerplate` | Generate client licensing code for non-WordPress software (Tauri/Rust, Chrome MV3, Python, C++/JUCE) using `device://` ids and clock-tamper guards. | *"Add FluentCart licensing to my Tauri desktop app."* |
 

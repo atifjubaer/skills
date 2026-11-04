@@ -1,7 +1,7 @@
 ---
 name: "fastr-mcp-suite"
 description: "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — free, MIT-licensed FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; or when a tool call fails."
-summary: "Setup and tool guide for the Fastr MCP Suite: install commands for every MCP client, all ten tools and their arguments, and fixes for the failures people actually hit. Every tool is free."
+summary: "Setup and tool guide for the Fastr MCP Suite: install commands for every MCP client, all thirteen tools and their arguments, and fixes for the failures people actually hit. Every tool is free."
 version: "2.0.0"
 license: "MIT"
 tags:
@@ -124,6 +124,7 @@ If any of those three fail, fix the connection first — no amount of prompt wor
 | Generating a full FluentCart gateway class | `fc_generate_payment_gateway_boilerplate` |
 | Generating FluentCart Software Licensing SDK integration boilerplate | `fc_generate_licensing_boilerplate` |
 | Generating custom Vue 3 Customer Dashboard tab boilerplate | `fc_generate_customer_endpoint_boilerplate` |
+| Licensing a desktop app, Chrome extension, VST or CLI tool | `fc_generate_device_licensing_boilerplate` |
 | Checking an HMAC signature against a raw payload | `ls_verify_webhook` |
 | Validating a customer's license key live | `ls_validate_license` |
 
@@ -202,6 +203,21 @@ Generates production-ready client integration PHP code for third-party WordPress
 ```
 
 Generates production-ready PHP boilerplate for adding custom server-rendered pages and tabs to the FluentCart Vue 3 customer dashboard via `fluent_cart_api()->addCustomerDashboardEndpoint()`. Emits authenticated customer session resolution via `CustomerResource::getCurrentCustomer()`, multi-segment sub-path routing, allowed SVG icons, and design system variables.
+
+### `fc_generate_device_licensing_boilerplate`
+
+```json
+{
+  "platform": "tauri_rust",
+  "storeUrl": "https://store.example.com/",
+  "productId": 42,
+  "appName": "Acme Studio"
+}
+```
+
+`platform` is one of `tauri_rust`, `chrome_extension`, `python`, `cpp_vst`. Returns a complete client implementation that activates and re-validates a FluentCart license using a `device://<uuid>` identifier in the `site_url` field, persists that id in the OS credential store, and guards against a backwards system clock with the server's `server_time_unix` plus the pre-computed `expires_in_days`.
+
+Use this whenever the product is **not** a WordPress plugin: desktop apps, MV3 extensions, audio plugins, CLI tools. For WordPress plugins, `fc_generate_licensing_boilerplate` is the right tool instead.
 
 ### `ls_search_docs`
 
