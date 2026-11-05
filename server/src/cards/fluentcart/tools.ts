@@ -2564,7 +2564,7 @@ fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
     val pem = publicKeyPem
         .replace("-----BEGIN PUBLIC KEY-----", "")
         .replace("-----END PUBLIC KEY-----", "")
-        .replace("\\s".toRegex(), "")
+        .replace("\\\\s".toRegex(), "")
 
     val keySpec = X509EncodedKeySpec(Base64.getDecoder().decode(pem))
     val publicKey = KeyFactory.getInstance("RSA").generatePublic(keySpec)
