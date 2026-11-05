@@ -1584,7 +1584,10 @@ def activate(license_key: str, email: str) -> dict:
 
 const STORE = "${base}";
 const PRODUCT_ID = ${productId};
-const GRACE_MS = 15 * 24 * 60 * 60 * 1000;
+// Offline entitlement is bounded by the signed token's own exp, which the
+// server issues. Nothing below trusts a timestamp this extension wrote:
+// chrome.storage is editable from DevTools in seconds.
+const PUBLIC_KEY_URL = STORE + "?fluent-cart=fastr_license_public_key";
 
 async function getInstallId() {
   const data = await chrome.storage.local.get("install_id");
@@ -1650,24 +1653,110 @@ export async function activateLicense(licenseKey, email) {
   if (json.error_type === "trial_fingerprint_required") throw new Error("client_outdated");
   if (json.error_type === "trial_device_mismatch") throw new Error("trial_device_mismatch");
 
-  if (json.status === "valid") {
+  if (json.status === "valid" && json.license_token) {
     await chrome.storage.local.set({
       license_key: licenseKey,
       activation_hash: json.activation_hash,
-      status: "valid",
-      last_checked_at: Date.now(),
-      last_server_time: json.server_time_unix
+      license_token: json.license_token,
+      server_time_unix: json.server_time_unix,
+      local_at_check: Date.now()
     });
   }
 
   return json;
 }
 
+function b64Bytes(input) {
+  const bin = atob(input.replace(/-/g, "+").replace(/_/g, "/"));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function storePublicKey() {
+  const cached = await chrome.storage.local.get("fastr_public_key");
+  if (cached.fastr_public_key) return cached.fastr_public_key;
+
+  const res = await fetch(PUBLIC_KEY_URL, { cache: "no-store" });
+  const json = await res.json();
+  const pem = String(json.public_key || json.pem || "");
+
+  if (pem) await chrome.storage.local.set({ fastr_public_key: pem });
+  return pem;
+}
+
+// RS256 verification. A token the user forges fails here; a token the store
+// signed cannot be edited without breaking the signature.
+export async function verifyLicenseToken(token, pem) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3 || !pem) return null;
+
+  try {
+    const der = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
+
+    const key = await crypto.subtle.importKey(
+      "spki",
+      b64Bytes(der),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    const ok = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      key,
+      b64Bytes(parts[2]),
+      new TextEncoder().encode(parts[0] + "." + parts[1])
+    );
+
+    if (!ok) return null;
+
+    const claims = JSON.parse(new TextDecoder().decode(b64Bytes(parts[1])));
+
+    if (typeof claims.exp === "number" && claims.exp <= Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+
+    return claims;
+  } catch (error) {
+    return null;
+  }
+}
+
+// What the extension should gate on. Verified offline against the store's key,
+// so the answer survives losing the network but not editing storage.
+export async function hasAccess() {
+  const data = await chrome.storage.local.get([
+    "license_key",
+    "license_token",
+    "local_at_check"
+  ]);
+
+  if (!data.license_key || !data.license_token) {
+    return { status: "unlicensed" };
+  }
+
+  // A clock that now reads earlier than it did at the last successful check
+  // defeats the expiry check below, so refuse instead of guessing.
+  if (data.local_at_check && Date.now() < data.local_at_check) {
+    return { status: "invalid", reason: "clock_rollback" };
+  }
+
+  const pem = await storePublicKey();
+  const claims = await verifyLicenseToken(data.license_token, pem);
+
+  if (!claims) {
+    return { status: "expired", reason: "token_invalid_or_expired" };
+  }
+
+  return { status: "valid", source: "offline_token", claims };
+}
+
 export async function checkLicense() {
   const data = await chrome.storage.local.get([
     "license_key",
     "install_id",
-    "last_checked_at"
+    "license_token"
   ]);
 
   if (!data.license_key || !data.install_id) return { status: "unlicensed" };
@@ -1685,28 +1774,30 @@ export async function checkLicense() {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString()
     });
+
     const json = await res.json();
 
-    if (json.error_type === "trial_device_mismatch") {
-      await chrome.storage.local.set({ status: "invalid" });
+    if (json.status !== "valid") {
+      // The store said no. Whatever is still on disk is now a lie.
+      await chrome.storage.local.remove(["license_token", "local_at_check"]);
       return json;
     }
 
     await chrome.storage.local.set({
-      status: json.status,
-      last_checked_at: Date.now(),
-      last_server_time: json.server_time_unix
+      license_token: json.license_token || data.license_token,
+      server_time_unix: json.server_time_unix,
+      local_at_check: Date.now()
     });
+
     return json;
   } catch (error) {
-    if (data.last_checked_at && Date.now() - data.last_checked_at < GRACE_MS) {
-      return { status: "valid", offline_grace: true };
-    }
-    return { status: "expired", reason: "offline_grace_exceeded" };
+    // No network. The signed token is the best evidence available, and it
+    // expires on the server's schedule rather than ours.
+    return await hasAccess();
   }
 }
 
-chrome.alarms.create("fastr_license_check", { periodInMinutes: 720 });
+chrome.alarms.create("fastr_license_check", { periodInMinutes: 60 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "fastr_license_check") checkLicense();
 });
