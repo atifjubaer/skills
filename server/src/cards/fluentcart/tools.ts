@@ -1937,6 +1937,38 @@ export function verifyToken(token: string, publicKeyPem: string): Record<string,
   if (typeof claims.exp === "number" && claims.exp < Math.floor(Date.now() / 1000)) return null;
   return claims;
 }
+
+/**
+ * Decide whether the app should run, binding the token to THIS installation.
+ *
+ * verifyToken proves the store signed the token and that it has not expired.
+ * It does not prove the token was issued for this machine or this product, so
+ * a token copied from another install passes it. Compare the claims before
+ * granting anything.
+ *
+ * claims.fp is a server-side HMAC of the device fingerprint and cannot be
+ * recomputed here, so claims.ins (the install id you sent as site_url) is the
+ * binding a client is able to check. That is friction against sharing, not a
+ * guarantee: the server's check() is what actually enforces seats.
+ */
+export function entitlement(
+  token: string,
+  publicKeyPem: string,
+  expected: { installId?: string; productId?: number }
+): { ok: boolean; reason?: string; claims?: Record<string, unknown> } {
+  const claims = verifyToken(token, publicKeyPem);
+  if (!claims) return { ok: false, reason: "invalid_or_expired" };
+
+  if (typeof expected.productId === "number" && Number(claims.prod) !== expected.productId) {
+    return { ok: false, reason: "wrong_product" };
+  }
+
+  if (expected.installId && claims.ins && String(claims.ins) !== expected.installId) {
+    return { ok: false, reason: "wrong_install" };
+  }
+
+  return { ok: true, claims };
+}
 `
             }
           ]
