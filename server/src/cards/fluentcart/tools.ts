@@ -2121,6 +2121,52 @@ public static class FastrLicense
         return true;
     }
 
+    /// <summary>
+    /// Bind the token to this installation. VerifyToken proves the store signed
+    /// it and that it has not expired; it does not prove the token was issued
+    /// for this machine or this product, so a token copied from another install
+    /// passes it. claims.fp is a server-side HMAC and cannot be recomputed
+    /// here, so claims.ins (the install id sent as site_url) is the binding a
+    /// client is able to check.
+    /// </summary>
+    public static bool Entitlement(
+        string token,
+        string publicKeyPem,
+        string installId,
+        int productId,
+        out JsonElement claims,
+        out string reason)
+    {
+        reason = "";
+
+        if (!VerifyToken(token, publicKeyPem, out claims))
+        {
+            reason = "invalid_or_expired";
+            return false;
+        }
+
+        if (productId > 0)
+        {
+            if (!claims.TryGetProperty("prod", out var prod)
+                || prod.ValueKind != JsonValueKind.Number
+                || prod.GetInt32() != productId)
+            {
+                reason = "wrong_product";
+                return false;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(installId)
+            && claims.TryGetProperty("ins", out var ins)
+            && ins.GetString() != installId)
+        {
+            reason = "wrong_install";
+            return false;
+        }
+
+        return true;
+    }
+
     private static byte[] Base64UrlDecode(string value)
     {
         var padded = value.Replace('-', '+').Replace('_', '/');
@@ -2352,6 +2398,38 @@ func VerifyToken(token, publicKeyPEM string) (map[string]any, error) {
 	return claims, nil
 }
 
+// Entitlement binds the token to THIS installation.
+//
+// VerifyToken proves the store signed the token and that it has not expired.
+// It does not prove the token was issued for this machine or this product, so
+// a token copied from another install passes it. Compare the claims before
+// granting anything.
+//
+// claims["fp"] is a server-side HMAC of the device fingerprint and cannot be
+// recomputed here, so claims["ins"] - the install id sent as site_url - is the
+// binding a client is able to check.
+func Entitlement(token, publicKeyPEM, installID string, productID int) (map[string]any, string) {
+	claims, err := VerifyToken(token, publicKeyPEM)
+	if err != nil {
+		return nil, "invalid_or_expired"
+	}
+
+	if productID > 0 {
+		prod, ok := claims["prod"].(float64)
+		if !ok || int(prod) != productID {
+			return nil, "wrong_product"
+		}
+	}
+
+	if installID != "" {
+		if ins, ok := claims["ins"].(string); ok && ins != installID {
+			return nil, "wrong_install"
+		}
+	}
+
+	return claims, ""
+}
+
 func asString(v any) string {
 	if s, ok := v.(string); ok {
 		return s
@@ -2500,6 +2578,37 @@ fun verifyToken(token: String, publicKeyPem: String): JSONObject? {
 
     val payload = String(Base64.getUrlDecoder().decode(parts[1]))
     return JSONObject(payload)
+}
+
+// Entitlement binds the token to THIS installation.
+//
+// verifyToken only proves the store signed it: it does not check expiry, this
+// machine, or this product. Compare the claims before granting anything.
+// claims.fp is a server-side HMAC and cannot be recomputed here, so claims.ins
+// - the install id sent as site_url - is the binding a client can check.
+// Returns the claims and a null reason on success, or null and a reason.
+fun entitlement(
+    token: String,
+    publicKeyPem: String,
+    installId: String?,
+    productId: Int
+): Pair<JSONObject?, String?> {
+    val claims = verifyToken(token, publicKeyPem) ?: return Pair(null, "invalid_or_expired")
+
+    val exp = if (claims.has("exp")) claims.optLong("exp", 0L) else 0L
+    if (exp > 0L && exp <= System.currentTimeMillis() / 1000L) {
+        return Pair(null, "invalid_or_expired")
+    }
+
+    if (productId > 0 && claims.optInt("prod", -1) != productId) {
+        return Pair(null, "wrong_product")
+    }
+
+    if (!installId.isNullOrEmpty() && claims.has("ins") && claims.optString("ins", "") != installId) {
+        return Pair(null, "wrong_install")
+    }
+
+    return Pair(claims, null)
 }
 `
             }
