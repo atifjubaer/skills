@@ -152,10 +152,7 @@ jobs:
   sdk-compile-extra:
     name: Generated clients compile (Kotlin, Swift)
     runs-on: ${{ matrix.os }}
-    # Reported, not blocking: neither toolchain exists on the development
-    # machine, so these have never been compiled. Drop continue-on-error once
-    # each is green.
-    continue-on-error: true
+    # Both compile green since 1d46832. Blocking from now on.
     strategy:
       fail-fast: false
       matrix:
