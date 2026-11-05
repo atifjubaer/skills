@@ -136,8 +136,9 @@ jobs:
         run: php -l server/samples-out/FastrLicense.php
 
       - name: Compile Go
-        working-directory: server/samples-out
         run: |
+          mkdir -p /tmp/gocheck && cd /tmp/gocheck
+          cp "$GITHUB_WORKSPACE/server/samples-out/LicenseClient.go" .
           go mod init sample >/dev/null 2>&1 || true
           go vet ./...
           go build ./...
@@ -171,6 +172,12 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: server/package-lock.json
+
+      - uses: actions/setup-java@v4
+        if: matrix.lang == 'kotlin'
+        with:
+          distribution: temurin
+          java-version: '17'
 
       - name: Build the server
         working-directory: server
