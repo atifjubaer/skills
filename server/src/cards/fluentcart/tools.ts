@@ -1679,7 +1679,9 @@ async function storePublicKey() {
 
   const res = await fetch(PUBLIC_KEY_URL, { cache: "no-store" });
   const json = await res.json();
-  const pem = String(json.public_key || json.pem || "");
+  // The store answers { kid, alg, public_key_pem, ... }. Guessing a shorter
+  // name here means the key is never found and every user is locked out.
+  const pem = String(json.public_key_pem || json.public_key || json.pem || "");
 
   if (pem) await chrome.storage.local.set({ fastr_public_key: pem });
   return pem;
