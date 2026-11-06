@@ -966,8 +966,12 @@ char *fastr_latest_release(const char *license_key, const char *current_version)
 /* RS256 verification. Returns 1 when the signature is good. */
 int fastr_verify_token(const char *token, const char *public_key_pem)
 {
-    char *copy = strdup(token);
+    /* strdup allocates exactly strlen+1, and the base64 padding below is
+     * strcat-ed onto a slice of this buffer, so it needs headroom. */
+    size_t token_size = strlen(token) + 8;
+    char *copy = (char *) malloc(token_size);
     if (copy == NULL) return 0;
+    memcpy(copy, token, token_size > 1 ? strlen(token) + 1 : 1);
 
     char *header = strtok(copy, ".");
     char *payload = strtok(NULL, ".");
