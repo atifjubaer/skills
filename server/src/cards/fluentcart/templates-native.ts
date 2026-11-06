@@ -226,6 +226,10 @@ enum FastrLicense {
 
   if (platform === 'unity_csharp') {
     return `${banner(appName, 'Unity / C#', 'FastrLicense.cs', base, productId)}
+// UNVERIFIED: this target is emitted but never compiled in CI, because it
+// needs the Unity editor. Signature and token binding are written to the same
+// contract as the other clients, but only by inspection. Test it in your own
+// project before you ship on it.
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
