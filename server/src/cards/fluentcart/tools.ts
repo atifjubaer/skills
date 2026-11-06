@@ -1813,7 +1813,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     'fc_generate_client_sdk',
     {
       description:
-        'Generate a complete licence client for Node/Electron, .NET, Go or Kotlin: activation, heartbeat, deactivation, RS256 verification of the offline licence token, release checking, usage reporting, and the status=="valid" rule that survives FluentCart\'s two 200-with-success errors.',
+        'Generate a complete licence client for Node/Electron, .NET, Go or Kotlin: activation, heartbeat, deactivation, RS256 verification of the offline licence token and an entitlement() helper that binds it to this installation so a copied token is refused, release checking, usage reporting, and the status=="valid" rule that survives FluentCart\'s two 200-with-success errors.',
       inputSchema: {
         platform: z
           .enum(['node', 'dotnet', 'go', 'kotlin'])
@@ -2623,7 +2623,7 @@ fun entitlement(
     'fc_generate_native_client',
     {
       description:
-        'Generate a complete licence client for Swift, Unity/C#, Java, PHP or C: activation, heartbeat, deactivation, RS256 verification of the offline licence token, release checking and usage reporting.',
+        'Generate a complete licence client for Swift, Unity/C#, Java, PHP or C: activation, heartbeat, deactivation, RS256 verification of the offline licence token and an entitlement() helper that binds it to this installation so a copied token is refused, release checking and usage reporting.',
       inputSchema: {
         platform: z
           .enum(['swift', 'unity_csharp', 'java', 'php', 'c'])
