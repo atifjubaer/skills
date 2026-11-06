@@ -164,6 +164,36 @@ enum FastrLicense {
         return claims
     }
 
+    // Bind the token to THIS installation. verifyToken proves the store signed
+    // it; it does not check expiry, this machine or this product. claims.fp is
+    // a server-side HMAC that cannot be recomputed here, so claims.ins is the
+    // binding a client is able to check.
+    static func entitlement(
+        _ token: String,
+        publicKeyPem: String,
+        installId: String?,
+        productId: Int
+    ) -> (claims: [String: Any]?, reason: String?) {
+        guard let claims = verifyToken(token, publicKeyPem: publicKeyPem) else {
+            return (nil, "invalid_or_expired")
+        }
+
+        if let exp = (claims["exp"] as? NSNumber)?.doubleValue, exp <= Date().timeIntervalSince1970 {
+            return (nil, "invalid_or_expired")
+        }
+
+        if productId > 0, let prod = (claims["prod"] as? NSNumber)?.intValue, prod != productId {
+            return (nil, "wrong_product")
+        }
+
+        if let installId = installId, !installId.isEmpty,
+           let ins = claims["ins"] as? String, ins != installId {
+            return (nil, "wrong_install")
+        }
+
+        return (claims, nil)
+    }
+
     private static func base64UrlDecode(_ value: String) -> Data? {
         var base64 = value.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
         base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
@@ -330,6 +360,53 @@ public static class FastrLicense
             Encoding.UTF8.GetString(Base64UrlDecode(parts[1])));
 
         return claims != null;
+    }
+
+    /// <summary>
+    /// Bind the token to this installation. VerifyToken proves the store signed
+    /// it; it does not check expiry, this machine or this product. claims.fp is
+    /// a server-side HMAC that cannot be recomputed here, so claims.ins is the
+    /// binding a client is able to check.
+    /// </summary>
+    public static bool Entitlement(
+        string token,
+        string publicKeyPem,
+        string installId,
+        int productId,
+        out Dictionary<string, object> claims,
+        out string reason)
+    {
+        reason = "";
+
+        if (!VerifyToken(token, publicKeyPem, out claims))
+        {
+            reason = "invalid_or_expired";
+            return false;
+        }
+
+        if (!claims.ContainsKey("exp")
+            || Convert.ToInt64(claims["exp"]) <= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+        {
+            reason = "invalid_or_expired";
+            return false;
+        }
+
+        if (productId > 0
+            && (!claims.ContainsKey("prod") || Convert.ToInt32(claims["prod"]) != productId))
+        {
+            reason = "wrong_product";
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(installId)
+            && claims.ContainsKey("ins")
+            && Convert.ToString(claims["ins"]) != installId)
+        {
+            reason = "wrong_install";
+            return false;
+        }
+
+        return true;
     }
 
     private static byte[] Base64UrlDecode(string value)
@@ -507,6 +584,56 @@ public final class FastrLicense {
         return verifier.verify(Base64.getUrlDecoder().decode(parts[2]));
     }
 
+    // Bind the token to THIS installation. verifyToken proves the store signed
+    // it and checks nothing else, so a copied token passes. claims.fp is a
+    // server-side HMAC that cannot be recomputed here, so claims.ins - the
+    // install id sent as site_url - is the binding a client can check.
+    // Returns an empty string when entitled, otherwise the reason.
+    public static String entitlement(String token, String publicKeyPem, String installId, int productId) throws Exception {
+        if (!verifyToken(token, publicKeyPem)) return "invalid_or_expired";
+
+        String[] parts = token.split("[.]");
+        String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+
+        String exp = claimValue(payload, "exp");
+        if (exp != null && Long.parseLong(exp) <= System.currentTimeMillis() / 1000L) {
+            return "invalid_or_expired";
+        }
+
+        String prod = claimValue(payload, "prod");
+        if (productId > 0 && (prod == null || Integer.parseInt(prod) != productId)) {
+            return "wrong_product";
+        }
+
+        String ins = claimValue(payload, "ins");
+        if (installId != null && !installId.isEmpty() && ins != null && !ins.equals(installId)) {
+            return "wrong_install";
+        }
+
+        return "";
+    }
+
+    // Reads a top-level claim without pulling in a JSON library: a quoted value
+    // is returned as-is, a bare number as its digits. Good enough for the three
+    // claims this checks, and it fails closed by returning null.
+    private static String claimValue(String json, String name) {
+        String needle = "\\"" + name + "\\":";
+        int at = json.indexOf(needle);
+        if (at < 0) return null;
+
+        int start = at + needle.length();
+        if (start >= json.length()) return null;
+
+        if (json.charAt(start) == '"') {
+            int end = json.indexOf('"', start + 1);
+            return end < 0 ? null : json.substring(start + 1, end);
+        }
+
+        int end = start;
+        while (end < json.length() && "-0123456789".indexOf(json.charAt(end)) >= 0) end++;
+        return end == start ? null : json.substring(start, end);
+    }
+
     public static String latestRelease(String key, String currentVersion, String platform) throws Exception {
         String url = STORE + "?fluent-cart=fastr_release_latest"
             + "&product_id=" + PRODUCT_ID
@@ -637,6 +764,36 @@ final class FastrLicense
         return $claims;
     }
 
+    /**
+     * Bind the token to THIS installation.
+     *
+     * verifyToken proves the store signed it and that it has not expired. It
+     * does not prove the token was issued for this machine or this product, so
+     * a copied token passes. claims.fp is a server-side HMAC and cannot be
+     * recomputed here, so claims.ins - the install id sent as site_url - is the
+     * binding a client is able to check.
+     *
+     * @return array{ok:bool,reason?:string,claims?:array}
+     */
+    public static function entitlement(string $token, string $publicKeyPem, string $installId = '', int $productId = 0): array
+    {
+        $claims = self::verifyToken($token, $publicKeyPem);
+
+        if ($claims === null) {
+            return ['ok' => false, 'reason' => 'invalid_or_expired'];
+        }
+
+        if ($productId > 0 && (int) ($claims['prod'] ?? -1) !== $productId) {
+            return ['ok' => false, 'reason' => 'wrong_product'];
+        }
+
+        if ($installId !== '' && isset($claims['ins']) && (string) $claims['ins'] !== $installId) {
+            return ['ok' => false, 'reason' => 'wrong_install'];
+        }
+
+        return ['ok' => true, 'claims' => $claims];
+    }
+
     public static function latestRelease(string $key, string $currentVersion, string $platform = 'any'): array
     {
         $query = http_build_query([
@@ -689,6 +846,10 @@ final class FastrLicense
 
 /* The activate/check body carries "license_token"; hand it to
  * fastr_verify_token() so the app can run offline without a heartbeat. */
+/* NOTE: this C client verifies the token signature and expiry but does not
+ * bind it to an install or product, because it carries no JSON decoder. Treat
+ * it as offline proof of signature only; the server check() is what enforces
+ * seats. Port entitlement() from the Java or PHP client if you need binding. */
 struct buffer { char *data; size_t size; };
 
 static size_t on_body(void *chunk, size_t size, size_t count, void *user)
