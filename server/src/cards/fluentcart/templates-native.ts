@@ -1025,7 +1025,7 @@ static int fastr_claim(const char *json, const char *name, char *out, size_t out
     if (json == NULL || name == NULL || out == NULL || out_size == 0) return 0;
 
     char needle[64];
-    int written = snprintf(needle, sizeof(needle), "\"%s\":", name);
+    int written = snprintf(needle, sizeof(needle), "\\"%s\\":", name);
     if (written <= 0 || (size_t) written >= sizeof(needle)) return 0;
 
     const char *at = strstr(json, needle);
