@@ -846,10 +846,6 @@ final class FastrLicense
 
 /* The activate/check body carries "license_token"; hand it to
  * fastr_verify_token() so the app can run offline without a heartbeat. */
-/* NOTE: this C client verifies the token signature and expiry but does not
- * bind it to an install or product, because it carries no JSON decoder. Treat
- * it as offline proof of signature only; the server check() is what enforces
- * seats. Port entitlement() from the Java or PHP client if you need binding. */
 struct buffer { char *data; size_t size; };
 
 static size_t on_body(void *chunk, size_t size, size_t count, void *user)
@@ -1020,6 +1016,114 @@ int fastr_verify_token(const char *token, const char *public_key_pem)
     free(copy);
 
     return ok;
+}
+
+/* Reads a top-level claim from a decoded JWT payload: a quoted string or a
+ * bare integer. Returns 0 when the claim is absent. */
+static int fastr_claim(const char *json, const char *name, char *out, size_t out_size)
+{
+    if (json == NULL || name == NULL || out == NULL || out_size == 0) return 0;
+
+    char needle[64];
+    int written = snprintf(needle, sizeof(needle), "\"%s\":", name);
+    if (written <= 0 || (size_t) written >= sizeof(needle)) return 0;
+
+    const char *at = strstr(json, needle);
+    if (at == NULL) return 0;
+
+    at += strlen(needle);
+
+    size_t i = 0;
+
+    if (*at == '"') {
+        ++at;
+        while (at[i] != '"' && at[i] != '\0' && i + 1 < out_size) {
+            out[i] = at[i];
+            ++i;
+        }
+    } else {
+        while ((at[i] == '-' || (at[i] >= '0' && at[i] <= '9')) && i + 1 < out_size) {
+            out[i] = at[i];
+            ++i;
+        }
+    }
+
+    out[i] = '\0';
+
+    return i > 0 ? 1 : 0;
+}
+
+/* Returns NULL when the token entitles this install and product to run,
+ * otherwise a short reason.
+ *
+ * fastr_verify_token() proves the store signed the token and that it has not
+ * expired. It does not prove the token was issued for this machine or this
+ * product, so a token copied from another install passes it. claims.ins - the
+ * install id sent as site_url - is the binding a client can check. claims.fp is
+ * a server-side HMAC and cannot be recomputed here.
+ */
+const char *fastr_entitlement(const char *token, const char *public_key_pem, const char *install_id, int product_id)
+{
+    if (!fastr_verify_token(token, public_key_pem)) return "invalid_or_expired";
+
+    size_t token_len = strlen(token);
+    char *copy = (char *) malloc(token_len + 8);
+
+    if (copy == NULL) return "invalid_or_expired";
+
+    memcpy(copy, token, token_len + 1);
+
+    char *first = strchr(copy, '.');
+    if (first == NULL) { free(copy); return "invalid_or_expired"; }
+
+    char *payload = first + 1;
+    char *second = strchr(payload, '.');
+
+    if (second == NULL) { free(copy); return "invalid_or_expired"; }
+
+    *second = '\0';
+
+    for (char *p = payload; *p; ++p) {
+        if (*p == '-') *p = '+';
+        else if (*p == '_') *p = '/';
+    }
+
+    size_t payload_len = strlen(payload);
+    size_t padding = (4 - payload_len % 4) % 4;
+
+    for (size_t i = 0; i < padding; ++i) strcat(payload, "=");
+
+    unsigned char decoded[8192];
+    int size = EVP_DecodeBlock(decoded, (unsigned char *) payload, (int) strlen(payload));
+
+    free(copy);
+
+    if (size <= 0) return "invalid_or_expired";
+
+    size -= (int) padding;
+
+    if (size <= 0 || (size_t) size >= sizeof(decoded)) return "invalid_or_expired";
+
+    decoded[size] = '\0';
+
+    const char *json = (const char *) decoded;
+    char claim[160];
+
+    if (!fastr_claim(json, "exp", claim, sizeof(claim))) return "invalid_or_expired";
+    if (atoll(claim) <= 0 || atoll(claim) <= (long long) time(NULL)) return "invalid_or_expired";
+
+    if (product_id > 0) {
+        if (!fastr_claim(json, "prod", claim, sizeof(claim))) return "wrong_product";
+        if (atoi(claim) != product_id) return "wrong_product";
+    }
+
+    if (install_id != NULL && install_id[0] != '\0') {
+        if (fastr_claim(json, "ins", claim, sizeof(claim)) && strcmp(claim, install_id) != 0) {
+            return "wrong_install";
+        }
+    }
+
+    return NULL;
 }
 `;
 }
