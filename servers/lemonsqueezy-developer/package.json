@@ -1,6 +1,6 @@
 {
   "name": "lemonsqueezy-developer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for Lemon Squeezy developer knowledge: API documentation search, resource schema lookup, reference reading, webhook signature verification and licence-key validation.",
   "type": "module",
   "main": "dist/index.js",

@@ -563,7 +563,7 @@ Full schema, fingerprint tiers, token verification, scoring weights, and test ch
 
 ## ⚡ Fastr MCP Server Tools Guidance
 
-When paired with the **Fastr MCP Suite**, AI coding assistants must use these 10 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
+When the **`fluentcart-developer`** MCP server is connected, AI coding assistants must use these 10 dedicated FluentCart tools instead of guessing or loading giant documentation files into context:
 
 | Tool | Purpose | Typical User Query |
 |---|---|---|

@@ -215,7 +215,7 @@ function verify_lemon_license(string $licenseKey, string $instanceId): bool
 
 ## ⚡ Fastr MCP Server Tools Guidance (Lemon Squeezy)
 
-When paired with the **Fastr MCP Suite**, AI coding assistants must use these dedicated tools instead of guessing JSON:API bodies or cryptographic parameters:
+When the **`lemonsqueezy-developer`** MCP server is connected, AI coding assistants must use these dedicated tools instead of guessing JSON:API bodies or cryptographic parameters:
 
 | Tool | Purpose | Typical User Query |
 |---|---|---|

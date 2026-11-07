@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "lemonsqueezy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "lemonsqueezy-developer"
+      ]
+    }
+  }
+}

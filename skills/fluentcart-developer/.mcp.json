@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "fluentcart": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "fluentcart-developer"
+      ]
+    }
+  }
+}
