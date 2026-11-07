@@ -90,30 +90,48 @@ export function registerFluentCartTools(server: McpServer): void {
     },
     async ({ table }) => {
       try {
+        // Two schema sources: FluentCart core (wp_fct_*) and the Fastr Devices
+        // add-on's own wp_fastr_* tables, which live in no core file.
         const schemaFile = path.join(FC_REFS_DIR, 'database-schema-reference.md');
+        const addonFile = path.join(FC_REFS_DIR, 'fastr-addon-schema.md');
         if (!fs.existsSync(schemaFile)) {
           return { content: [{ type: 'text', text: 'Database schema reference not found.' }], isError: true };
         }
 
-        const content = fs.readFileSync(schemaFile, 'utf8');
-        const sections = content.split(/\n## /);
-        const match = sections.find(s => s.toLowerCase().includes(table.toLowerCase()));
+        const wanted = table.toLowerCase();
+        let match: string | undefined;
+        let source = 'database-schema-reference.md';
+
+        for (const file of [schemaFile, addonFile]) {
+          if (!fs.existsSync(file)) continue;
+          const found = fs
+            .readFileSync(file, 'utf8')
+            .split(/\n## /)
+            .find(s => s.toLowerCase().includes(wanted));
+          if (found) {
+            match = found;
+            source = path.basename(file);
+            break;
+          }
+        }
 
         if (!match) {
           return {
             content: [{
               type: 'text',
               text:
-                `Table "${table}" not found in database-schema-reference.md. It documents every ` +
-                `wp_fct_* table — try the table name without the prefix, e.g. "orders", "order_items", ` +
-                `"customer_addresses". For a model's attributes and relations call ` +
+                `Table "${table}" not found in database-schema-reference.md or fastr-addon-schema.md. ` +
+                `The first documents every wp_fct_* table — try the name without the prefix, e.g. "orders", ` +
+                `"order_items", "customer_addresses". The second documents the add-on's wp_fastr_* tables: ` +
+                `fastr_releases, fastr_trial_registry, fastr_usage, fastr_webhooks, fastr_webhook_deliveries. ` +
+                `For a model's attributes and relations call ` +
                 `fc_get_reference({ file: "models-complete-index.md", section: "..." }).`
             }]
           };
         }
 
         return {
-          content: [{ type: 'text', text: `## ${match.slice(0, 3000)}` }]
+          content: [{ type: 'text', text: `## ${match.slice(0, 3000)}\n\nSource: ${source}` }]
         };
       } catch (err: any) {
         return {

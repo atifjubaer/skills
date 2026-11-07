@@ -204,6 +204,17 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       );
     }
 
+    {
+      // The add-on keeps its own tables. fc_get_db_schema read only the core
+      // schema file, so all five were unqueryable.
+      const text = await call(s, 'fc_get_db_schema', { table: 'fastr_trial_registry' });
+      check(
+        'call fc_get_db_schema serves add-on tables',
+        text.includes('fingerprint_hash') && text.includes('fastr-addon-schema.md'),
+        text.length + ' chars'
+      );
+    }
+
     const infoText = await call(s, 'get_info');
     const parsed = JSON.parse(infoText);
     check('get_info reports free', parsed.session?.tier === 'free' && parsed.price === 'free', parsed.session?.transport);
