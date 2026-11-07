@@ -30,9 +30,20 @@ export function registerFluentCartTools(server: McpServer): void {
 
         // The per-topic files carry the detail; hooks-complete-index.md carries
         // the module and Pro-module hooks that have no per-topic file at all.
+        //
+        // fastr-addon-hooks.md is the Fastr Devices add-on's own 35 hooks. They
+        // are not FluentCart core hooks and appear in none of the core files, so
+        // without it here the add-on's entire extension surface is unsearchable —
+        // which is exactly how it shipped until now.
         const files = fs
           .readdirSync(FC_REFS_DIR)
-          .filter(f => f.startsWith('action-hooks') || f.startsWith('filter-hooks') || f === 'hooks-complete-index.md');
+          .filter(
+            f =>
+              f.startsWith('action-hooks') ||
+              f.startsWith('filter-hooks') ||
+              f === 'hooks-complete-index.md' ||
+              f === 'fastr-addon-hooks.md'
+          );
         const matches: string[] = [];
         const lowerQuery = query.toLowerCase();
 

@@ -192,6 +192,18 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
     });
     check('reference reader rejects traversal', traversal.result?.isError === true);
 
+    {
+      // The add-on ships its own hooks and they appear in none of the core
+      // reference files. fc_search_hooks read only the core set, so all 35 of
+      // them were documented nowhere and unsearchable.
+      const text = await call(s, 'fc_search_hooks', { query: 'fastr_trial' });
+      check(
+        'call fc_search_hooks finds add-on hooks',
+        text.includes('fastr_trial/granted') && text.includes('fastr_trial/require_fingerprint'),
+        text.length + " chars"
+      );
+    }
+
     const infoText = await call(s, 'get_info');
     const parsed = JSON.parse(infoText);
     check('get_info reports free', parsed.session?.tier === 'free' && parsed.price === 'free', parsed.session?.transport);
