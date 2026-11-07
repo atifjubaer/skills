@@ -32,14 +32,18 @@ import { join } from 'node:path';
 const root = process.cwd();
 const serverDir = join(root, 'servers/fluentcart-developer');
 
-// This used to be `!existsSync(root/.git)`, which was wrong: MCPize also runs
-// this script locally as a pre-deploy build check, and a slimmed upload
-// deliberately moves .git aside — so the check matched a local checkout and the
-// staging branch below overwrote the repo's package.json and replaced its
-// node_modules with the server's. Require the image workdir as well: MCPize
-// builds at /app, and a Windows checkout can never be that path.
+// Staging is keyed on the image workdir alone. This used to be
+// `!existsSync(root/.git)`, which was wrong: MCPize also runs this script
+// locally as a pre-deploy build check, and a slimmed upload deliberately moves
+// .git aside — so the check matched a local checkout and the staging branch
+// below overwrote the repo's package.json and replaced its node_modules.
+// MCPize builds at /app, and a Windows checkout can never be that path.
+//
+// Only the *staging* is gated. Installing dependencies is not: the build check
+// runs before the tarball is made, in a directory that may have no
+// node_modules at all.
 const normalisedRoot = root.replace(/\\/g, '/');
-const inImage = !existsSync(join(root, '.git')) && /^\/app(\/|$)/.test(normalisedRoot);
+const inImage = /^\/app(\/|$)/.test(normalisedRoot);
 
 // execSync rather than execFileSync: Node refuses to spawn npm.cmd without a
 // shell on Windows. Both cmd.exe and /bin/sh handle a plain command string.
@@ -50,9 +54,17 @@ const run = command => execSync(command, { cwd: root, stdio: 'inherit' });
 // to be quoted for both cmd.exe and /bin/sh.
 const quote = value => `"${value}"`;
 
+// In the image, discard whatever node_modules the upload carried and reinstall
+// against the lockfile, so the runtime tree matches the one that was built.
 if (inImage) {
   console.log('[mcpize-build] image build — discarding the uploaded node_modules.');
   rmSync(join(serverDir, 'node_modules'), { recursive: true, force: true });
+}
+
+// A deploy copy and a fresh checkout both arrive without dependencies. The
+// build needs tsc, so install whether or not this is the image.
+if (!existsSync(join(serverDir, 'node_modules'))) {
+  console.log('[mcpize-build] installing dependencies from the lockfile');
   run(`npm --prefix ${quote(serverDir)} ci --no-audit --no-fund`);
 }
 
