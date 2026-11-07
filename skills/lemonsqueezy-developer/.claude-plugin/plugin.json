@@ -1,0 +1,12 @@
+{
+  "name": "lemonsqueezy-developer",
+  "description": "Comprehensive developer knowledge base and architectural manual for integrating Lemon Squeezy e-commerce, subscriptions, checkouts, and licensing into any web, WordPress, or mobile stack. Covers JSON:API conventions, checkout sessions, Lemon.js overlays, HMAC-SHA256 webhook security, subscription lifecycles, and software license keys.",
+  "version": "1.2.0",
+  "author": {
+    "name": "FastrSoft",
+    "url": "https://fastrsoft.com"
+  },
+  "homepage": "https://github.com/atifjubaer/skills",
+  "repository": "https://github.com/atifjubaer/skills",
+  "license": "MIT"
+}

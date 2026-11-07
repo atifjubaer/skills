@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "fastr-mcp-suite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "fastr-mcp-suite"
+      ]
+    }
+  }
+}

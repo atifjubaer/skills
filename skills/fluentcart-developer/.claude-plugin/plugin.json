@@ -1,0 +1,12 @@
+{
+  "name": "fluentcart-developer",
+  "description": "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, with generated clients that bind the offline licence token to each installation, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks.",
+  "version": "1.6.0",
+  "author": {
+    "name": "FastrSoft",
+    "url": "https://fastrsoft.com"
+  },
+  "homepage": "https://github.com/atifjubaer/skills",
+  "repository": "https://github.com/atifjubaer/skills",
+  "license": "MIT"
+}

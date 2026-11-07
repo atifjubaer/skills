@@ -1,0 +1,12 @@
+{
+  "name": "fastr-mcp-suite",
+  "description": "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — free, MIT-licensed FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; or when a tool call fails.",
+  "version": "2.0.0",
+  "author": {
+    "name": "FastrSoft",
+    "url": "https://fastrsoft.com"
+  },
+  "homepage": "https://github.com/atifjubaer/skills",
+  "repository": "https://github.com/atifjubaer/skills",
+  "license": "MIT"
+}

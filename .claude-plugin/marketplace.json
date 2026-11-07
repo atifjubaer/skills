@@ -1,0 +1,32 @@
+{
+  "name": "fastr-skills",
+  "owner": {
+    "name": "FastrSoft",
+    "email": "support@fastrsoft.com",
+    "url": "https://fastrsoft.com"
+  },
+  "metadata": {
+    "description": "FluentCart and Lemon Squeezy developer skills, with the Fastr MCP Suite.",
+    "version": "1.7.0"
+  },
+  "plugins": [
+    {
+      "name": "fastr-mcp-suite",
+      "source": "./skills/fastr-mcp-suite",
+      "description": "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — free, MIT-licensed FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; or when a tool call fails.",
+      "version": "2.0.0"
+    },
+    {
+      "name": "fluentcart-developer",
+      "source": "./skills/fluentcart-developer",
+      "description": "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, with generated clients that bind the offline licence token to each installation, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks.",
+      "version": "1.6.0"
+    },
+    {
+      "name": "lemonsqueezy-developer",
+      "source": "./skills/lemonsqueezy-developer",
+      "description": "Comprehensive developer knowledge base and architectural manual for integrating Lemon Squeezy e-commerce, subscriptions, checkouts, and licensing into any web, WordPress, or mobile stack. Covers JSON:API conventions, checkout sessions, Lemon.js overlays, HMAC-SHA256 webhook security, subscription lifecycles, and software license keys.",
+      "version": "1.2.0"
+    }
+  ]
+}
