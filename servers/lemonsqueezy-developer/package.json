@@ -1,17 +1,17 @@
 {
-  "name": "fastr-mcp-suite",
-  "version": "1.7.0",
-  "description": "MCP server for FluentCart and Lemon Squeezy developer knowledge: documentation search, schema lookup, webhook signature verification and licence validation",
+  "name": "lemonsqueezy-developer",
+  "version": "1.0.0",
+  "description": "MCP server for Lemon Squeezy developer knowledge: API documentation search, resource schema lookup, reference reading, webhook signature verification and licence-key validation.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "fastr-mcp": "dist/index.js"
+    "lemonsqueezy-developer": "dist/index.js"
   },
   "files": [
     "dist",
-    "smithery.config.json",
-    "README.md"
+    "README.md",
+    "LICENSE.md"
   ],
   "scripts": {
     "build": "tsc && node scripts/copy-skills.mjs",
@@ -28,18 +28,16 @@
     "claude-code",
     "cursor",
     "lemonsqueezy",
-    "fluentcart",
-    "ai-agent",
-    "smithery",
-    "mcpize"
+    "developer-tools",
+    "ai-agent"
   ],
   "author": "Atif Jubaer",
   "license": "MIT",
-  "homepage": "https://github.com/atifjubaer/skills/tree/main/server#readme",
+  "homepage": "https://github.com/atifjubaer/skills/tree/main/servers/lemonsqueezy-developer#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/atifjubaer/skills.git",
-    "directory": "server"
+    "directory": "servers/lemonsqueezy-developer"
   },
   "bugs": {
     "url": "https://github.com/atifjubaer/skills/issues"

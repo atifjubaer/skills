@@ -4,7 +4,7 @@ import { createMcpHandler } from '@modelcontextprotocol/server';
 import dotenv from 'dotenv';
 import { fullAccess } from './auth.js';
 import { createServerInstance } from './server.js';
-import { SUITE_VERSION } from './version.js';
+import { SERVER_VERSION } from './version.js';
 
 dotenv.config();
 
@@ -34,7 +34,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     server: 'fastr-dev-suite',
-    version: SUITE_VERSION,
+    version: SERVER_VERSION,
     protocol: '2026-07-28',
     licence: 'MIT',
     price: 'free',

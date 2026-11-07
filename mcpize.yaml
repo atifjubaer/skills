@@ -1,29 +1,29 @@
 # MCPize deployment manifest.
 #
 # The deploy root is the repository root, but the MCP server package lives in
-# server/ — every build and start command is prefixed accordingly. `entry` points
+# servers/fluentcart-developer/ — every build and start command is prefixed accordingly. `entry` points
 # MCPize's capability scan at the file that imports the MCP SDK; without it the
 # scan reports "no MCP capabilities" because the root package.json is the skills
 # CLI, not the server.
 #
 # `runtime: container` rejects this image ("HTTP base Dockerfile not supported
 # for runtime: container"), so the manifest uses the TypeScript runtime and lets
-# MCPize build and run the server directly. server/Dockerfile stays for local
+# MCPize build and run the server directly. servers/fluentcart-developer/Dockerfile stays for local
 # runs and for hosts that take a Docker image.
 #
 # Deploy: `npx mcpize deploy` from this directory. Secrets below are entered in
 # the MCPize dashboard, never committed.
 version: 1
-name: fastr-mcp-suite
-description: Free, MIT-licensed FluentCart and Lemon Squeezy developer tools — hooks, DB schemas, API docs, webhook and licence verification for AI coding clients.
+name: fluentcart-developer
+description: Free, MIT-licensed FluentCart developer tools — hooks, DB schemas, API docs and boilerplate generation for AI coding clients.
 runtime: typescript
 
-# The MCP HTTP entry point. server/build also bundles skills/ into server/dist/skills.
-entry: server/src/http.ts
+# The MCP HTTP entry point. servers/fluentcart-developer/build also bundles skills/ into servers/fluentcart-developer/dist/skills.
+entry: servers/fluentcart-developer/src/http.ts
 
 build:
   # The generated Dockerfile copies only the *root* package manifests before
-  # running `install` (COPY package*.json ./), so server/package-lock.json does not
+  # running `install` (COPY package*.json ./), so servers/fluentcart-developer/package-lock.json does not
   # exist at that point and `npm --prefix server ci` dies with EUSAGE. Dependencies
   # are installed by the build command instead, which runs after the full source
   # copy. `install` is deliberately a no-op.

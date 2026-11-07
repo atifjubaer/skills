@@ -30,7 +30,7 @@ Why free:
 
 | Channel | Role | Cost |
 | --- | --- | --- |
-| npm | `fastr-mcp-suite` binary — the install line in every guide | free |
+| npm | `fluentcart-developer` and `lemonsqueezy-developer` binaries — the install line in every guide | free |
 | GitHub | source, issues, pull requests | free |
 | MCPize | hosted Streamable HTTP endpoint + discovery | free |
 | Smithery | public registry | free (sunset **2026-10-31**) |
@@ -52,7 +52,7 @@ So a caller still needs an MCPize-issued credential to use the hosted endpoint,
 even though the server itself asks for nothing. That credential is the
 marketplace's, not ours: `server/src/http.ts` ignores every header and registers
 the same ten tools either way. Anyone who wants zero intermediaries can run
-`npx -y fastr-mcp-suite` locally, or self-host the HTTP transport.
+`npx -y fluentcart-developer` locally, or self-host the HTTP transport.
 
 ### Apify is discovery, not a checkout
 
@@ -66,5 +66,5 @@ Any sentence that mentions a licence key, a checkout URL, a tier, or a
 `PRO_LICENSE_KEY` is stale. The current install instruction is one line:
 
 ```bash
-claude mcp add fastr-suite -- npx -y fastr-mcp-suite
+claude mcp add fluentcart -- npx -y fluentcart-developer
 ```

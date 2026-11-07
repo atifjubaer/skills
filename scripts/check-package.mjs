@@ -1,6 +1,6 @@
 // Guards the published tarball.
 //
-// The root package ships one skill. `server/` is a separate npm package and must
+// The root package ships one skill. `servers/` holds separate npm packages and must
 // never end up in this one — and neither should a second product's skill. Both
 // are one forgotten `files` entry away from shipping.
 import { execSync } from 'node:child_process';
@@ -17,8 +17,8 @@ const errors = [];
 
 const forbidden = [
   {
-    matches: p => p.startsWith('server/'),
-    why: 'server/ is its own published package and must not ship in the skills package'
+    matches: p => p.startsWith('servers/'),
+    why: 'servers/ are their own published packages and must not ship in the skills package'
   },
   {
     matches: p => p.startsWith('skills/') && !p.startsWith('skills/fluentcart-developer/'),

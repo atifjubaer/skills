@@ -1,21 +1,15 @@
 {
-  "name": "fastr-skills",
+  "name": "fluentcart-lemonsqueezy-skills",
   "owner": {
     "name": "FastrSoft",
-    "email": "support@fastrsoft.com",
+    "email": "[EMAIL_REDACTED]",
     "url": "https://fastrsoft.com"
   },
   "metadata": {
-    "description": "FluentCart and Lemon Squeezy developer skills, with the Fastr MCP Suite.",
-    "version": "1.7.0"
+    "description": "FluentCart and Lemon Squeezy developer skills, each with its own MCP server.",
+    "version": "2.0.0"
   },
   "plugins": [
-    {
-      "name": "fastr-mcp-suite",
-      "source": "./skills/fastr-mcp-suite",
-      "description": "Install, connect, and operate the Fastr MCP Suite server (fastr-dev-suite) — free, MIT-licensed FluentCart and Lemon Squeezy tools over MCP. Use this skill when wiring the server into Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, or a hosted HTTP client; when deciding which fc_, ls_, or suite_ tool answers a question; or when a tool call fails.",
-      "version": "2.0.0"
-    },
     {
       "name": "fluentcart-developer",
       "source": "./skills/fluentcart-developer",

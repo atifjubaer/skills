@@ -1,10 +1,17 @@
 {
   "mcpServers": {
-    "fastr-mcp-suite": {
+    "fluentcart": {
       "command": "npx",
       "args": [
         "-y",
-        "fastr-mcp-suite"
+        "fluentcart-developer"
+      ]
+    },
+    "lemonsqueezy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "lemonsqueezy-developer"
       ]
     }
   }

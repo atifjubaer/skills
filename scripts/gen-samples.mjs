@@ -1,12 +1,12 @@
 /**
- * Generates every client the FluentCart MCP tools can emit, into server/samples-out/.
+ * Generates every client the FluentCart MCP tools can emit, into servers/fluentcart-developer/samples-out/.
  *
  * This exists so CI can COMPILE the output. The protocol probe in
  * verify-stdio.mjs asserts that a template contains expected substrings, which
  * cannot see a doubled function declaration — four generators shipped
  * non-compiling code while that suite reported 41/41.
  *
- * Run from the repository root after `npm --prefix server run build`:
+ * Run from the repository root after `npm --prefix servers/fluentcart-developer run build`:
  *   node scripts/gen-samples.mjs
  */
 import fs from 'node:fs';
@@ -14,10 +14,10 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const root = path.resolve(import.meta.dirname, '..');
-const dist = path.join(root, 'server/dist/cards/fluentcart/tools.js');
+const dist = path.join(root, 'servers/fluentcart-developer/dist/cards/fluentcart/tools.js');
 
 if (!fs.existsSync(dist)) {
-  console.error(`missing build output: ${dist}\nrun: npm --prefix server run build`);
+  console.error(`missing build output: ${dist}\nrun: npm --prefix servers/fluentcart-developer run build`);
   process.exit(1);
 }
 
@@ -30,7 +30,7 @@ registerFluentCartTools({
   },
 });
 
-const outDir = path.join(root, 'server/samples-out');
+const outDir = path.join(root, 'servers/fluentcart-developer/samples-out');
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 

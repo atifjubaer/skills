@@ -1,25 +1,20 @@
 {
-  "name": "fluentcart-developer",
-  "version": "1.1.1",
-  "description": "CLI tool and developer knowledge base for FluentCart theme, plugin, shipping, and payment gateway development",
+  "name": "fluentcart-lemonsqueezy-skills",
+  "version": "2.0.0",
+  "private": true,
+  "description": "FluentCart and Lemon Squeezy developer skills, each shipped with its own MCP server",
   "main": "bin/index.js",
   "bin": {
-    "fluentcart-developer": "bin/index.js",
     "fluentcart-ai-skill": "bin/index.js"
   },
-  "files": [
-    "bin/",
-    "CLAUDE.md",
-    "skills/fluentcart-developer/"
-  ],
   "scripts": {
     "build": "node copy-skills.js",
-    "build:server": "npm --prefix server run build",
-    "verify:server": "npm --prefix server run verify",
+    "build:servers": "npm --prefix servers/fluentcart-developer run build && npm --prefix servers/lemonsqueezy-developer run build",
+    "verify:servers": "npm --prefix servers/fluentcart-developer run verify && npm --prefix servers/lemonsqueezy-developer run verify",
+    "split": "node scripts/split-suite.mjs",
     "check:skills": "node scripts/validate-skills.mjs",
     "check:package": "node scripts/check-package.mjs",
-    "ci": "npm run check:skills && npm run check:package",
-    "prepublishOnly": "npm run ci && npm run build"
+    "ci": "npm run check:skills && npm run check:package"
   },
   "repository": {
     "type": "git",
@@ -30,18 +25,13 @@
     "url": "https://github.com/atifjubaer/skills/issues"
   },
   "keywords": [
-    "fluentcart-developer",
     "fluentcart",
+    "lemonsqueezy",
     "wordpress",
     "ai-skills",
-    "skills",
-    "antigravity",
-    "cursor",
+    "mcp",
     "claude-code",
-    "windsurf",
-    "cline",
-    "zed",
-    "copilot"
+    "cursor"
   ],
   "author": "Fastrsoft",
   "license": "MIT"

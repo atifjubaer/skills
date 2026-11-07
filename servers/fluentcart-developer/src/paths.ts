@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  *    and `dist/` because both are exactly one level under `server/`.
  */
 function candidateRoots(): string[] {
-  const roots = [path.resolve(__dirname, 'skills'), path.resolve(__dirname, '../../skills')];
+  const roots = [path.resolve(__dirname, 'skills'), path.resolve(__dirname, '../../../skills')];
   if (process.env.FASTR_SKILLS_DIR) roots.unshift(path.resolve(process.env.FASTR_SKILLS_DIR));
   return roots;
 }

@@ -1,7 +1,7 @@
 # Atif Jubaer's Agent Skills Repository
 
-[![fastr-mcp-suite MCP server](https://mcprush.com/badge/fastr-mcp-suite/card.svg)](https://mcprush.com/to/fastr-mcp-suite?ref=badge)
-[![npm version](https://img.shields.io/npm/v/fastr-mcp-suite.svg)](https://www.npmjs.com/package/fastr-mcp-suite)
+[![fluentcart-developer](https://img.shields.io/npm/v/fluentcart-developer.svg?label=fluentcart-developer)](https://www.npmjs.com/package/fluentcart-developer)
+[![lemonsqueezy-developer](https://img.shields.io/npm/v/lemonsqueezy-developer.svg?label=lemonsqueezy-developer)](https://www.npmjs.com/package/lemonsqueezy-developer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive, platform-agnostic knowledge base, instruction set, and CLI toolkit for FluentCart theme, plugin, shipping, and payment gateway development.
@@ -26,37 +26,36 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **Dynamic Checkouts & Lemon.js:** API checkout generation, in-app modal overlays, and custom metadata tracking.
   - **3 Runnable Example Projects:** Next.js App Router webhook route, WordPress licensing integration plugin, and standalone Lemon.js checkout overlay.
 
-- **`Fastr MCP Suite`** ([`fastr-mcp-suite`](skills/fastr-mcp-suite/SKILL.md)):
-  - **Install Guide:** Exact config for Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Zed, plus the hosted Streamable HTTP transport.
-  - **Tool Reference:** All thirteen `fc_*`, `ls_*`, and `suite_*` tools with their arguments, return shapes, and when to reach for each.
-  - **No Gate:** Every tool is free for every client — no licence key, account, or request quota.
-  - **Troubleshooting:** The failures people actually hit — unknown table names, unreachable reference files, and the Windows `npx` stdio artifact.
+- **MCP servers** — each skill ships with its own, so installing one never drags in the other:
+  - **[`fluentcart-developer`](./servers/fluentcart-developer)** — 11 tools for FluentCart.
+  - **[`lemonsqueezy-developer`](./servers/lemonsqueezy-developer)** — 6 tools for Lemon Squeezy.
+  - Both are free for every client: no licence key, account, or request quota.
 
 ---
 
-## Playing Cards (MCP Server)
+## MCP Servers
 
-Skills tell the model what to do. The MCP server in [`server/`](./server/README.md) gives it the tools to do it — without loading a single large markdown file into context.
+Skills tell the model what to do. Each server gives it the tools to do it — without loading a single large markdown file into context. They are separate packages on purpose: the FluentCart knowledge tree is 1.6 MB and 3,800 lines of tooling, and a Lemon Squeezy user should not have to carry it.
 
-| Card | Tools |
+| Server | Tools |
 | --- | --- |
-| **Card 1 — FluentCart Developer Agent** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate`, `fc_generate_customer_endpoint_boilerplate` |
-| **Card 2 — Lemon Squeezy Developer Agent** | `ls_search_docs`, `ls_get_schema`, `ls_get_reference`, `ls_verify_webhook`, `ls_validate_license` |
-| **Suite** | `suite_get_info` |
+| **[`fluentcart-developer`](./servers/fluentcart-developer)** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate`, `fc_generate_customer_endpoint_boilerplate`, `fc_generate_device_licensing_boilerplate`, `fc_generate_trial_guard_boilerplate`, `fc_generate_client_sdk`, `fc_generate_native_client`, `get_info` |
+| **[`lemonsqueezy-developer`](./servers/lemonsqueezy-developer)** | `ls_search_docs`, `ls_get_schema`, `ls_get_reference`, `ls_verify_webhook`, `ls_validate_license`, `get_info` |
 
-Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base. `fc_get_reference` and `ls_get_reference` open any file under a skill's `references/` folder by name, or a single heading inside it — that is how the 54 FluentCart and 7 Lemon Squeezy reference files reach an MCP client that never loads them wholesale.
+Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base. `fc_get_reference` and `ls_get_reference` open any file under a skill's `references/` folder by name, or a single heading inside it — that is how the 57 FluentCart and 7 Lemon Squeezy reference files reach an MCP client that never loads them wholesale.
 
 ```bash
-npx -y fastr-mcp-suite    # stdio: no install, no build — published as fastr-mcp-suite
+npx -y fluentcart-developer      # stdio: no install, no build
+npx -y lemonsqueezy-developer    # stdio: no install, no build
 
-cd server && npm install && npm run build
-node dist/index.js        # stdio: Claude Code, Cursor, Windsurf, Smithery CLI
-node dist/http.js         # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
+cd servers/fluentcart-developer && npm install && npm run build
+node dist/index.js               # stdio: Claude Code, Cursor, Windsurf
+node dist/http.js                # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
 ```
 
-All thirteen tools are registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach the server can call everything it ships. Deployment and transport details are documented in [`server/README.md`](./server/README.md).
+Every tool is registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach a server can call everything it ships. `npm run verify` in either package boots the built server over stdio and asserts a real call against every tool.
 
-**Licensing:** everything in this repository — the skills under `skills/` and the server under `server/` — is MIT. See [`server/LICENSE.md`](./server/LICENSE.md). Fork it, host it, sell support around it; the only ask is that you keep the copyright notice.
+**Licensing:** everything in this repository is MIT. Fork it, host it, sell support around it; the only ask is that you keep the copyright notice.
 
 ---
 
@@ -155,21 +154,24 @@ skills/
 │   ├── sample-custom-payment-gateway/
 │   ├── sample-shipping-carrier/
 │   └── fluentcart-starter-child-theme/
-├── server/                    # 👈 MCP server (MIT, free)
-│   ├── src/
-│   │   ├── auth.ts            # Session descriptor (no gating)
-│   │   ├── server.ts          # Server factory + skills catalog
-│   │   ├── index.ts           # stdio entry
-│   │   ├── http.ts            # Streamable HTTP entry
-│   │   └── cards/             # One folder per Playing Card
-│   ├── scripts/               # Build bundler + protocol probe
-│   └── Dockerfile             # Build from repo root
+├── servers/                   # 👈 MCP servers (MIT, free, one package each)
+│   ├── fluentcart-developer/
+│   │   ├── src/
+│   │   │   ├── auth.ts        # Session descriptor (no gating)
+│   │   │   ├── server.ts      # Server factory + skills catalog
+│   │   │   ├── index.ts       # stdio entry
+│   │   │   ├── http.ts        # Streamable HTTP entry
+│   │   │   └── cards/         # This package's tools
+│   │   ├── scripts/           # Skill bundler + stdio protocol probe
+│   │   └── Dockerfile         # Build from repo root
+│   └── lemonsqueezy-developer/
+│       └── …                  # Same layout, Lemon Squeezy tools
 └── skills/                    # 👈 Skill content (MIT, public)
-    ├── fluentcart-developer/  # Card 1
+    ├── fluentcart-developer/
     │   ├── SKILL.md
     │   ├── references/
     │   └── examples/
-    └── lemonsqueezy-developer/ # Card 2
+    └── lemonsqueezy-developer/
         ├── SKILL.md
         └── references/
 ```

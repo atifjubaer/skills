@@ -29,12 +29,16 @@ jobs:
       - name: Check the published package contents
         run: node scripts/check-package.mjs
 
-  server:
-    name: MCP server build and protocol probe
+  servers:
+    name: Build and probe ${{ matrix.package }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [fluentcart-developer, lemonsqueezy-developer]
     defaults:
       run:
-        working-directory: server
+        working-directory: servers/${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,14 +46,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: servers/${{ matrix.package }}/package-lock.json
 
       - run: npm ci
 
       - name: Typecheck and build
         run: npm run build
 
-      - name: Protocol, tier-gating and skills catalog probe
+      - name: Protocol, tool and skills catalog probe
         run: npm run verify
 
   docker:
@@ -59,12 +63,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build image from repo root
-        run: docker build -f server/Dockerfile -t fastr-mcp-suite .
+        run: docker build -f servers/fluentcart-developer/Dockerfile -t fluentcart-developer .
 
       - name: Boot container and hit /health
         run: |
-          docker run -d --name suite -p 8080:8080 \
-            -e ALLOWED_HOSTS=localhost,127.0.0.1 fastr-mcp-suite
+          docker run -d --name fluentcart -p 8080:8080 \
+            -e ALLOWED_HOSTS=localhost,127.0.0.1 fluentcart-developer
           for i in $(seq 1 20); do
             if curl -fsS http://127.0.0.1:8080/health; then exit 0; fi
             sleep 1
@@ -86,7 +90,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: servers/fluentcart-developer/package-lock.json
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -126,19 +130,19 @@ jobs:
           mkdir -p /tmp/dotnet && cd /tmp/dotnet
           dotnet new classlib -f net8.0 --force >/dev/null
           rm -f Class1.cs
-          cp "$GITHUB_WORKSPACE/server/samples-out/LicenseClient.cs" .
+          cp "$GITHUB_WORKSPACE/servers/fluentcart-developer/samples-out/LicenseClient.cs" .
           dotnet build -c Release --nologo
 
       - name: Compile Java
-        run: javac -Xlint:all -d /tmp/jout server/samples-out/FastrLicense.java
+        run: javac -Xlint:all -d /tmp/jout servers/fluentcart-developer/samples-out/FastrLicense.java
 
       - name: Lint PHP
-        run: php -l server/samples-out/FastrLicense.php
+        run: php -l servers/fluentcart-developer/samples-out/FastrLicense.php
 
       - name: Compile Go
         run: |
           mkdir -p /tmp/gocheck && cd /tmp/gocheck
-          cp "$GITHUB_WORKSPACE/server/samples-out/LicenseClient.go" .
+          cp "$GITHUB_WORKSPACE/servers/fluentcart-developer/samples-out/LicenseClient.go" .
           go mod init sample >/dev/null 2>&1 || true
           go vet ./...
           go build ./...
@@ -147,7 +151,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libcurl4-openssl-dev libssl-dev
-          gcc -fsyntax-only -Wall -Wextra server/samples-out/fastr_license.c
+          gcc -fsyntax-only -Wall -Wextra servers/fluentcart-developer/samples-out/fastr_license.c
 
   sdk-compile-extra:
     name: Generated clients compile (Kotlin, Swift)
@@ -168,7 +172,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: servers/fluentcart-developer/package-lock.json
 
       - uses: actions/setup-java@v4
         if: matrix.lang == 'kotlin'
@@ -191,8 +195,8 @@ jobs:
           curl -fsSL -o /tmp/kotlin.zip https://github.com/JetBrains/kotlin/releases/download/v2.0.21/kotlin-compiler-2.0.21.zip
           unzip -q /tmp/kotlin.zip -d /tmp
           curl -fsSL -o /tmp/json.jar https://repo1.maven.org/maven2/org/json/json/20240303/json-20240303.jar
-          /tmp/kotlinc/bin/kotlinc -classpath /tmp/json.jar -d /tmp/kout.jar server/samples-out/LicenseClient.kt
+          /tmp/kotlinc/bin/kotlinc -classpath /tmp/json.jar -d /tmp/kout.jar servers/fluentcart-developer/samples-out/LicenseClient.kt
 
       - name: Compile Swift
         if: matrix.lang == 'swift'
-        run: swiftc -typecheck server/samples-out/LicenseClient.swift
+        run: swiftc -typecheck servers/fluentcart-developer/samples-out/LicenseClient.swift

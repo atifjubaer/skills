@@ -9,7 +9,7 @@ __pycache__/
 *.log
 
 # Generated client samples (scripts/gen-samples.mjs)
-server/samples-out/
+servers/*/samples-out/
 
 # FastrMemory agent state — local only, never published
 .fastr/

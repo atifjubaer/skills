@@ -7,18 +7,18 @@
 //   builder:  COPY package*.json ./  ->  RUN <build.install>  ->  COPY . .  ->  RUN <build.command>
 //   runtime:  COPY --from=builder /app/package*.json ./  ->  /app/node_modules  ->  /app/dist
 //
-// This repository is a monorepo: the server lives in server/ and compiles to
-// server/dist. The runtime stage only picks up /app/dist and /app/node_modules,
+// This repository is a monorepo: the server lives in servers/fluentcart-developer/ and compiles to
+// servers/fluentcart-developer/dist. The runtime stage only picks up /app/dist and /app/node_modules,
 // so the build has to move them up — and replace the root package.json with the
 // server's, which carries "type": "module"; the skill CLI manifest does not, and
 // the compiled ESM would refuse to load under it.
 //
-// The uploaded tree also carries server/node_modules, because MCPize's tarball
+// The uploaded tree also carries servers/fluentcart-developer/node_modules, because MCPize's tarball
 // filter compares "/"-separated patterns against "\"-separated relative paths on
 // Windows, so only top-level directory names are excluded. Those modules were
 // installed on another platform and their .bin shims have no execute bit on
 // Linux (`sh: tsc: Permission denied`), so the image build discards them and
-// installs from server/package-lock.json instead.
+// installs from servers/fluentcart-developer/package-lock.json instead.
 //
 // `mcpize deploy` also runs build.command in the working tree for its local build
 // check, where staging would clobber the repository's own package.json and
@@ -30,7 +30,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { join } from 'node:path';
 
 const root = process.cwd();
-const serverDir = join(root, 'server');
+const serverDir = join(root, 'servers/fluentcart-developer');
 const inImage = !existsSync(join(root, '.git'));
 
 // execSync rather than execFileSync: Node refuses to spawn npm.cmd without a
@@ -51,8 +51,8 @@ if (!inImage) {
 }
 
 for (const [label, dir] of [
-  ['server/dist', join(serverDir, 'dist')],
-  ['server/node_modules', join(serverDir, 'node_modules')],
+  ['servers/fluentcart-developer/dist', join(serverDir, 'dist')],
+  ['servers/fluentcart-developer/node_modules', join(serverDir, 'node_modules')],
 ]) {
   if (!existsSync(dir)) {
     console.error(`[mcpize-build] missing ${label} — the server build did not produce it.`);
@@ -73,11 +73,11 @@ cpSync(join(serverDir, 'dist'), join(root, 'dist'), { recursive: true });
 cpSync(join(serverDir, 'node_modules'), join(root, 'node_modules'), { recursive: true });
 
 if (!existsSync(join(root, 'dist', 'http.js'))) {
-  console.error('[mcpize-build] dist/http.js was not emitted — check server/tsconfig.json.');
+  console.error('[mcpize-build] dist/http.js was not emitted — check servers/fluentcart-developer/tsconfig.json.');
   process.exit(1);
 }
 if (!existsSync(join(root, 'dist', 'skills'))) {
-  console.error('[mcpize-build] dist/skills is missing — server/scripts/copy-skills.mjs did not run.');
+  console.error('[mcpize-build] dist/skills is missing — servers/fluentcart-developer/scripts/copy-skills.mjs did not run.');
   process.exit(1);
 }
 if (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).type !== 'module') {
@@ -86,7 +86,7 @@ if (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).type !== 'modul
 }
 
 // MCPize's generated image entrypoint is `node dist/<entry minus .ts>`, i.e.
-// /app/dist/server/src/http.js — it does not always honour startCommand.command.
+// /app/dist/servers/fluentcart-developer/src/http.js — it does not always honour startCommand.command.
 // Deployment 9689c123 failed with exactly that missing module while dist/http.js
 // sat next to it, so emit a one-line re-export at the path the entry derives to.
 // If MCPize starts honouring startCommand again, this file is simply unused.
