@@ -31,19 +31,32 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const serverDir = join(root, 'servers/fluentcart-developer');
-const inImage = !existsSync(join(root, '.git'));
+
+// This used to be `!existsSync(root/.git)`, which was wrong: MCPize also runs
+// this script locally as a pre-deploy build check, and a slimmed upload
+// deliberately moves .git aside — so the check matched a local checkout and the
+// staging branch below overwrote the repo's package.json and replaced its
+// node_modules with the server's. Require the image workdir as well: MCPize
+// builds at /app, and a Windows checkout can never be that path.
+const normalisedRoot = root.replace(/\\/g, '/');
+const inImage = !existsSync(join(root, '.git')) && /^\/app(\/|$)/.test(normalisedRoot);
 
 // execSync rather than execFileSync: Node refuses to spawn npm.cmd without a
 // shell on Windows. Both cmd.exe and /bin/sh handle a plain command string.
 const run = command => execSync(command, { cwd: root, stdio: 'inherit' });
 
+// The checkout sits under a path with spaces ("Skills Development AI"), and
+// npm reads everything after `--prefix` up to the next space, so the path has
+// to be quoted for both cmd.exe and /bin/sh.
+const quote = value => `"${value}"`;
+
 if (inImage) {
   console.log('[mcpize-build] image build — discarding the uploaded node_modules.');
   rmSync(join(serverDir, 'node_modules'), { recursive: true, force: true });
-  run('npm --prefix server ci --no-audit --no-fund');
+  run(`npm --prefix ${quote(serverDir)} ci --no-audit --no-fund`);
 }
 
-run('npm --prefix server run build');
+run(`npm --prefix ${quote(serverDir)} run build`);
 
 if (!inImage) {
   console.log('[mcpize-build] local checkout — server built, image staging skipped.');
@@ -86,14 +99,16 @@ if (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).type !== 'modul
 }
 
 // MCPize's generated image entrypoint is `node dist/<entry minus .ts>`, i.e.
-// /app/dist/servers/fluentcart-developer/src/http.js — it does not always honour startCommand.command.
-// Deployment 9689c123 failed with exactly that missing module while dist/http.js
-// sat next to it, so emit a one-line re-export at the path the entry derives to.
+// /app/dist/servers/fluentcart-developer/src/http.js — it does not always honour
+// startCommand.command. Deployment 9689c123 failed with exactly that missing
+// module while dist/http.js sat next to it, so emit a one-line re-export at the
+// path the entry derives to. The path follows `entry:` in mcpize.yaml and the
+// import climbs back to the dist root, so it changes whenever the package moves.
 // If MCPize starts honouring startCommand again, this file is simply unused.
+const shimDir = join(root, 'dist', 'servers', 'fluentcart-developer', 'src');
+mkdirSync(shimDir, { recursive: true });
 for (const name of ['http', 'index']) {
-  const shimDir = join(root, 'dist', 'server', 'src');
-  mkdirSync(shimDir, { recursive: true });
-  writeFileSync(join(shimDir, `${name}.js`), `import '../../${name}.js';\n`);
+  writeFileSync(join(shimDir, `${name}.js`), `import '../../../${name}.js';\n`);
 }
 
 console.log('[mcpize-build] staged dist/ and node_modules/ at the image root.');
