@@ -49,9 +49,10 @@ Deep engineering guidance for SaaS and digital download monetization:
 
 ---
 
-## Pair with Fastr MCP Suite
-For live payment gateway code generation, schema validation, and database querying inside Claude, install our companion MCP server on MCPize:
-👉 [Fastr MCP Suite on MCPize](https://mcpize.com/mcp/fastr-mcp-suite)
+## Pair with the MCP servers
+For live schema lookup and boilerplate generation inside Claude, connect the companion MCP server:
+👉 **[fluentcart-developer on MCPize](https://mcpize.com/mcp/fluentcart-developer)**
+👉 `npx -y fluentcart-developer`
 ```
 
 ## 4. The Request (Demo Prompt)

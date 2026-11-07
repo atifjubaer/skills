@@ -23,9 +23,10 @@ Complete technical reference, architectural manual, and guidance system for inte
 - **Software License Engine:** License activation, site verification, deactivation, and seat limits.
 - **Lemon.js Checkout Overlays:** Embedded modal checkout implementation and event listener callbacks.
 
-### Pair with Fastr MCP Suite:
-For live signature verification tools and remote license validation endpoints, connect our companion MCP server on MCPize:
-👉 **[Fastr MCP Suite on MCPize](https://mcpize.com/mcp/fastr-mcp-suite)**
+### Pair with the Lemon Squeezy Developer MCP server:
+For live signature verification and remote licence validation inside Claude, connect the companion MCP server:
+👉 **[lemonsqueezy-developer on npm](https://www.npmjs.com/package/lemonsqueezy-developer)**
+👉 `npx -y lemonsqueezy-developer`
 ```
 
 ## Step 3: See it in Action (Demo)

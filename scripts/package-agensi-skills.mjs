@@ -249,9 +249,10 @@ The definitive developer knowledge base and architecture manual for **FluentCart
 - **Shipping & Surcharges:** Dynamic shipping carriers, custom fee surcharges, and ghost product handling.
 - **REST API Reference:** Admin and customer profile endpoints, schema payloads, and authentication.
 
-### Pair with Fastr MCP Suite:
-For live payment gateway code generation and database querying inside Claude, install our companion MCP server on MCPize:
-👉 **[Fastr MCP Suite on MCPize](https://mcpize.com/mcp/fastr-mcp-suite)**
+### Pair with the FluentCart Developer MCP server:
+For live hook search, schema lookup and boilerplate generation inside Claude, connect the companion MCP server — hosted, or run it locally with no account:
+👉 **[fluentcart-developer on MCPize](https://mcpize.com/mcp/fluentcart-developer)**
+👉 `npx -y fluentcart-developer`
 \`\`\`
 
 ## Step 3: See it in Action (Demo)
@@ -344,9 +345,10 @@ Complete technical reference, architectural manual, and guidance system for inte
 - **Software License Engine:** License activation, site verification, deactivation, and seat limits.
 - **Lemon.js Checkout Overlays:** Embedded modal checkout implementation and event listener callbacks.
 
-### Pair with Fastr MCP Suite:
-For live signature verification tools and remote license validation endpoints, connect our companion MCP server on MCPize:
-👉 **[Fastr MCP Suite on MCPize](https://mcpize.com/mcp/fastr-mcp-suite)**
+### Pair with the FluentCart Developer MCP server:
+For live signature verification and remote licence validation inside Claude, connect the companion MCP server:
+👉 **[fluentcart-developer on MCPize](https://mcpize.com/mcp/fluentcart-developer)**
+👉 `npx -y fluentcart-developer`
 \`\`\`
 
 ## Step 3: See it in Action (Demo)
