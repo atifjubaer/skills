@@ -47,7 +47,16 @@ const inImage = /^\/app(\/|$)/.test(normalisedRoot);
 
 // execSync rather than execFileSync: Node refuses to spawn npm.cmd without a
 // shell on Windows. Both cmd.exe and /bin/sh handle a plain command string.
-const run = command => execSync(command, { cwd: root, stdio: 'inherit' });
+// The MCPize build is the paid tier: it includes the premium references that
+// the public npm build withholds. Setting it here rather than in the manifest's
+// build command keeps it out of a shell string, which has to survive both
+// cmd.exe and /bin/sh.
+const run = command =>
+  execSync(command, {
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...process.env, FASTR_INCLUDE_PREMIUM: '1' }
+  });
 
 // The checkout sits under a path with spaces ("Skills Development AI"), and
 // npm reads everything after `--prefix` up to the next space, so the path has

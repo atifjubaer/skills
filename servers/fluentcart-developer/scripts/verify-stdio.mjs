@@ -7,13 +7,20 @@
 // the opposite assertion: an anonymous session must see every tool.
 import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverRoot = path.resolve(__dirname, '..');
 const entry = path.join(serverRoot, 'dist', 'index.js');
+/**
+ * Premium references ship to MCPize and never to npm. A trimmed build is
+ * correct, not broken — so the add-on assertions are skipped when the file is
+ * absent, rather than failing and blocking a publish that is meant to be
+ * trimmed. Absence is checked, never assumed.
+ */
+const bundled = name => existsSync(path.join(serverRoot, 'dist', 'skills', 'fluentcart-developer', 'references', name));
 const pkg = JSON.parse(readFileSync(path.join(serverRoot, 'package.json'), 'utf8'));
 
 const results = [];
@@ -192,7 +199,9 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
     });
     check('reference reader rejects traversal', traversal.result?.isError === true);
 
-    {
+    if (!bundled('fastr-addon-hooks.md')) {
+      console.log('SKIP  add-on hooks — fastr-addon-hooks.md is not in this build (public/npm build)');
+    } else {
       // The add-on ships its own hooks and they appear in none of the core
       // reference files. fc_search_hooks read only the core set, so all 35 of
       // them were documented nowhere and unsearchable.
@@ -204,7 +213,9 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       );
     }
 
-    {
+    if (!bundled('fastr-addon-schema.md')) {
+      console.log('SKIP  add-on tables — fastr-addon-schema.md is not in this build (public/npm build)');
+    } else {
       // The add-on keeps its own tables. fc_get_db_schema read only the core
       // schema file, so all five were unqueryable.
       const text = await call(s, 'fc_get_db_schema', { table: 'fastr_trial_registry' });
