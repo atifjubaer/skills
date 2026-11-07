@@ -15,7 +15,8 @@
     "check:skills": "node scripts/validate-skills.mjs",
     "check:package": "node scripts/check-package.mjs",
     "ci": "npm run check:skills && npm run check:package && npm run check:parity",
-    "check:parity": "node scripts/check-server-parity.mjs"
+    "check:parity": "node scripts/check-server-parity.mjs",
+    "deploy:mcpize": "node scripts/deploy-mcpize.mjs"
   },
   "repository": {
     "type": "git",
