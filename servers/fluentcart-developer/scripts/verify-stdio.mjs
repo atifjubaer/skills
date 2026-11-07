@@ -224,6 +224,43 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
   }
 }
 
+
+// ------------------------------------------------------------ HTTP transport
+// The stdio probe above never loads `http.ts`, which is exactly how both
+// packages shipped a /health endpoint that still called itself the retired
+// suite and advertised both cards. This boots the real HTTP entry and reads
+// back what it reports.
+{
+  const port = 8100 + (process.pid % 400);
+  const child = spawn(process.execPath, [path.join(serverRoot, "dist", "http.js")], {
+    cwd: serverRoot,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, PORT: String(port) }
+  });
+  const deadline = Date.now() + 15000;
+  let body = null;
+  try {
+    while (Date.now() < deadline) {
+      try {
+        const res = await fetch("http://127.0.0.1:" + port + "/health");
+        if (res.ok) { body = await res.json(); break; }
+      } catch {
+        // not listening yet
+      }
+      await new Promise(r => setTimeout(r, 250));
+    }
+    check("http: /health reachable", body !== null);
+    if (body) {
+      check("http: /health names this package", body.server === "fluentcart-developer", body.server);
+      check("http: /health reports its own card", body.card === "fluentcart", body.card);
+      check("http: /health version matches package.json", body.version === pkg.version, String(body.version));
+      check("http: /health advertises no other card", body.cards === undefined, JSON.stringify(body.cards));
+    }
+  } finally {
+    child.kill();
+  }
+}
+
 const failed = results.filter(r => !r.pass);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 process.exit(failed.length === 0 ? 0 : 1);

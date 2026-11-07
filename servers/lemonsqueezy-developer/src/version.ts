@@ -9,4 +9,4 @@
  * two disagree, and `prepublishOnly` runs verify, so a drifted release cannot
  * be published.
  */
-export const SERVER_VERSION = '1.0.0';
+export const SERVER_VERSION = '1.0.1';

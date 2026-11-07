@@ -33,18 +33,15 @@ app.all('/mcp', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    server: 'fastr-dev-suite',
+    server: 'fluentcart-developer',
     version: SERVER_VERSION,
     protocol: '2026-07-28',
     licence: 'MIT',
     price: 'free',
-    cards: [
-      'fluentcart-developer',
-      'lemonsqueezy-developer'
-    ]
+    card: 'fluentcart'
   });
 });
 
 app.listen(port, () => {
-  console.log(`[Fastr MCP Suite] Listening on http://0.0.0.0:${port}/mcp`);
+  console.log(`[fluentcart-developer] Listening on http://0.0.0.0:${port}/mcp`);
 });
