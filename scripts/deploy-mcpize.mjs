@@ -36,11 +36,18 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const stashRoot = path.join(path.dirname(repoRoot), '.mcpize-stash');
 const dryRun = process.argv.includes('--dry-run');
 
-/** Directories that must not be in the upload. Each is stashed and restored. */
+/**
+ * Directories that must not be in the upload. Each is stashed and restored.
+ *
+ * `rebuildable` marks a directory the deploy's own build check will recreate
+ * from the lockfile. When that happens the stash is a duplicate, not a
+ * conflict — discarding it is correct, and warning about it every deploy would
+ * train you to ignore the warning that matters.
+ */
 const STASH = [
-  '.git',
-  'servers/fluentcart-developer/node_modules',
-  'servers/lemonsqueezy-developer/node_modules'
+  { path: '.git', rebuildable: false },
+  { path: 'servers/fluentcart-developer/node_modules', rebuildable: true },
+  { path: 'servers/lemonsqueezy-developer/node_modules', rebuildable: true }
 ];
 
 const moved = [];
@@ -56,17 +63,21 @@ const dirSize = dir => {
 
 function restore() {
   while (moved.length > 0) {
-    const { from, to } = moved.pop();
+    const { from, to, rebuildable } = moved.pop();
     try {
       if (!fs.existsSync(to)) continue;
 
       if (fs.existsSync(from)) {
-        // The deploy rebuilt this directory while it was stashed — the image
-        // build check runs `npm ci` in the same checkout. Renaming onto a
-        // populated directory would nest the stash inside it instead of
-        // restoring it (that is how a `node_modules/.mcpize-stash` copy once
-        // appeared), so keep both and say so loudly rather than merge silently.
+        // The deploy rebuilt this directory while it was stashed — the build
+        // check runs `npm ci` in the same checkout. Renaming onto a populated
+        // directory would nest the stash inside it instead of restoring it
+        // (that is how a `node_modules/.skills-nm-fc` copy once appeared).
         const entries = fs.readdirSync(from);
+        if (entries.length > 0 && rebuildable) {
+          fs.rmSync(to, { recursive: true, force: true });
+          console.log(`[restore] ${path.relative(repoRoot, from)} was rebuilt by the deploy — discarded the stash`);
+          continue;
+        }
         if (entries.length > 0) {
           console.error(
             `[restore] LEFT IN STASH: ${path.relative(repoRoot, from)} already exists and is populated.\n` +
@@ -109,7 +120,8 @@ console.log(`[deploy] repo: ${repoRoot}`);
 console.log(`[deploy] before: ${dirSize(repoRoot)}`);
 
 if (dryRun) {
-  for (const rel of STASH) {
+  for (const entry of STASH) {
+    const rel = entry.path;
     const from = path.join(repoRoot, rel);
     console.log(
       fs.existsSync(from)
@@ -131,7 +143,7 @@ try {
     }
     const to = path.join(stashRoot, rel.replace(/[\\/]/g, '__'));
     fs.renameSync(from, to);
-    moved.push({ from, to });
+    moved.push({ from, to, rebuildable: entry.rebuildable });
     console.log(`[stash] ${rel} (${dirSize(to)})`);
   }
 
