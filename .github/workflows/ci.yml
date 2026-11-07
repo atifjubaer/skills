@@ -114,7 +114,7 @@ jobs:
           go-version: '1.22'
 
       - name: Build the server
-        working-directory: server
+        working-directory: servers/fluentcart-developer
         run: |
           npm ci
           npm run build
@@ -125,7 +125,7 @@ jobs:
         run: node scripts/gen-samples.mjs
 
       - name: Typecheck TypeScript
-        working-directory: server
+        working-directory: servers/fluentcart-developer
         run: npx tsc --noEmit --strict --target es2020 --module commonjs --moduleResolution node --skipLibCheck --types node samples-out/license.ts
 
       - name: Compile .NET
@@ -184,7 +184,7 @@ jobs:
           java-version: '17'
 
       - name: Build the server
-        working-directory: server
+        working-directory: servers/fluentcart-developer
         run: |
           npm ci
           npm run build
