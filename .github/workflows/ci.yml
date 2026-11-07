@@ -29,6 +29,9 @@ jobs:
       - name: Check the published package contents
         run: node scripts/check-package.mjs
 
+      - name: Guard the duplicated transport core
+        run: node scripts/check-server-parity.mjs
+
   servers:
     name: Build and probe ${{ matrix.package }}
     runs-on: ubuntu-latest
