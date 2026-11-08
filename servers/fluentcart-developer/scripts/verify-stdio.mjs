@@ -174,6 +174,14 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
     {
       const text = await call(s, 'fc_generate_device_licensing_boilerplate', {"platform":"tauri_rust","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
       check('call fc_generate_device_licensing_boilerplate', text.length > 500, text ? `${text.length} chars` : 'empty');
+      // keyring 3 ships no backend, so a bare keyring = "3" compiles and then
+      // silently fails to persist: a new device id every launch, one seat burnt
+      // each time, and deactivate() unable to release what it cannot find.
+      check(
+        'tauri: keyring backend is declared',
+        text.includes('features = ["windows-native"]'),
+        'windows-native / apple-native / sync-secret-service'
+      );
     }
     {
       const text = await call(s, 'fc_generate_trial_guard_boilerplate', {"platform":"python","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
@@ -182,6 +190,11 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
     {
       const text = await call(s, 'fc_generate_client_sdk', {"platform":"node","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
       check('call fc_generate_client_sdk', text.length > 500, text ? `${text.length} chars` : 'empty');
+      // The device contract needs a persisted identity, a clock guard and an
+      // offline grace window; a client without them burns a seat per launch.
+      check('node client: persists a device id', text.includes('export function deviceId'), 'deviceId()');
+      check('node client: clock guard', text.includes('clockIsSane'), 'clockIsSane()');
+      check('node client: offline grace', text.includes('isLicensedOffline'), 'isLicensedOffline()');
     }
     {
       const text = await call(s, 'fc_generate_native_client', {"platform":"java","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});

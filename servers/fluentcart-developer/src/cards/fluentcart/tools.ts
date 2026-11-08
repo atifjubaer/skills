@@ -534,8 +534,22 @@ ${subRouteCases}
 //   reqwest  = { version = "0.12", features = ["blocking", "json"] }
 //   serde    = { version = "1", features = ["derive"] }
 //   serde_json = "1"
-//   keyring  = "3"
 //   uuid     = { version = "1", features = ["v4"] }
+//
+//   # keyring 3 enables no backend by default. A bare keyring = "3" compiles
+//   # and even returns Ok from set_password(), but get_password() always
+//   # answers NoEntry. The device id and the stored licence then never
+//   # survive a restart: every launch registers a NEW device, which costs a
+//   # seat, and deactivate() cannot find its own state to give the seat back.
+//   # Declare the store for each platform you ship.
+//   [target.'cfg(target_os = "windows")'.dependencies]
+//   keyring = { version = "3", features = ["windows-native"] }
+//
+//   [target.'cfg(target_os = "macos")'.dependencies]
+//   keyring = { version = "3", features = ["apple-native"] }
+//
+//   [target.'cfg(target_os = "linux")'.dependencies]
+//   keyring = { version = "3", features = ["sync-secret-service"] }
 //
 // All functions are blocking: call them from tauri::async_runtime::spawn_blocking.
 
@@ -1871,18 +1885,112 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             {
               type: 'text',
               text: `${header('Node / Electron', 'src/license.ts')}
-import { createVerify } from "node:crypto";
+import { createVerify, randomUUID } from "node:crypto";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 const STORE = "${base}";
 const PRODUCT_ID = ${productId};
+
+/**
+ * Where the device id and the last verdict live. In Electron, point this at
+ * app.getPath("userData") before the first call.
+ */
+const DATA_DIR = process.env.FASTR_DATA_DIR || join(homedir(), ".${slug}");
+const DEVICE_FILE = join(DATA_DIR, "device-id");
+const STATE_FILE = join(DATA_DIR, "license.json");
+
+/** A backwards clock jump larger than this means the machine was moved. */
+const CLOCK_TOLERANCE_SECS = 300;
+/** How long a cached verdict survives without reaching the store. */
+const OFFLINE_GRACE_SECS = 7 * 24 * 60 * 60;
 
 export type LicenseState = {
   status: string;
   token?: string;
   entitlements?: number[];
-  expiresInDays?: number;
+  expiresInDays?: number | null;
   errorType?: string;
 };
+
+type StoredState = LicenseState & {
+  licenseKey: string;
+  deviceId: string;
+  variationTitle?: string;
+  expires?: string;
+  /** Server clock at the last successful call — the only time we trust. */
+  serverTimeUnix?: number;
+  /** Local clock at that same moment, used to detect a rollback. */
+  checkedAtLocal: number;
+};
+
+/**
+ * device://<uuid>, created once and kept.
+ *
+ * Deriving this from hardware is wrong: MAC addresses change, serials are not
+ * readable on every platform, and both can be cloned. Persist it, never
+ * regenerate it on update, and never let a failed write invent a new one —
+ * a new id is a new seat.
+ */
+export function deviceId(): string {
+  try {
+    const existing = readFileSync(DEVICE_FILE, "utf8").trim();
+    if (existing) return existing;
+  } catch {
+    /* first run */
+  }
+
+  const fresh = "device://" + randomUUID();
+  mkdirSync(DATA_DIR, { recursive: true });
+  writeFileSync(DEVICE_FILE, fresh, { mode: 0o600 });
+  return fresh;
+}
+
+export function loadState(): StoredState | null {
+  try {
+    return JSON.parse(readFileSync(STATE_FILE, "utf8")) as StoredState;
+  } catch {
+    return null;
+  }
+}
+
+function saveState(state: StoredState): void {
+  mkdirSync(DATA_DIR, { recursive: true });
+  writeFileSync(STATE_FILE, JSON.stringify(state), { mode: 0o600 });
+}
+
+/**
+ * False when the local clock sits more than CLOCK_TOLERANCE_SECS behind the
+ * moment of the last check — the signature of someone trying to outlive an
+ * expiry. Forward jumps are not flagged: they only cost the user.
+ */
+export function clockIsSane(state: StoredState | null = loadState()): boolean {
+  if (!state || !state.checkedAtLocal) return true;
+  return Math.floor(Date.now() / 1000) - state.checkedAtLocal >= -CLOCK_TOLERANCE_SECS;
+}
+
+/** The online verdict, using the server-computed remaining days. */
+export function isLicensed(state: StoredState | null = loadState()): boolean {
+  if (!state) return false;
+  if (state.status !== "valid" && state.status !== "active") return false;
+  if (!clockIsSane(state)) return false;
+  // Server-computed: never do date math against the local clock.
+  if (typeof state.expiresInDays === "number") return state.expiresInDays >= 0;
+  return true; // lifetime
+}
+
+/**
+ * The verdict to use when the store cannot be reached. A tampered clock is
+ * refused outright; an untouched clock is trusted for OFFLINE_GRACE_SECS.
+ */
+export function isLicensedOffline(state: StoredState | null = loadState()): boolean {
+  if (!state) return false;
+  if (!clockIsSane(state)) return false;
+  const age = Math.floor(Date.now() / 1000) - state.checkedAtLocal;
+  if (age > OFFLINE_GRACE_SECS) return false;
+  return isLicensed(state);
+}
 
 async function call(verb: string, body: Record<string, string>) {
   const res = await fetch(STORE + "?fluent-cart=" + verb, {
@@ -1893,7 +2001,9 @@ async function call(verb: string, body: Record<string, string>) {
   return { http: res.status, json: await res.json() };
 }
 
-export async function activate(licenseKey: string, instanceId: string, fingerprint: string, email: string): Promise<LicenseState> {
+// instanceId defaults to the persisted device id, so a restart reuses the same
+// seat instead of registering a new device.
+export async function activate(licenseKey: string, fingerprint: string, email = "", instanceId = deviceId()): Promise<LicenseState> {
   const { json } = await call("activate_license", {
     item_id: String(PRODUCT_ID),
     license_key: licenseKey,
@@ -1908,31 +2018,61 @@ export async function activate(licenseKey: string, instanceId: string, fingerpri
 
   // FluentCart returns key_mismatch / invalid_activation as HTTP 200 with
   // success=true. Only status === "valid" means licensed.
-  return {
+  const state: StoredState = {
+    licenseKey,
+    deviceId: instanceId,
     status: json.status,
     token: json.license_token,
     entitlements: json.entitlements,
-    expiresInDays: json.expires_in_days,
-    errorType: json.error_type
+    expiresInDays: json.expires_in_days ?? null,
+    errorType: json.error_type,
+    variationTitle: json.variation_title,
+    expires: json.expires,
+    serverTimeUnix: json.server_time_unix,
+    checkedAtLocal: Math.floor(Date.now() / 1000)
   };
+  saveState(state);
+  return state;
 }
 
-export async function check(licenseKey: string, instanceId: string, fingerprint: string): Promise<LicenseState> {
+export async function check(licenseKey: string, fingerprint: string, instanceId = deviceId()): Promise<LicenseState> {
   const { json } = await call("check_license", {
     item_id: String(PRODUCT_ID),
     license_key: licenseKey,
     site_url: instanceId,
     device_fingerprint: fingerprint
   });
-  return { status: json.status, token: json.license_token, entitlements: json.entitlements };
+
+  const prev = loadState();
+  const state: StoredState = {
+    licenseKey,
+    deviceId: instanceId,
+    status: json.status ?? "unknown",
+    token: json.license_token ?? prev?.token,
+    entitlements: json.entitlements ?? prev?.entitlements,
+    expiresInDays: json.expires_in_days ?? prev?.expiresInDays ?? null,
+    variationTitle: json.variation_title ?? prev?.variationTitle,
+    expires: json.expires ?? prev?.expires,
+    serverTimeUnix: json.server_time_unix ?? prev?.serverTimeUnix,
+    checkedAtLocal: Math.floor(Date.now() / 1000)
+  };
+  saveState(state);
+  return state;
 }
 
-export async function deactivate(licenseKey: string, instanceId: string): Promise<void> {
+export async function deactivate(licenseKey: string, instanceId = deviceId()): Promise<void> {
   await call("deactivate_license", {
     item_id: String(PRODUCT_ID),
     license_key: licenseKey,
     site_url: instanceId
   });
+
+  // The device id stays: it is this machine's identity, not the licence's.
+  try {
+    rmSync(STATE_FILE);
+  } catch {
+    /* nothing cached */
+  }
 }
 
 export async function latestRelease(licenseKey: string, currentVersion: string, platform = "any") {
