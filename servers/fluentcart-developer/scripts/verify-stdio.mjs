@@ -195,6 +195,9 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       check('node client: persists a device id', text.includes('export function deviceId'), 'deviceId()');
       check('node client: clock guard', text.includes('clockIsSane'), 'clockIsSane()');
       check('node client: offline grace', text.includes('isLicensedOffline'), 'isLicensedOffline()');
+      // A refused activation is HTTP 200 with success:false and no status. A
+      // client that does not throw here ships unlocked.
+      check('node client: refuses a non-valid status', text.includes('Activation refused by the store'), 'throws');
     }
     {
       const text = await call(s, 'fc_generate_native_client', {"platform":"java","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});

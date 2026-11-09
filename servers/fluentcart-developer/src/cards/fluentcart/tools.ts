@@ -2016,8 +2016,16 @@ export async function activate(licenseKey: string, fingerprint: string, email = 
     server_version: "1.0.0"
   });
 
-  // FluentCart returns key_mismatch / invalid_activation as HTTP 200 with
-  // success=true. Only status === "valid" means licensed.
+  // A refused activation arrives as HTTP 200 with success:false, an error_type
+  // and NO status field at all. Reading json.status, seeing undefined and carrying
+  // on is how a client ships unlocked -- throw instead, and surface the store's
+  // own message so the user knows what to do.
+  const status = String(json.status ?? "");
+
+  if (status !== "valid" && status !== "active") {
+    throw new Error(json.message || json.error_type || "Activation refused by the store.");
+  }
+
   const state: StoredState = {
     licenseKey,
     deviceId: instanceId,
