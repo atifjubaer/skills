@@ -21,7 +21,13 @@ type SkillCatalog = Awaited<ReturnType<typeof loadSkills>>;
 let catalogPromise: Promise<SkillCatalog | null> | undefined;
 
 function skillsCatalog(): Promise<SkillCatalog | null> {
-  catalogPromise ??= loadSkills(skillsRoot()).catch((err: any) => {
+  catalogPromise ??= loadSkills(skillsRoot(), {
+    // The FluentCart corpus is 588 documentation pages plus FastrSoft's own
+    // references — 604 files, past the SDK's default ceiling of 512. That
+    // ceiling is a publication-size heuristic, not a protocol limit, so raise
+    // it rather than ship a server that warns on every boot.
+    limits: { files: 4096, bytes: 64 * 1024 * 1024 }
+  }).catch((err: any) => {
     console.error(`[Warning] Could not load skills catalog: ${err.message}`);
     catalogPromise = undefined;
     return null;
@@ -69,6 +75,7 @@ const TOOLS = [
   "fc_search_hooks",
   "fc_get_db_schema",
   "fc_get_reference",
+  "fc_search_docs",
   "fc_generate_payment_gateway_boilerplate",
   "fc_generate_licensing_boilerplate",
   "fc_generate_customer_endpoint_boilerplate",

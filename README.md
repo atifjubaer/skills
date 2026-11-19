@@ -1,7 +1,6 @@
 # Atif Jubaer's Agent Skills Repository
 
 [![fluentcart-developer](https://img.shields.io/npm/v/fluentcart-developer.svg?label=fluentcart-developer)](https://www.npmjs.com/package/fluentcart-developer)
-[![lemonsqueezy-developer](https://img.shields.io/npm/v/lemonsqueezy-developer.svg?label=lemonsqueezy-developer)](https://www.npmjs.com/package/lemonsqueezy-developer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive, platform-agnostic knowledge base, instruction set, and CLI toolkit for FluentCart theme, plugin, shipping, and payment gateway development.
@@ -18,42 +17,74 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **15 REST API Modules (Core & Pro):** Orders, Products, Customers, Coupons, Subscriptions, Tax, Shipping, Settings, Email Notifications, Reports, Integrations, Files, Labels & Attributes, Dashboard & Utilities, Public Shop, Checkout, Customer Profile, Software Licensing (Pro), Roles & Permissions (Pro), Order Bumps (Pro).
   - **6 Runnable Example Projects:** Custom Addon plugin, Fee Surcharge plugin, Payment Gateway plugin, Shipping Carrier, Starter Child Theme, and Software Licensing SDK plugin.
 
-- **`Lemon Squeezy Developer`** (`lemonsqueezy-developer`):
-  - **Complete JSON:API Manual:** Stores, Products, Variants, Prices, Files, Orders, and Subscriptions specifications.
-  - **HMAC-SHA256 Webhook Security:** Timing-safe raw request signature verifiers for Node.js, Next.js App Router, and PHP.
-  - **Subscriptions Lifecycle:** State transitions, pausing, cancellations, dunning retries, and hosted customer portal URLs.
-  - **Software Licensing:** Public `/activate`, `/validate`, and `/deactivate` endpoints for desktop software and plugins.
-  - **Dynamic Checkouts & Lemon.js:** API checkout generation, in-app modal overlays, and custom metadata tracking.
-  - **3 Runnable Example Projects:** Next.js App Router webhook route, WordPress licensing integration plugin, and standalone Lemon.js checkout overlay.
-
-- **MCP servers** — each skill ships with its own, so installing one never drags in the other:
+- **MCP server** — the skill ships with its own, so installing it never drags in a second product:
   - **[`fluentcart-developer`](./servers/fluentcart-developer)** — 11 tools for FluentCart.
-  - **[`lemonsqueezy-developer`](./servers/lemonsqueezy-developer)** — 6 tools for Lemon Squeezy.
-  - Both are free for every client: no licence key, account, or request quota.
+  - It is free for every client: no licence key, account, or request quota.
 
 ---
 
 ## MCP Servers
 
-Skills tell the model what to do. Each server gives it the tools to do it — without loading a single large markdown file into context. They are separate packages on purpose: the FluentCart knowledge tree is 1.6 MB and 3,800 lines of tooling, and a Lemon Squeezy user should not have to carry it.
+Skills tell the model what to do. The server gives it the tools to do it — without loading a single large markdown file into context. It ships as its own package: the FluentCart knowledge tree is 1.6 MB and 3,800 lines of tooling, and a model should not have to carry all of it to answer one question.
 
 | Server | Tools |
 | --- | --- |
 | **[`fluentcart-developer`](./servers/fluentcart-developer)** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate`, `fc_generate_customer_endpoint_boilerplate`, `fc_generate_device_licensing_boilerplate`, `fc_generate_trial_guard_boilerplate`, `fc_generate_client_sdk`, `fc_generate_native_client`, `get_info` |
-| **[`lemonsqueezy-developer`](./servers/lemonsqueezy-developer)** | `ls_search_docs`, `ls_get_schema`, `ls_get_reference`, `ls_verify_webhook`, `ls_validate_license`, `get_info` |
 
-Every session also exposes the skills catalog itself (`skills/list`, `resources/read`), so the agent reads one reference file on demand instead of the whole knowledge base. `fc_get_reference` and `ls_get_reference` open any file under a skill's `references/` folder by name, or a single heading inside it — that is how the 57 FluentCart and 7 Lemon Squeezy reference files reach an MCP client that never loads them wholesale.
+Every session also exposes the skills catalog itself (`skills/list`, `resources/read`). Three tools reach the documentation directly, which is how 588 pages stay out of the context window:
+
+| Tool | What it answers |
+| --- | --- |
+| `fc_search_docs` | Full-text across all 588 pages. `query` words must all match; optional `prefix` scopes to `restapi/`, `database/`, `hooks/`, `modules/` |
+| `fc_get_reference` | One page by path (`restapi/operations/orders/void-renewal.md`), or a single heading inside it |
+| `fc_get_db_schema` | One `wp_fct_*` table, read from `database/schema.md` |
+
+### Running it locally, with no marketplace
+
+The server is stdio-first, so any harness that can launch a process can use it — Claude Code, Claude Desktop, Cursor, Windsurf, OpenCode, DeepSeek. No account, no key, no quota:
 
 ```bash
-npx -y fluentcart-developer      # stdio: no install, no build
-npx -y lemonsqueezy-developer    # stdio: no install, no build
-
-cd servers/fluentcart-developer && npm install && npm run build
-node dist/index.js               # stdio: Claude Code, Cursor, Windsurf
-node dist/http.js                # Streamable HTTP on :8080: MCPize, Railway, Render, Fly.io
+npx -y fluentcart-developer       # stdio: no install, no build
 ```
 
-Every tool is registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota — a client that can reach a server can call everything it ships. `npm run verify` in either package boots the built server over stdio and asserts a real call against every tool.
+From a checkout:
+
+```bash
+cd servers/fluentcart-developer && npm install && npm run build
+node dist/index.js                # stdio
+node dist/http.js                 # Streamable HTTP on :8080
+```
+
+Register it with Claude Code in one line:
+
+```bash
+claude mcp add fluentcart -- npx -y fluentcart-developer
+```
+
+Every tool is registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota. `npm run verify` boots the built server over stdio and asserts a real call against every tool.
+
+---
+
+## Keeping the documentation current
+
+`skills/fluentcart-developer/references/` is a **generated mirror of <https://dev.fluentcart.com>** — 588 Markdown pages laid out exactly as the site lays them out, plus an `INDEX.md`. It is regenerated, never hand-edited:
+
+```bash
+npm run sync:docs        # re-capture every page
+```
+
+`scripts/sync-fluentcart-docs.mjs` does this without a browser and without a single click:
+
+1. **Inventory** — reads `/hashmap.json` (585 source pages, authoritative) and the `__VP_SITE_DATA__` sidebar config embedded in any page (566 canonical links). Both are VitePress build artifacts, so no page is guessed at and no unlinked page is missed.
+2. **URL resolution** — sidebar links win, because `payment_setting_fields.md` is one filename and cannot be recovered by turning `_` into `/`. A small override table covers the last few: `database_readme.md` is served at `/database/README`, and `/engineering/` is a hand-built landing page.
+3. **Capture** — fetches each page and slices out `div.vp-doc`, the fully server-rendered body.
+4. **Convert** — HTML to Markdown: headings, fenced code with its language tag, GFM tables, lists, links, VitePress admonitions. Internal `.html` links are rewritten to `.md` so they resolve offline.
+5. **OpenAPI fallback** — the 449 `restapi/operations/*` pages are shells, because VitePress renders them client-side and the HTML ships an empty body. When a capture comes back under 200 bytes the script fetches `/openapi/public/<path>.json` and renders the real endpoint: method, route, parameters table, request body and every response code.
+6. **Manifest** — `.vendor-docs/fluentcart-dev/_manifest.json` records url, status, bytes and a sha256 for every page, so two syncs can be diffed.
+
+Output lands in `.vendor-docs/` (git-ignored) and is copied into `skills/fluentcart-developer/references/`. The five FastrSoft-authored files listed in `premium-references.json` are preserved through every sync and withheld from public builds.
+
+The Agensi listing is a **curated subset** (`AGENSI_SECTIONS` in `scripts/package-agensi-skills.mjs`), because that marketplace rejects archives over 50 files: hooks, modules, payment integration, guides and a generated index — 50 files exactly.
 
 **Licensing:** everything in this repository is MIT. Fork it, host it, sell support around it; the only ask is that you keep the copyright notice.
 
@@ -154,26 +185,21 @@ skills/
 │   ├── sample-custom-payment-gateway/
 │   ├── sample-shipping-carrier/
 │   └── fluentcart-starter-child-theme/
-├── servers/                   # 👈 MCP servers (MIT, free, one package each)
-│   ├── fluentcart-developer/
-│   │   ├── src/
-│   │   │   ├── auth.ts        # Session descriptor (no gating)
-│   │   │   ├── server.ts      # Server factory + skills catalog
-│   │   │   ├── index.ts       # stdio entry
-│   │   │   ├── http.ts        # Streamable HTTP entry
-│   │   │   └── cards/         # This package's tools
-│   │   ├── scripts/           # Skill bundler + stdio protocol probe
-│   │   └── Dockerfile         # Build from repo root
-│   └── lemonsqueezy-developer/
-│       └── …                  # Same layout, Lemon Squeezy tools
+├── servers/                   # 👈 MCP server (MIT, free)
+│   └── fluentcart-developer/
+│       ├── src/
+│       │   ├── auth.ts        # Session descriptor (no gating)
+│       │   ├── server.ts      # Server factory + skills catalog
+│       │   ├── index.ts       # stdio entry
+│       │   ├── http.ts        # Streamable HTTP entry
+│       │   └── cards/         # This package's tools
+│       ├── scripts/           # Skill bundler + stdio protocol probe
+│       └── Dockerfile         # Build from repo root
 └── skills/                    # 👈 Skill content (MIT, public)
-    ├── fluentcart-developer/
-    │   ├── SKILL.md
-    │   ├── references/
-    │   └── examples/
-    └── lemonsqueezy-developer/
+    └── fluentcart-developer/
         ├── SKILL.md
-        └── references/
+        ├── references/
+        └── examples/
 ```
 
 ---

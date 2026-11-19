@@ -21,7 +21,7 @@ const W = SIZE * SS;
 
 const BG = [15, 23, 42]; // slate-900
 const CARD_A = [99, 102, 241]; // indigo-500 — FluentCart
-const CARD_B = [245, 158, 11]; // amber-500 — Lemon Squeezy
+const CARD_B = [245, 158, 11]; // amber-500 — second accent
 
 /** Rounded box spanning [x0,y0]-[x1,y1] with corner radius r. */
 function inRoundedBox(px, py, x0, y0, x1, y1, r) {

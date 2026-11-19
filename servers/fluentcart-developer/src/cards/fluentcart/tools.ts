@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { skillRefs } from '../../paths.js';
-import { listReferences, readReference } from '../../reference-reader.js';
+import { listReferences, readReference, searchReferences } from '../../reference-reader.js';
 import { nativeClientTemplate } from './templates-native.js';
 
 export function registerFluentCartTools(server: McpServer): void {
@@ -92,7 +92,7 @@ export function registerFluentCartTools(server: McpServer): void {
       try {
         // Two schema sources: FluentCart core (wp_fct_*) and the Fastr Devices
         // add-on's own wp_fastr_* tables, which live in no core file.
-        const schemaFile = path.join(FC_REFS_DIR, 'database-schema-reference.md');
+        const schemaFile = path.join(FC_REFS_DIR, 'database', 'schema.md');
         const addonFile = path.join(FC_REFS_DIR, 'fastr-addon-schema.md');
         if (!fs.existsSync(schemaFile)) {
           return { content: [{ type: 'text', text: 'Database schema reference not found.' }], isError: true };
@@ -100,7 +100,7 @@ export function registerFluentCartTools(server: McpServer): void {
 
         const wanted = table.toLowerCase();
         let match: string | undefined;
-        let source = 'database-schema-reference.md';
+        let source = 'database/schema.md';
 
         for (const file of [schemaFile, addonFile]) {
           if (!fs.existsSync(file)) continue;
@@ -120,7 +120,7 @@ export function registerFluentCartTools(server: McpServer): void {
             content: [{
               type: 'text',
               text:
-                `Table "${table}" not found in database-schema-reference.md or fastr-addon-schema.md. ` +
+                `Table "${table}" not found in database/schema.md or fastr-addon-schema.md. ` +
                 `The first documents every wp_fct_* table — try the name without the prefix, e.g. "orders", ` +
                 `"order_items", "customer_addresses". The second documents the add-on's wp_fastr_* tables: ` +
                 `fastr_releases, fastr_trial_registry, fastr_usage, fastr_webhooks, fastr_webhook_deliveries. ` +
@@ -196,6 +196,70 @@ export function registerFluentCartTools(server: McpServer): void {
       } catch (err: any) {
         return {
           content: [{ type: 'text', text: `Failed to read reference: ${err.message}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    'fc_search_docs',
+    {
+      description:
+        'Full-text search across all 588 FluentCart documentation pages — the 474 REST API ' +
+        'operations, 49 database models, 22 hook files, modules, guides and payment integration. ' +
+        'Use this when you know the keyword but not which page holds it, then read the hit with ' +
+        'fc_get_reference. Every word in the query must appear on the matching line.',
+      inputSchema: {
+        query: z
+          .string()
+          .describe('Words to find, e.g. "void renewal", "tax rate", "order bump", "license activation"'),
+        prefix: z
+          .string()
+          .optional()
+          .describe('Restrict to a path prefix: "restapi/", "database/", "hooks/", "modules/"'),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(20)
+          .describe('Maximum hits to return (default 20)')
+      },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ query, prefix, limit }) => {
+      try {
+        if (!fs.existsSync(FC_REFS_DIR)) {
+          return { content: [{ type: 'text', text: 'FluentCart references directory not found.' }], isError: true };
+        }
+
+        const { hits, scanned } = searchReferences(FC_REFS_DIR, query, { prefix, limit });
+        if (hits.length === 0) {
+          return {
+            content: [
+              { type: 'text', text: `No match for "${query}" across ${scanned} pages${prefix ? ` under ${prefix}` : ''}.` }
+            ]
+          };
+        }
+
+        const body = hits
+          .map((h) => `- ${h.file}:${h.line} — ${h.heading}\n    ${h.snippet}`)
+          .join('\n');
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text:
+                `${hits.length} hit(s) for "${query}" across ${scanned} pages.\n\n${body}\n\n` +
+                'Read one with fc_get_reference — pass the path before the colon as "file".'
+            }
+          ]
+        };
+      } catch (err: any) {
+        return {
+          content: [{ type: 'text', text: `Search failed: ${err.message}` }],
           isError: true
         };
       }

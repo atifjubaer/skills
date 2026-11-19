@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [fluentcart-developer, lemonsqueezy-developer]
+        package: [fluentcart-developer]
     defaults:
       run:
         working-directory: servers/${{ matrix.package }}

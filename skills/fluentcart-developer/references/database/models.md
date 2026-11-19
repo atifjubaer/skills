@@ -1,0 +1,404 @@
+# Database Model Basic
+
+## Introduction
+
+FluentCart ORM provides a beautiful, simple ActiveRecord implementation for working with database tables. Each database table has a corresponding "Model" which is used to interact with that table. Models allow you to query for data in db tables, as well as insert new records into the table.
+
+NOTE
+
+FluentCart offers helper functions and methods to interact with FluentCart's database so you may use those things instead of Models directly. We are documenting these for our internal usage and very-high level usage by 3rd-party developers.
+
+## Built-in FluentCart DB Models
+
+All the built-in database models are available at
+
+- `fluent-cart/app/Models/` — core models
+- `fluent-cart-pro/app/Models/` — a small number of Pro models, such as the extended `User`
+- `fluent-cart-pro/app/Modules/*/Models/` — most Pro models, grouped by the module that owns them
+
+Pro models that live under `app/Modules/`:
+
+| Model | Module | Table |
+| --- | --- | --- |
+| `License`, `LicenseActivation`, `LicenseSite`, `LicenseMeta` | Licensing | `fct_licenses`, `fct_license_activations`, `fct_license_sites`, `fct_license_meta` |
+| `StockAdjustment` | AdvancedInventory | `fct_stock_adjustments` |
+| `PricingRule`, `AppliedPricingRule` | DynamicPricing | `fct_pricing_rules`, `fct_applied_pricing_rules` |
+| `CurrencyRate` | MultiCurrency | `fct_currency_rates` |
+| `ReviewInteraction` | Reviews | `fct_review_interactions` |
+| `OrderPromotion`, `OrderPromotionStat` | Promotional | `fct_order_promotions`, `fct_order_promotion_stats` |
+
+`ProductReview` is a **core** model on `fct_product_reviews`.
+
+In this Article we will use `FluentCart\App\Models\Order` model as an example.
+
+## Retrieving Models
+
+Think of each Eloquent model as a powerful query builder allowing you to fluently query the database table associated with the model. For example:
+
+```
+<?php
+
+$orders = FluentCart\App\Models\Order::all();
+
+foreach ($orders as $order) {
+    echo $order->total_amount;
+}
+```
+
+### Adding Additional Constraints
+
+The ORM all method will return all of the results in the model's table. Since each model serves as a query builder, you may also add constraints to queries, and then use the get method to retrieve the results:
+
+```
+$orders = FluentCart\App\Models\Order::where('status', 'completed')
+           ->orderBy('created_at', 'DESC')
+           ->limit(10)
+           ->skip(5)
+           ->get();
+```
+
+## Retrieving Single Models / Aggregates
+
+Of course, in addition to retrieving all of the records for a given table, you may also retrieve single records using find or first. Instead of returning a collection of models, these methods return a single model instance:
+
+```
+// Retrieve a model by its primary key...
+$order = FluentCart\App\Models\Order::find(1);
+
+// Retrieve the first model matching the query constraints...
+$order = FluentCart\App\Models\Order::where('status', 'pending')->first();
+```
+
+You may also call the find method with an array of primary keys, which will return a collection of the matching records:
+
+```
+$orders = FluentCart\App\Models\Order::find([1,2,3]);
+```
+
+## Retrieving Aggregates
+
+You may also use the count, sum, max, and other aggregate methods available. These methods return the appropriate scalar value instead of a full model instance:
+
+```
+$count = FluentCart\App\Models\Order::where('status', 'completed')->count();
+
+$max = FluentCart\App\Models\Order::where('status', 'completed')->max('total_amount');
+```
+
+Available aggregate methods such as `count`, `max`, `min`, `avg`, and `sum`.
+
+## Inserting & Updating Models
+
+### Inserts
+
+To create a new record in the database, create a new model instance, set attributes on the model, then call the save method:
+
+```
+$order = FluentCart\App\Models\Order::create([
+    'customer_id' => 1,
+    'status' => 'pending',
+    'payment_method' => 'stripe',
+    'currency' => 'USD',
+    'total_amount' => Helper::toCent(99.99)
+]);
+```
+
+### Updates
+
+You can update a model few different way. You can assign property and then call `save()` method
+
+```
+$order = FluentCart\App\Models\Order::find(1);
+
+$order->status = 'completed';
+$order->completed_at = now();
+$order->save();
+```
+
+You can also update with an array
+
+```
+$order = FluentCart\App\Models\Order::find(1);
+
+$order->update([
+    'status' => 'completed',
+    'completed_at' => now()
+]);
+```
+
+## Accessing Attributes
+
+You can just call the database table column name for accessing the attributes
+
+```
+$order = FluentCart\App\Models\Order::find(1);
+
+$status = $order->status;
+$totalAmount = $order->total_amount;
+$customerId = $order->customer_id;
+```
+
+## Deleting Models
+
+To delete a model, call the delete method on a model instance:
+
+```
+$order = FluentCart\App\Models\Order::find(1);
+$order->delete();
+```
+
+### Deleting Models By Query
+
+Of course, you may also run a delete statement on a set of models. In this example, we will delete all orders that are marked as draft. Like mass updates, mass deletes will not fire any model events for the models that are deleted:
+
+```
+FluentCart\App\Models\Order::where('status', 'draft')->delete();
+```
+
+## Query Scopes
+
+Scopes allow you to define common sets of constraints that you may easily re-use throughout application. For example, you may need to frequently retrieve all orders by given statuses. In FluentCart Order model we already have this scope defined like this.
+
+```
+/**
+ * Local scope to filter orders by status
+ * @param \FluentCart\Framework\Database\Query\Builder $query
+ * @param string $status
+ * @return \FluentCart\Framework\Database\Query\Builder $query
+ */
+public function scopeOfStatus($query, $status)
+{
+    return $query->where('status', $status);
+}
+```
+
+Now say you want to get orders where status equal completed
+
+```
+$orders = FluentCart\App\Models\Order::ofStatus('completed')->get();
+```
+
+Please note that, the first letter will be small case.
+
+In the individual model documentation, you will find which FluentCart models have scopes.
+
+## Relationships
+
+Database tables are often related to one another. For example, a customer has multiple orders, or an order has multiple order items. FluentCart ORM makes managing and working with these relationships easy. Each Model has predefined relationships and you will find those in the individual model documentation.
+
+```
+$customer = FluentCart\App\Models\Customer::find(1);
+
+// These will return corresponding Order and Subscription collections
+$customerOrders = $customer->orders;
+$customerSubscriptions = $customer->subscriptions;
+```
+
+For a single relation like an `OrderItem` belongs to an order
+
+```
+$orderItem = FluentCart\App\Models\OrderItem::find(1);
+$order = $orderItem->order; // will return FluentCart\App\Models\Order
+```
+
+## Available Models
+
+### Core Models
+
+#### Order Models
+
+- **[Order Model](./models/order.md)** - Main order management
+- **[OrderItem Model](./models/order-item.md)** - Individual order items
+- **[OrderTransaction Model](./models/order-transaction.md)** - Payment transactions
+- **[OrderAddress Model](./models/order-address.md)** - Order addresses
+- **[OrderMeta Model](./models/order-meta.md)** - Order metadata
+- **[OrderOperation Model](./models/order-operation.md)** - Order operations
+- **[OrderTaxRate Model](./models/order-tax-rate.md)** - Tax calculations
+- **[OrderDownloadPermission Model](./models/order-download-permission.md)** - Download permissions
+
+#### Customer Models
+
+- **[Customer Model](./models/customer.md)** - Customer management
+- **[CustomerAddresses Model](./models/customer-addresses.md)** - Customer addresses
+- **[CustomerMeta Model](./models/customer-meta.md)** - Customer metadata
+
+#### Product Models
+
+- **[Product Model](./models/product.md)** - Product management
+- **[ProductDetail Model](./models/product-detail.md)** - Product details
+- **[ProductVariation Model](./models/product-variation.md)** - Product variations
+- **[ProductMeta Model](./models/product-meta.md)** - Product metadata
+- **[ProductDownload Model](./models/product-download.md)** - Product downloads
+
+#### Subscription Models
+
+- **[Subscription Model](./models/subscription.md)** - Subscription management
+- **[SubscriptionMeta Model](./models/subscription-meta.md)** - Subscription metadata
+
+#### Cart & Coupon Models
+
+- **[Cart Model](./models/cart.md)** - Shopping cart management
+- **[Coupon Model](./models/coupon.md)** - Coupon management
+- **[AppliedCoupon Model](./models/applied-coupon.md)** - Applied coupons
+
+#### System Models
+
+- **[Activity Model](./models/activity.md)** - Activity logging and audit trails
+- **[ScheduledAction Model](./models/scheduled-action.md)** - Background job scheduling
+- **[Meta Model](./models/meta.md)** - Generic metadata storage
+- **[User Model](./models/user.md)** - WordPress user integration
+- **[DynamicModel Model](./models/dynamic-model.md)** - Dynamic model functionality
+
+#### Attribute System Models
+
+- **[AttributeGroup Model](./models/attribute-group.md)** - Attribute groups (e.g., Color, Size)
+- **[AttributeTerm Model](./models/attribute-term.md)** - Attribute terms within groups
+- **[AttributeRelation Model](./models/attribute-relation.md)** - Attribute relationships
+
+#### Shipping & Tax Models
+
+- **[ShippingZone Model](./models/shipping-zone.md)** - Shipping zones and regions
+- **[ShippingMethod Model](./models/shipping-method.md)** - Shipping methods and rates
+- **[ShippingClass Model](./models/shipping-class.md)** - Shipping classes and rules
+- **[TaxClass Model](./models/tax-class.md)** - Tax classes and categories
+- **[TaxRate Model](./models/tax-rate.md)** - Tax rates and calculations
+
+#### Label System Models
+
+- **[Label Model](./models/label.md)** - Customer labeling system
+- **[LabelRelationship Model](./models/label-relationship.md)** - Polymorphic label relationships
+
+### Pro Plugin Models
+
+#### Licensing Models
+
+- **[License Model](./models/license.md)** - Software licenses
+- **[LicenseActivation Model](./models/license-activation.md)** - License activations
+- **[LicenseSite Model](./models/license-site.md)** - Licensed sites
+- **[LicenseMeta Model](./models/license-meta.md)** - License metadata
+
+#### Promotional Models
+
+- **[OrderPromotion Model](./models/order-promotion.md)** - Order promotions
+- **[OrderPromotionStat Model](./models/order-promotion-stat.md)** - Promotion statistics
+
+#### User Management Models
+
+- **[UserMeta Model](./models/user-meta.md)** - User metadata
+
+## Model Usage Examples
+
+### Activity Logging
+
+```
+// Create activity log
+$activity = FluentCart\App\Models\Activity::create([
+    'status' => 'success',
+    'log_type' => 'activity',
+    'module_type' => 'FluentCart\App\Models\Order',
+    'module_id' => 123,
+    'module_name' => 'order',
+    'title' => 'Order Status Updated',
+    'content' => 'Order status changed from pending to completed',
+    'user_id' => 1,
+    'created_by' => 'admin'
+]);
+
+// Get activity logs for an order
+$orderActivities = FluentCart\App\Models\Activity::where('module_type', 'FluentCart\App\Models\Order')
+    ->where('module_id', 123)
+    ->orderBy('created_at', 'desc')
+    ->get();
+```
+
+### Attribute Management
+
+```
+// Create attribute group
+$colorGroup = FluentCart\App\Models\AttributeGroup::create([
+    'title' => 'Color',
+    'slug' => 'color',
+    'description' => 'Product color attributes'
+]);
+
+// Add terms to group
+$redTerm = FluentCart\App\Models\AttributeTerm::create([
+    'group_id' => $colorGroup->id,
+    'title' => 'Red',
+    'slug' => 'red'
+]);
+
+// Relate attribute to product
+FluentCart\App\Models\AttributeRelation::create([
+    'group_id' => $colorGroup->id,
+    'term_id' => $redTerm->id,
+    'object_id' => 456 // Product ID
+]);
+```
+
+### Label System
+
+```
+// Create label
+$label = FluentCart\App\Models\Label::create([
+    'value' => 'featured'
+]);
+
+// Tag an order with label
+FluentCart\App\Models\LabelRelationship::create([
+    'label_id' => $label->id,
+    'labelable_id' => 123,
+    'labelable_type' => 'FluentCart\App\Models\Order'
+]);
+
+// Get all orders with 'featured' label
+$featuredOrders = FluentCart\App\Models\Order::whereHas('labels', function($query) {
+    $query->where('value', 'featured');
+})->get();
+```
+
+### Scheduled Actions
+
+```
+// Schedule a background job
+FluentCart\App\Models\ScheduledAction::create([
+    'scheduled_at' => now()->addMinutes(30),
+    'action' => 'send_order_confirmation',
+    'status' => 'pending',
+    'group' => 'order',
+    'object_id' => 123,
+    'object_type' => 'FluentCart\App\Models\Order',
+    'data' => ['email' => '[email&#160;protected]']
+]);
+
+// Get pending scheduled actions
+$pendingActions = FluentCart\App\Models\ScheduledAction::where('status', 'pending')
+    ->where('scheduled_at', '<=', now())
+    ->get();
+```
+
+### Pro Licensing
+
+```
+// Create license
+$license = FluentCartPro\App\Modules\Licensing\Models\License::create([
+    'status' => 'active',
+    'limit' => 5,
+    'license_key' => 'ABC123-DEF456-GHI789',
+    'product_id' => 456,
+    'customer_id' => 789,
+    'order_id' => 123,
+    'expiration_date' => now()->addYear()
+]);
+
+// Activate license on site
+FluentCartPro\App\Modules\Licensing\Models\LicenseActivation::create([
+    'site_id' => 1,
+    'license_id' => $license->id,
+    'status' => 'active',
+    'product_id' => 456,
+    'activation_hash' => 'unique_hash_here'
+]);
+```
+
+---

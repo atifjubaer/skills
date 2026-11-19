@@ -1,21 +1,22 @@
 {
-  "name": "fluentcart-lemonsqueezy-skills",
+  "name": "fluentcart-skills",
   "version": "2.0.0",
   "private": true,
-  "description": "FluentCart and Lemon Squeezy developer skills, each shipped with its own MCP server",
+  "description": "FluentCart developer skill, shipped with its own MCP server",
   "main": "bin/index.js",
   "bin": {
     "fluentcart-ai-skill": "bin/index.js"
   },
   "scripts": {
     "build": "node copy-skills.js",
-    "build:servers": "npm --prefix servers/fluentcart-developer run build && npm --prefix servers/lemonsqueezy-developer run build",
-    "verify:servers": "npm --prefix servers/fluentcart-developer run verify && npm --prefix servers/lemonsqueezy-developer run verify",
+    "build:servers": "npm --prefix servers/fluentcart-developer run build",
+    "verify:servers": "npm --prefix servers/fluentcart-developer run verify",
     "split": "node scripts/split-suite.mjs",
     "check:skills": "node scripts/validate-skills.mjs",
     "check:package": "node scripts/check-package.mjs",
     "ci": "npm run check:skills && npm run check:package && npm run check:parity",
     "check:parity": "node scripts/check-server-parity.mjs",
+    "sync:docs": "node scripts/sync-fluentcart-docs.mjs",
     "deploy:mcpize": "node scripts/deploy-mcpize.mjs"
   },
   "repository": {
@@ -28,7 +29,6 @@
   },
   "keywords": [
     "fluentcart",
-    "lemonsqueezy",
     "wordpress",
     "ai-skills",
     "mcp",

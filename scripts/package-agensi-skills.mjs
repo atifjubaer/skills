@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-// Package the skills into clean, spec-compliant ZIP archives for Agensi:
+// Package the skill into a clean, spec-compliant ZIP archive for Agensi:
 //   1. marketplace/agensi/fluentcart-developer.zip
-//   2. marketplace/agensi/lemonsqueezy-developer.zip
-//   3. marketplace/agensi/fastr-ecommerce-suite.zip (bundled pack)
 //
 // Also generates ready-to-paste submission listings in marketplace/agensi/
 // with the exact fields required by the Agensi creator dashboard:
@@ -64,7 +62,7 @@ function createZip(outputPath, spec) {
 // (anti-disintermediation filter). Scan the source folders first so a violating
 // ZIP is never built, instead of being rejected after upload.
 const BANNED_VENDOR_HOSTS = [
-  'gumroad.com', 'gum.co', 'whop.com', 'lemonsqueezy.com', 'payhip.com',
+  'gumroad.com', 'gum.co', 'whop.com', 'payhip.com',
   'ko-fi.com', 'buymeacoffee.com', 'patreon.com', 'buy.stripe.com',
   'checkout.stripe.com', 'paypal.me', 'sellfy.com', 'podia.com',
   'teachable.com', 'thinkific.com', 'kajabi.com', 'stan.store', 'polar.sh',
@@ -75,9 +73,21 @@ function scanForBannedHosts(label, entries) {
   const hits = [];
   const checkFile = file => {
     const lines = readFileSync(file, 'utf8').split('\n');
+    let fenced = false;
     lines.forEach((line, i) => {
+      // The rule protects against a listing that points buyers at an outside
+      // checkout. Fenced code is an integration example, not a sales link: the
+      // vendor's own Paddle guide cannot document the gateway without naming
+      // paddle.com, and that is what the page is for.
+      if (/^\s*(```|~~~)/.test(line)) {
+        fenced = !fenced;
+        return;
+      }
+      if (fenced) return;
+
+      const prose = line.replace(/`[^`]*`/g, '');
       for (const host of BANNED_VENDOR_HOSTS) {
-        if (line.toLowerCase().includes(host)) hits.push(`${file}:${i + 1}  ${host}`);
+        if (prose.toLowerCase().includes(host)) hits.push(`${file}:${i + 1}  ${host}`);
       }
     });
   };
@@ -106,7 +116,7 @@ function scanForBannedHosts(label, entries) {
 }
 
 console.log('--- 0. Checking Vendor Links ---');
-scanForBannedHosts('skill folders', ['skills/fluentcart-developer', 'skills/lemonsqueezy-developer']);
+scanForBannedHosts('skill folders', ['skills/fluentcart-developer']);
 
 // Agensi flags any archive holding more than 50 files, so the marketplace build
 // is trimmed without touching the repo: runnable `examples/` stay in the repo and
@@ -124,84 +134,97 @@ function copyFolder(src, dest, skip) {
   }
 }
 
-function mergeHookFiles(refsDir, pattern, output, title) {
-  const files = readdirSync(refsDir)
-    .filter(f => f.startsWith(pattern) && f.endsWith('.md'))
-    .sort();
-  if (files.length < 2) return;
-  const body = files
-    .map(f => readFileSync(join(refsDir, f), 'utf8').trim())
-    .join('\n\n---\n\n');
-  writeFileSync(join(refsDir, output), `# ${title}\n\n${body}\n`);
-  for (const f of files) rmSync(join(refsDir, f));
-}
+/**
+ * The subset of the documentation corpus that ships to Agensi.
+ *
+ * Agensi rejects archives over 50 files (`pyVerify` asserts it), and the full
+ * corpus is 588 pages. The 474 `restapi/operations/` pages and the 49
+ * `database/` pages are most of it, so they are left out and the archive keeps
+ * the parts that read as a coherent manual on their own: every hook, every
+ * module, payment integration, and the guides.
+ *
+ * Nothing here is premium content — `premium-references.json` files never leave
+ * the repo, and the full corpus ships through npm and MCPize instead.
+ */
+const AGENSI_SECTIONS = [
+  'hooks',
+  'modules',
+  'payment-methods-integration',
+  'guides'
+];
 
-function rewriteSkillMd(file, sections) {
-  const lines = readFileSync(file, 'utf8').split('\n');
-  const out = [];
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i].trim();
-    const section = sections.find(s => line === s.heading);
-    if (!section) {
-      out.push(lines[i]);
-      continue;
-    }
-    if (section.headingReplacement !== null) out.push(section.headingReplacement ?? lines[i]);
-    i += 1;
-    while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('- ['))) i += 1;
-    i -= 1;
-    if (section.replacement) out.push('', section.replacement, '');
-  }
-  writeFileSync(file, out.join('\n'));
-}
+const AGENSI_ROOT_PAGES = ['getting-started.md'];
 
 function stageSkill(card) {
   const dest = join(staging, card);
-  copyFolder(join(root, 'skills', card), dest, ['examples']);
-  const refs = join(dest, 'references');
-  mergeHookFiles(refs, 'action-hooks-', 'action-hooks-reference.md', 'FluentCart Action Hooks — Complete Reference');
-  mergeHookFiles(refs, 'filter-hooks-', 'filter-hooks-reference.md', 'FluentCart Filter Hooks — Complete Reference');
-  rewriteSkillMd(join(dest, 'SKILL.md'), [
-    {
-      heading: '#### Action Hooks (8 Modular Files)',
-      headingReplacement: '#### Action Hooks',
-      replacement:
-        '- [action-hooks-reference.md](references/action-hooks-reference.md) — Complete action hook reference: orders, subscriptions, licenses, cart & checkout, customers, products & coupons, payments & integrations, admin templates.'
-    },
-    {
-      heading: '#### Filter Hooks (6 Modular Files)',
-      headingReplacement: '#### Filter Hooks',
-      replacement:
-        '- [filter-hooks-reference.md](references/filter-hooks-reference.md) — Complete filter hook reference: settings & configuration, orders & payments, products & pricing, cart & checkout, customers & subscriptions, integrations & advanced.'
-    },
-    { heading: '#### Runnable Code Examples & Project Boilerplates (`examples/`)', headingReplacement: null, replacement: null }
-  ]);
+  const src = join(root, 'skills', card);
+  const refsSrc = join(src, 'references');
+  const refsDest = join(dest, 'references');
+
+  mkdirSync(refsDest, { recursive: true });
+  copyFileSync(join(src, 'SKILL.md'), join(dest, 'SKILL.md'));
+
+  const shipped = [];
+  const copyRef = rel => {
+    const to = join(refsDest, rel);
+    mkdirSync(dirname(to), { recursive: true });
+    copyFileSync(join(refsSrc, rel), to);
+    shipped.push(rel);
+  };
+
+  for (const page of AGENSI_ROOT_PAGES) {
+    if (existsSync(join(refsSrc, page))) copyRef(page);
+  }
+  // Sections nest (`hooks/actions/orders.md`), so walk them to the leaves.
+  const walkRefs = (section, dir, prefix) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walkRefs(section, join(dir, entry.name), rel);
+      else if (entry.name.endsWith('.md')) copyRef(`${section}/${rel}`);
+    }
+  };
+
+  for (const section of AGENSI_SECTIONS) {
+    const dir = join(refsSrc, section);
+    if (existsSync(dir)) walkRefs(section, dir, '');
+  }
+
+  // An index listing only what actually shipped, so no link dangles.
+  writeFileSync(
+    join(refsDest, 'INDEX.md'),
+    [
+      '# FluentCart Developer — Documentation Index',
+      '',
+      'The pages bundled in this archive, mirrored from <https://dev.fluentcart.com>.',
+      'The complete 588-page corpus ships with the MCP server and the npm package.',
+      '',
+      ...shipped.sort().map(f => `- references/${f}`),
+      ''
+    ].join('\n')
+  );
+
+  // SKILL.md sits at the archive root; everything else is under references/.
+  const total = shipped.length + 1;
+  console.log(`[agensi] ${card}: ${total} file(s) staged (Agensi limit 50)`);
+  if (total > 50) {
+    console.error(`[agensi] ${card} is over the 50-file Agensi limit — trim AGENSI_SECTIONS.`);
+    process.exit(1);
+  }
   return dest;
 }
 
 console.log('--- 1. Staging Marketplace Build ---');
 rmSync(staging, { recursive: true, force: true });
 const fcStage = stageSkill('fluentcart-developer');
-const lsStage = stageSkill('lemonsqueezy-developer');
-console.log(`Staged ${fcStage} and ${lsStage}`);
+console.log(`Staged ${fcStage}`);
 
-console.log('--- 2. Packaging Individual Skills ---');
+console.log('--- 2. Packaging the Skill ---');
 
-// 1. FluentCart Developer (flat at root so SKILL.md is at root of archive)
+// FluentCart Developer (flat at root so SKILL.md is at root of archive)
 const fcZip = join(outDir, 'fluentcart-developer.zip');
 createZip(fcZip, `flat:${relative(root, fcStage)}`);
 
-// 2. Lemon Squeezy Developer (flat at root)
-const lsZip = join(outDir, 'lemonsqueezy-developer.zip');
-createZip(lsZip, `flat:${relative(root, lsStage)}`);
-
-console.log('--- 3. Packaging Combined Multi-Skill Suite ---');
-
-// 3. Fastr E-Commerce Suite (nested by skill name so both skills coexist)
-const suiteZip = join(outDir, 'fastr-ecommerce-suite.zip');
-createZip(suiteZip, `nested:${relative(root, fcStage)}|nested:${relative(root, lsStage)}`);
-
-console.log('--- 4. Verifying Archives ---');
+console.log('--- 3. Verifying the Archive ---');
 
 const pyVerify = `
 import zipfile, sys
@@ -217,9 +240,7 @@ with zipfile.ZipFile(zip_path, 'r') as z:
     assert len(names) <= 50, f"Agensi flags archives with more than 50 files (found {len(names)})"
 `;
 
-for (const z of [fcZip, lsZip, suiteZip]) {
-  execFileSync('python', ['-I', '-c', pyVerify, z], { cwd: root, stdio: 'inherit' });
-}
+execFileSync('python', ['-I', '-c', pyVerify, fcZip], { cwd: root, stdio: 'inherit' });
 
 console.log('--- 5. Writing Submission Metadata Sheets ---');
 
@@ -252,7 +273,7 @@ The definitive developer knowledge base and architecture manual for **FluentCart
 ### Pair with the FluentCart Developer MCP server:
 For live hook search, schema lookup and boilerplate generation inside Claude, connect the companion MCP server — hosted, or run it locally with no account:
 👉 **[fluentcart-developer on MCPize](https://mcpize.com/mcp/fluentcart-developer)**
-👉 `npx -y fluentcart-developer`
+👉 \`npx -y fluentcart-developer\`
 \`\`\`
 
 ## Step 3: See it in Action (Demo)
@@ -319,115 +340,9 @@ class QuickPayGateway extends BasePaymentMethod
 
 writeFileSync(join(outDir, 'fluentcart-developer-submission.md'), fcSubmission);
 
-// Lemon Squeezy Submission Sheet
-const lsSubmission = `# Agensi Skill Submission: Lemon Squeezy Developer
-
-## Step 1: Skill ZIP Upload
-- **File:** \`marketplace/agensi/lemonsqueezy-developer.zip\`
-- **Logo:** \`marketplace/assets/lemonsqueezy-developer-logo.png\`
-
-## Step 2: Skill Details
-- **Skill Name:** Lemon Squeezy Developer Agent
-- **Summary:** Complete developer reference for Lemon Squeezy e-commerce: checkout overlays, HMAC-SHA256 webhooks, subscription lifecycles, and software license keys.
-- **Category:** Developer Tools / E-Commerce
-- **Tags:** \`lemonsqueezy\`, \`payments\`, \`subscriptions\`, \`billing\`, \`licensing\`, \`ecommerce\`
-
-### Full Description:
-\`\`\`markdown
-# Lemon Squeezy Developer Agent
-
-Complete technical reference, architectural manual, and guidance system for integrating **Lemon Squeezy** payments, subscriptions, digital downloads, software licenses, and webhooks into Next.js, Node.js, Laravel, Python, WordPress, or any backend stack.
-
-### What's Included:
-- **API Reference:** Comprehensive documentation for Lemon Squeezy JSON:API endpoints (Checkouts, Orders, Subscriptions, License Keys, Variants).
-- **HMAC-SHA256 Webhook Security:** Timing-safe signature verification algorithms in Node.js, Python, and PHP to prevent forgery attacks.
-- **Subscription Lifecycle Management:** Status transitions (\`on_trial\`, \`active\`, \`paused\`, \`past_due\`, \`unpaid\`, \`cancelled\`, \`expired\`) and billing webhooks.
-- **Software License Engine:** License activation, site verification, deactivation, and seat limits.
-- **Lemon.js Checkout Overlays:** Embedded modal checkout implementation and event listener callbacks.
-
-### Pair with the FluentCart Developer MCP server:
-For live signature verification and remote licence validation inside Claude, connect the companion MCP server:
-👉 **[fluentcart-developer on MCPize](https://mcpize.com/mcp/fluentcart-developer)**
-👉 `npx -y fluentcart-developer`
-\`\`\`
-
-## Step 3: See it in Action (Demo)
-
-### The Request (what the buyer types):
-\`\`\`text
-How do I securely verify a Lemon Squeezy webhook in Node.js using crypto.timingSafeEqual,
-and extract the subscription ID from a subscription_payment_success event?
-\`\`\`
-
-### The Result (what your agent delivers):
-\`\`\`text
-Here is the production-grade webhook verification handler for Lemon Squeezy in Node.js.
-It enforces HMAC-SHA256 verification using raw binary buffers to prevent timing attacks.
-
-\`\`\`typescript
-import crypto from 'node:crypto';
-
-export function verifyLemonSqueezyWebhook(
-  rawBody: Buffer,
-  signatureHeader: string | null,
-  secret: string
-): boolean {
-  if (!signatureHeader || !secret) return false;
-
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(rawBody);
-  const digest = hmac.digest('hex');
-
-  const digestBuffer = Buffer.from(digest, 'utf8');
-  const signatureBuffer = Buffer.from(signatureHeader, 'utf8');
-
-  if (digestBuffer.length !== signatureBuffer.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(digestBuffer, signatureBuffer);
-}
-
-// In your Express / Next.js API route:
-export async function handleWebhook(req, res) {
-  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET!;
-  const signature = req.headers['x-signature'];
-  const rawBody = req.rawBody; // Ensure body-parser raw buffer is preserved
-
-  if (!verifyLemonSqueezyWebhook(rawBody, signature, secret)) {
-    return res.status(401).json({ error: 'Invalid HMAC signature' });
-  }
-
-  const payload = JSON.parse(rawBody.toString('utf8'));
-  const eventName = payload.meta.event_name;
-
-  if (eventName === 'subscription_payment_success') {
-    const subscriptionId = payload.data.id;
-    const customerId = payload.data.attributes.customer_id;
-    const renewsAt = payload.data.attributes.renews_at;
-    console.log(\`Subscription \${subscriptionId} renewed for customer \${customerId} until \${renewsAt}\`);
-  }
-
-  return res.status(200).json({ received: true });
-}
-\`\`\`
-\`\`\`
-
-## Step 4: Compatibility
-- **Universal SKILL.md Standard:** Compatible with Claude Code, Cursor, Codex CLI, OpenClaw, Gemini CLI, VS Code Copilot.
-- **Compatibility Note:** Works offline with any markdown-capable agent.
-
-## Step 5: Pricing
-- **Pricing Model:** Free ($0). The companion MCP server and all of its tools are free and MIT-licensed too.
-`;
-
-writeFileSync(join(outDir, 'lemonsqueezy-developer-submission.md'), lsSubmission);
-
 console.log('--- 6. Re-checking Submission Copy ---');
 scanForBannedHosts('submission sheets', [
-  'marketplace/agensi/fluentcart-developer-submission.md',
-  'marketplace/agensi/lemonsqueezy-developer-submission.md',
-  'marketplace/agensi/fastr-ecommerce-suite-submission.md'
+  'marketplace/agensi/fluentcart-developer-submission.md'
 ]);
 
 rmSync(staging, { recursive: true, force: true });

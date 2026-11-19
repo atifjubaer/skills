@@ -1,0 +1,153 @@
+# Product Meta Model
+
+| DB Table Name | {wp_db_prefix}_fct_product_meta |
+| --- | --- |
+| Schema | [Check Schema](/database/schema.md#fct-product-meta-table) |
+| Source File | fluent-cart/app/Models/ProductMeta.php |
+| Name Space | FluentCart\App\Models |
+| Class | FluentCart\App\Models\ProductMeta |
+
+## Attributes
+
+| Attribute | Data Type | Comment |
+| --- | --- | --- |
+| id | Integer | Primary Key (guarded) |
+| object_id | Integer | ID of the associated object |
+| object_type | String | Type of object (product, variation, etc.) |
+| meta_key | String | Meta key name |
+| meta_value | Text | Meta value (JSON encoded for arrays/objects, auto-encoded/decoded via mutator/accessor) |
+| created_at | Date Time | Creation timestamp |
+| updated_at | Date Time | Last update timestamp |
+
+## Usage
+
+Please check [Model Basic](/database/models.md) for Common methods.
+
+### Accessing Attributes
+
+```
+$productMeta = FluentCart\App\Models\ProductMeta::find(1);
+
+$productMeta->id; // returns id
+$productMeta->object_id; // returns object ID
+$productMeta->object_type; // returns object type
+$productMeta->meta_key; // returns meta key
+$productMeta->meta_value; // returns meta value (auto-decoded if JSON)
+```
+
+## Relations
+
+This model does not define any relationships. It is a generic meta storage model that uses `object_id` and `object_type` to associate with different parent entities (products, variations, etc.).
+
+## Methods
+
+Along with Global Model methods, this model has few helper methods.
+
+### setMetaValueAttribute($meta_value)
+
+Set meta value with automatic JSON encoding (mutator). Arrays and objects are encoded with `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES` flags.
+
+- Parameters `$meta_value` - mixed (array, object, or string)
+
+Returns `void`
+
+#### Usage
+
+```
+$productMeta->meta_value = ['custom_data' => 'value', 'settings' => ['key' => 'value']];
+// Automatically JSON encodes arrays and objects
+```
+
+### getMetaValueAttribute($value)
+
+Get meta value with automatic JSON decoding (accessor). If the stored string is valid JSON, it returns the decoded array. Otherwise, returns the raw string value.
+
+- Parameters `$value` - mixed
+
+Returns `mixed` (decoded array if valid JSON, otherwise original value)
+
+#### Usage
+
+```
+$metaValue = $productMeta->meta_value; // Returns decoded value (array, object, or string)
+```
+
+## Usage Examples
+
+### Get Product Meta
+
+```
+$productMeta = FluentCart\App\Models\ProductMeta::where('object_type', 'product')
+    ->where('object_id', 123)
+    ->get();
+
+foreach ($productMeta as $meta) {
+    echo "Key: " . $meta->meta_key;
+    echo "Value: " . print_r($meta->meta_value, true);
+}
+```
+
+### Create Product Meta
+
+```
+$productMeta = FluentCart\App\Models\ProductMeta::create([
+    'object_id' => 123,
+    'object_type' => 'product',
+    'meta_key' => 'custom_field',
+    'meta_value' => 'custom_value'
+]);
+```
+
+### Store Complex Product Data
+
+```
+$productMeta = FluentCart\App\Models\ProductMeta::create([
+    'object_id' => 123,
+    'object_type' => 'variation',
+    'meta_key' => 'product_options',
+    'meta_value' => [
+        'color' => 'red',
+        'size' => 'large',
+        'customizations' => ['engraving' => 'Happy Birthday']
+    ]
+]);
+```
+
+### Get Meta by Key
+
+```
+$meta = FluentCart\App\Models\ProductMeta::where('object_type', 'product')
+    ->where('object_id', 123)
+    ->where('meta_key', 'product_thumbnail')
+    ->first();
+
+if ($meta) {
+    echo "Thumbnail: " . $meta->meta_value;
+}
+```
+
+### Update Meta Value
+
+```
+$meta = FluentCart\App\Models\ProductMeta::find(1);
+$meta->meta_value = ['updated' => true, 'timestamp' => now()];
+$meta->save();
+```
+
+### Get All Meta for Product
+
+```
+$productMetas = FluentCart\App\Models\ProductMeta::where('object_type', 'product')
+    ->where('object_id', 123)
+    ->get();
+```
+
+### Get Meta for Variation
+
+```
+$variationMetas = FluentCart\App\Models\ProductMeta::where('object_type', 'variation')
+    ->where('object_id', 456)
+    ->get();
+```
+
+---

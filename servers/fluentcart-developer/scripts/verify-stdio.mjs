@@ -104,6 +104,7 @@ const TOOLS = [
   "fc_search_hooks",
   "fc_get_db_schema",
   "fc_get_reference",
+  "fc_search_docs",
   "fc_generate_payment_gateway_boilerplate",
   "fc_generate_licensing_boilerplate",
   "fc_generate_customer_endpoint_boilerplate",
@@ -156,7 +157,7 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       check('call fc_get_db_schema', text.length > 50, text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_get_reference', {"file":"database-models-reference.md"});
+      const text = await call(s, 'fc_get_reference', { file: 'database/models.md' });
       check('call fc_get_reference', text.length > 100, text ? `${text.length} chars` : 'empty');
     }
     {
@@ -204,8 +205,17 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       check('call fc_generate_native_client', text.length > 500, text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_get_reference', { file: 'rest-api-subscriptions.md', section: 'Void Renewal Invoice' });
-      check('call fc_get_reference section', text.startsWith('### Void Renewal Invoice'), `${text.length} chars`);
+      const text = await call(s, 'fc_get_reference', {
+        file: 'restapi/operations/orders/void-renewal.md',
+        section: 'Parameters'
+      });
+      check('call fc_get_reference section', text.startsWith('### Parameters'), `${text.length} chars`);
+
+      const found = await call(s, 'fc_search_docs', { query: 'void renewal', limit: 5 });
+      check('call fc_search_docs', found.includes('void-renewal'), `${found.length} chars`);
+
+      const scoped = await call(s, 'fc_search_docs', { query: 'order', prefix: 'hooks/' });
+      check('call fc_search_docs prefix', scoped.includes('hooks/'), `${scoped.length} chars`);
     }
 
     // Path traversal must be refused, not silently resolved.
