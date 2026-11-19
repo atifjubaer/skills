@@ -78,12 +78,23 @@ restate every key you still want.
 
 ## Plugin index
 
-`dsh-plugin-fluentcart` is listed in [`index.json`](./index.json), a
+[`index.json`](./index.json) is a
 [plugin index](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/plugin-market.md)
-in `format: 1`. To use it, open **Plugins → Custom plugin indexes**, add the
-raw URL of that file, and install from the **Discover** tab.
+in `format: 1`. Open **Plugins → Custom plugin indexes**, add the URL of that
+file, and install from the **Discover** tab.
 
-Regenerate it after a publish:
+**It must be served from a publicly readable URL.** This repository is private,
+and a `raw.githubusercontent.com` link to a private repository returns 401 to
+DSH's fetch, so the index has to be published somewhere public before the
+Discover tab can read it. The plain `dsh plugin add dsh-plugin-fluentcart`
+install above does not depend on the index and always works.
+
+The icon is a relative path, so `icons/fluentcart.png` must be published next to
+`index.json`, resolved against the index URL the way an image resolves against a
+page. Both files are already laid out that way.
+
+Regenerate the index after a publish, so the listed versions and their
+timestamps come from the registry rather than from memory:
 
 ```sh
 npm run make-index
