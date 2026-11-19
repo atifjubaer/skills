@@ -73,6 +73,9 @@ Every tool is registered for every caller on both transports. There is no licenc
 npm run sync:docs        # re-capture every page
 ```
 
+**[UPDATING.md](./UPDATING.md)** — maintainer notes for refreshing the corpus
+and publishing a release. Not required to use the skill.
+
 `scripts/sync-fluentcart-docs.mjs` does this without a browser and without a single click:
 
 1. **Inventory** — reads `/hashmap.json` (585 source pages, authoritative) and the `__VP_SITE_DATA__` sidebar config embedded in any page (566 canonical links). Both are VitePress build artifacts, so no page is guessed at and no unlinked page is missed.
