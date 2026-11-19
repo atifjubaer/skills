@@ -6,13 +6,6 @@
         "-y",
         "fluentcart-developer"
       ]
-    },
-    "lemonsqueezy": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "lemonsqueezy-developer"
-      ]
     }
   }
 }

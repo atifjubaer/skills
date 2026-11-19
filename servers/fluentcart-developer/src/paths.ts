@@ -28,7 +28,7 @@ export function skillsRoot(): string {
   return cachedRoot;
 }
 
-/** Absolute path to a single skill folder, e.g. `skills/lemonsqueezy-developer`. */
+/** Absolute path to a single skill folder, e.g. `skills/fluentcart-developer`. */
 export function skillDir(name: string): string {
   return path.join(skillsRoot(), name);
 }

@@ -7,7 +7,7 @@ skills ([`skills/`](../skills)) are MIT, every tool is registered for every
 caller, and there is nothing to buy, unlock, or renew.
 
 That decision was made on **2026-10-30** and replaced an earlier three-SKU
-subscription model ($12 / $12 / $19 per month through Lemon Squeezy). The
+subscription model ($12 / $12 / $19 per month through a hosted-checkout vendor). The
 commercial scaffolding — licence validation, the store/product id map, the
 `VALID_LICENSE_KEYS` allowlist, gateway secrets, and the `X-MCP-License-Key`
 header — was removed with it.
@@ -30,7 +30,7 @@ Why free:
 
 | Channel | Role | Cost |
 | --- | --- | --- |
-| npm | `fluentcart-developer` and `lemonsqueezy-developer` binaries — the install line in every guide | free |
+| npm | `fluentcart-developer` binary — the install line in every guide | free |
 | GitHub | source, issues, pull requests | free |
 | MCPize | hosted Streamable HTTP endpoint + discovery | free |
 | Smithery | public registry | free (sunset **2026-10-31**) |

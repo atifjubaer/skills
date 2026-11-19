@@ -8,8 +8,8 @@
 // by git) with a manifest of URL, size and content hash, so the next refresh
 // can diff two snapshots and touch only what actually moved.
 //
-//   node scripts/fetch-vendor-docs.mjs            # fetch everything
-//   node scripts/fetch-vendor-docs.mjs --only=lemonsqueezy-api
+//   node scripts/fetch-vendor-docs.mjs                 # fetch everything
+//   node scripts/fetch-vendor-docs.mjs --only=fluentcart-docs
 //
 // Output:
 //   .vendor-docs/<source-id>/<slug>.txt   page text, tags stripped
@@ -29,16 +29,6 @@ const MAX_PAGES = 250;
 const USER_AGENT = 'skills-repo-docs-sync/1.0 (+https://github.com/atifjubaer/skills)';
 
 const SOURCES = [
-  {
-    id: 'lemonsqueezy-api',
-    root: 'https://docs.lemonsqueezy.com/api',
-    crawl: (url) => url.pathname.startsWith('/api')
-  },
-  {
-    id: 'lemonsqueezy-help',
-    root: 'https://docs.lemonsqueezy.com/help',
-    crawl: (url) => url.pathname.startsWith('/help')
-  },
   {
     id: 'fluentcart-docs',
     sitemap: 'https://docs.fluentcart.com/sitemap.xml',

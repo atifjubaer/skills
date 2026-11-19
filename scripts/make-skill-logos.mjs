@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Generates square 512x512 PNG logos for Agensi skill listings:
 // 1. marketplace/assets/fluentcart-developer-logo.png
-// 2. marketplace/assets/lemonsqueezy-developer-logo.png
 //
 // Pure Node with built-in zlib — no native image dependencies.
 
@@ -147,46 +146,6 @@ function drawFluentCart(px, py, sample) {
   if (inSegment(px, py, 295, 212, 285, 268, 6)) paint(sample, INDIGO_LIGHT);
 }
 
-// ------------------------------------------------------------- 2. Lemon Squeezy Logo
-// Amber/Yellow theme with citrus geometry + code brackets
-const AMBER_PRIMARY = [245, 158, 11]; // #f59e0b
-const AMBER_LIGHT = [252, 211, 77]; // #fcd34d
-
-function drawLemonSqueezy(px, py, sample) {
-  // Tile background
-  if (inRoundedBox(px, py, 12, 12, SIZE - 12, SIZE - 12, 112)) {
-    paint(sample, BG);
-  }
-
-  // Outer lemon body: circle with pointy tips
-  if (inCircle(px, py, SIZE / 2, SIZE / 2, 145)) {
-    paint(sample, AMBER_PRIMARY);
-  }
-  // Left and right lemon tips
-  if (inRoundedBox(px, py, 80, 236, 130, 276, 20)) paint(sample, AMBER_PRIMARY);
-  if (inRoundedBox(px, py, 382, 236, 432, 276, 20)) paint(sample, AMBER_PRIMARY);
-
-  // Inner lemon slice background (lighter yellow)
-  if (inCircle(px, py, SIZE / 2, SIZE / 2, 120)) {
-    paint(sample, AMBER_LIGHT);
-  }
-
-  // Inner center dark core
-  if (inCircle(px, py, SIZE / 2, SIZE / 2, 95)) {
-    paint(sample, BG);
-  }
-
-  // Code bracket '<' inside lemon
-  if (inSegment(px, py, 235, 220, 205, 256, 9)) paint(sample, WHITE);
-  if (inSegment(px, py, 205, 256, 235, 292, 9)) paint(sample, WHITE);
-
-  // Code bracket '>' inside lemon
-  if (inSegment(px, py, 277, 220, 307, 256, 9)) paint(sample, WHITE);
-  if (inSegment(px, py, 307, 256, 277, 292, 9)) paint(sample, WHITE);
-
-  // Slash '/'
-  if (inSegment(px, py, 264, 215, 248, 297, 8)) paint(sample, AMBER_PRIMARY);
-}
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const assetsDir = join(root, 'marketplace', 'assets');
@@ -198,8 +157,3 @@ const fcPath = join(assetsDir, 'fluentcart-developer-logo.png');
 writeFileSync(fcPath, fcPng);
 console.log(`wrote ${fcPath} (${fcPng.length} bytes, 512x512)`);
 
-console.log('Rendering Lemon Squeezy Developer Logo...');
-const lsPng = renderImage(drawLemonSqueezy);
-const lsPath = join(assetsDir, 'lemonsqueezy-developer-logo.png');
-writeFileSync(lsPath, lsPng);
-console.log(`wrote ${lsPath} (${lsPng.length} bytes, 512x512)`);

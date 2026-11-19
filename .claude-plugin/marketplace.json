@@ -6,7 +6,7 @@
     "url": "https://fastrsoft.com"
   },
   "metadata": {
-    "description": "FluentCart and Lemon Squeezy developer skills, each with its own MCP server.",
+    "description": "FluentCart developer skill, shipped with its own MCP server.",
     "version": "2.0.0"
   },
   "plugins": [
@@ -15,12 +15,6 @@
       "source": "./skills/fluentcart-developer",
       "description": "Comprehensive developer knowledge base for FluentCart WordPress e-commerce. Build custom plugins, add-ons, classic and block themes, monetize and license software via the official Software Licensing SDK, with generated clients that bind the offline licence token to each installation, create custom payment gateways with recurring subscriptions, implement dynamic shipping carriers, extend the Vue 3 customer dashboard with addCustomerDashboardEndpoint, query 34 Eloquent database tables, and leverage 680+ action and filter hooks.",
       "version": "1.6.0"
-    },
-    {
-      "name": "lemonsqueezy-developer",
-      "source": "./skills/lemonsqueezy-developer",
-      "description": "Comprehensive developer knowledge base and architectural manual for integrating Lemon Squeezy e-commerce, subscriptions, checkouts, and licensing into any web, WordPress, or mobile stack. Covers JSON:API conventions, checkout sessions, Lemon.js overlays, HMAC-SHA256 webhook security, subscription lifecycles, and software license keys.",
-      "version": "1.2.0"
     }
   ]
 }

@@ -1,9 +1,9 @@
-// Guards the two published server manifests.
+// Guards the published server manifest.
 //
 // This used to check the root package's tarball, when the root package was
 // `fluentcart-developer` and shipped a single skill. The root is now private
-// and publishes nothing, so the check was rewritten against the two packages
-// that do publish.
+// and publishes nothing, so the check was rewritten against the package that
+// does publish.
 //
 // It is deliberately static: it reads package.json and never builds. The
 // realistic mistake is someone widening `files` and quietly shipping
@@ -17,10 +17,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const serversRoot = path.join(root, 'servers');
 
-const PACKAGES = [
-  { pkg: 'fluentcart-developer', skill: 'fluentcart-developer' },
-  { pkg: 'lemonsqueezy-developer', skill: 'lemonsqueezy-developer' }
-];
+const PACKAGES = [{ pkg: 'fluentcart-developer', skill: 'fluentcart-developer' }];
 
 /** Everything a tarball may contain. Anything else is a mistake. */
 const ALLOWED_FILES = ['dist', 'README.md', 'LICENSE.md', 'package.json'];

@@ -46,8 +46,7 @@ const dryRun = process.argv.includes('--dry-run');
  */
 const STASH = [
   { path: '.git', rebuildable: false },
-  { path: 'servers/fluentcart-developer/node_modules', rebuildable: true },
-  { path: 'servers/lemonsqueezy-developer/node_modules', rebuildable: true }
+  { path: 'servers/fluentcart-developer/node_modules', rebuildable: true }
 ];
 
 const moved = [];
