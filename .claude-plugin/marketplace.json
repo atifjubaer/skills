@@ -1,5 +1,5 @@
 {
-  "name": "fluentcart-lemonsqueezy-skills",
+  "name": "fluentcart-skills",
   "owner": {
     "name": "FastrSoft",
     "email": "[EMAIL_REDACTED]",
@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "FluentCart developer skill, shipped with its own MCP server.",
-    "version": "2.0.0"
+    "version": "3.0.0"
   },
   "plugins": [
     {
