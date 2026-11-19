@@ -23,6 +23,7 @@ concurrency:
 
 permissions:
   contents: write # commit the bump and push the tag
+  id-token: write # trusted publishing: npm authenticates this workflow over OIDC
 
 jobs:
   release:
@@ -38,12 +39,20 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      # No registry-url on purpose: setup-node would write an .npmrc holding
+      # ${NODE_AUTH_TOKEN}, and with no such secret the empty token shadows the
+      # OIDC credential. The default registry is already registry.npmjs.org.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
           cache: npm
           cache-dependency-path: servers/fluentcart-developer/package-lock.json
+
+      # Trusted publishing requires npm >= 11.5.1; the npm bundled with Node 22 is 10.x.
+      - name: Upgrade npm
+        run: |
+          npm install -g npm@11
+          npm --version
 
       - run: npm ci
 
@@ -72,19 +81,19 @@ jobs:
           echo "Bumped to $VERSION"
 
       # No --provenance: npm only attests builds from a publicly readable
-      # repository, and this one is private. Turn it back on (and add
-      # `id-token: write` above) if the repo is ever made public.
+      # repository, and this one is private. Turn it back on if the repo is
+      # ever made public.
+      #
+      # No NODE_AUTH_TOKEN either. The npm CLI prefers OIDC when the runner
+      # offers it, so this publishes with the trusted publisher configured on
+      # npmjs.com and nothing stored in this repository.
       - name: Publish (dry run)
         if: inputs.dry_run
         run: npm publish --access public --dry-run
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish
         if: ${{ !inputs.dry_run }}
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit the bump and tag it
         if: ${{ !inputs.dry_run }}
