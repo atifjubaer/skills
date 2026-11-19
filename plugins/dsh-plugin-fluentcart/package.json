@@ -1,0 +1,73 @@
+{
+  "name": "dsh-plugin-fluentcart",
+  "version": "1.0.0",
+  "description": "FluentCart developer tools for DeepSeek Harness: registers the fluentcart MCP server and ships the fluentcart-developer skill, so the model can search FluentCart docs, look up hooks and DB tables, and generate boilerplate without any manual cordis.yml editing.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./skills/*": "./skills/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "skills",
+    "icons",
+    "cordis.patch.yml",
+    "index.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "fluentcart",
+    "mcp",
+    "wordpress",
+    "ecommerce"
+  ],
+  "author": "Atif Jubaer",
+  "license": "MIT",
+  "homepage": "https://github.com/atifjubaer/skills/tree/main/plugins/dsh-plugin-fluentcart#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atifjubaer/skills.git",
+    "directory": "plugins/dsh-plugin-fluentcart"
+  },
+  "bugs": {
+    "url": "https://github.com/atifjubaer/skills/issues"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.0 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "fluentcart-developer": "^3.0.1"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-mcp-client": ">=0.2.0 <0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-mcp-client": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-mcp-client": "0.2.2-rc.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node test/e2e.mjs",
+    "prepublishOnly": "npm test",
+    "make-index": "node scripts/make-index.mjs"
+  }
+}

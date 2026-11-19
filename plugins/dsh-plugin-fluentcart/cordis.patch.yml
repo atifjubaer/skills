@@ -1,0 +1,13 @@
+# dsh-plugin-fluentcart
+#
+# One row. The plugin module under lib/ mounts the fluentcart MCP server with
+# the host's own @deepseek-ai/dsh-mcp-client and registers the skill, so this
+# bundle needs no hand-written mcp-client row beside it and no absolute paths:
+# the server entry is resolved from this package's own dependencies.
+#
+# To override it, add a row in your profile's cordis.patch.yml with the same
+# id — later layers win, but a patch replaces the whole `config` value rather
+# than merging into it, so restate every key you still want.
+- insert:
+    - id: fluentcart
+      name: dsh-plugin-fluentcart
