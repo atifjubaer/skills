@@ -59,6 +59,55 @@ jobs:
       - name: Protocol, tool and skills catalog probe
         run: npm run verify
 
+  # The plugin is a thin wrapper, so there is nothing to unit-test — what can
+  # actually break is the wiring: the peer import, the deepseek-harness bundle
+  # manifest, the server resolution, and the child process teardown. The e2e
+  # exercises all four against the real published MCP client and a real spawned
+  # server. It also fails by hanging rather than passing if the child leaks,
+  # which is why the step has a timeout.
+  plugins:
+    name: Build and probe ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [dsh-plugin-fluentcart]
+    defaults:
+      run:
+        working-directory: plugins/${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: plugins/${{ matrix.package }}/package-lock.json
+
+      - run: npm ci
+
+      - name: Mount the plugin and connect the real server
+        timeout-minutes: 5
+        run: npm test
+
+      # What must ship is the bundle manifest and the entry module; what must
+      # not is the dev tree. A dependency that quietly grew into a dsh package
+      # would double-load the MCP client, and a missing `files` entry would
+      # ship node_modules.
+      - name: Check the published package contents
+        run: |
+          npm pack --dry-run 2>&1 | tee /tmp/pack.log
+          for required in lib/index.js cordis.patch.yml skills/fluentcart-developer/SKILL.md; do
+            grep -qF "$required" /tmp/pack.log || {
+              echo "::error::$required is missing from the tarball"
+              exit 1
+            }
+          done
+          if grep -qE 'node_modules|test/e2e|scripts/make-index' /tmp/pack.log; then
+            echo "::error::the tarball contains development files"
+            exit 1
+          fi
+
   docker:
     name: Docker image and healthcheck
     runs-on: ubuntu-latest
