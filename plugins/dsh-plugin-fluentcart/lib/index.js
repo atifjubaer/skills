@@ -27,8 +27,19 @@ import * as McpClient from '@deepseek-ai/dsh-mcp-client'
 /** Cordis plugin identity. */
 export const name = 'fluentcart'
 
-/** The MCP client publishes its tools through the shared registry, so that must exist first. */
-export const inject = ['tools']
+/**
+ * The MCP client publishes its tools through the shared registry, and the
+ * skill goes into the skill registry, so both must exist before this loads.
+ *
+ * `skills` is required, not optional, because Cordis has no optional
+ * injection: a service reached through `ctx` must be declared here or the
+ * read throws. An earlier version guarded the registration with `if
+ * (ctx.skills)` and that guard *was* the crash — the property access throws
+ * before the falsy check can run. Every shipped profile composes
+ * `@deepseek-ai/dsh-skill`, which provides this service, so requiring it
+ * costs nothing real.
+ */
+export const inject = ['tools', 'skills']
 
 /** Server name the tools are namespaced under: `mcp__fluentcart__fc_search_docs`, and so on. */
 const SERVER_NAME = 'fluentcart'
@@ -130,27 +141,25 @@ function readSkill() {
 /**
  * Register the skill and connect the MCP server.
  *
- * The skill is best-effort: a host composed without the skills service should
- * still get the tools, because the tools are the part that does the work. The
- * MCP connection is not best-effort — `failOnStartupError` is on, so a server
- * that cannot start rejects this plugin's activation instead of leaving the
- * model with a skill describing tools that are not there.
+ * Reading the packaged SKILL.md is best-effort: a malformed skill file should
+ * cost the skill, not the tools, because the tools are the part that does the
+ * work. The MCP connection is not best-effort — `failOnStartupError` is on, so
+ * a server that cannot start rejects this plugin's activation instead of
+ * leaving the model with a skill describing tools that are not there.
  *
- * @param {import('@deepseek-ai/cordis').Context} ctx - context providing the tool registry.
+ * @param {import('@deepseek-ai/cordis').Context} ctx - context providing the tool and skill registries.
  * @returns {Promise<void>} settles once initial MCP tool discovery completes.
  */
 export async function apply(ctx) {
-  if (ctx.skills) {
-    try {
-      const skill = readSkill()
-      ctx.skills.register({
-        ...skill,
-        provider: 'fluentcart',
-        invocation: { modelInvocable: true, userInvocable: true },
-      })
-    } catch (error) {
-      ctx.logger?.warn?.(`dsh-plugin-fluentcart: skill not registered — ${error.message}`)
-    }
+  try {
+    const skill = readSkill()
+    ctx.skills.register({
+      ...skill,
+      provider: 'fluentcart',
+      invocation: { modelInvocable: true, userInvocable: true },
+    })
+  } catch (error) {
+    ctx.logger?.warn?.(`dsh-plugin-fluentcart: skill not registered — ${error.message}`)
   }
 
   const connection = McpClient.Config({

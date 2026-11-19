@@ -9,6 +9,8 @@
 // actually advertised. Stubbing the registries keeps the test free of an LLM,
 // a system prompt, and a session, none of which this plugin touches.
 
+import { readFileSync } from 'node:fs'
+
 import { Context } from '@deepseek-ai/cordis'
 
 import * as plugin from '../lib/index.js'
@@ -62,6 +64,30 @@ check(
   Array.isArray(plugin.inject) && plugin.inject.includes('tools'),
   'plugin injects tools',
   JSON.stringify(plugin.inject),
+)
+check(
+  Array.isArray(plugin.inject) && plugin.inject.includes('skills'),
+  'plugin injects skills',
+  JSON.stringify(plugin.inject),
+)
+
+// Cordis proxies services so that *reading* an un-injected one throws, which
+// means a `if (ctx.skills)` guard is itself the crash rather than the guard.
+// That bug shipped once and this check exists to stop it coming back: every
+// `ctx.<name>` the plugin reads must be declared in `inject`, unless it is a
+// member Cordis mixes onto every context.
+const CONTEXT_MEMBERS = new Set([
+  'baseUrl', 'effect', 'emit', 'events', 'extend', 'get', 'inject', 'intercept',
+  'isolate', 'logger', 'mixin', 'on', 'parallel', 'plugin', 'provide', 'reflect',
+  'registry', 'root', 'serial', 'set',
+])
+const source = readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
+const reads = new Set([...source.matchAll(/\bctx\.([A-Za-z_$][\w$]*)/g)].map((m) => m[1]))
+const undeclared = [...reads].filter((key) => !CONTEXT_MEMBERS.has(key) && !plugin.inject.includes(key))
+check(
+  undeclared.length === 0,
+  'every ctx service read is declared in inject',
+  undeclared.length ? `undeclared: ${undeclared.join(', ')}` : [...reads].join(', '),
 )
 
 // --- MCP connection --------------------------------------------------------
