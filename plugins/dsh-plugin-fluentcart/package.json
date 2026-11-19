@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-fluentcart",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FluentCart developer tools for DeepSeek Harness: registers the fluentcart MCP server and ships the fluentcart-developer skill, so the model can search FluentCart docs, look up hooks and DB tables, and generate boilerplate without any manual cordis.yml editing.",
   "type": "module",
   "main": "lib/index.js",

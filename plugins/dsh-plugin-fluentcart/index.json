@@ -1,0 +1,100 @@
+{
+  "format": 1,
+  "title": {
+    "en": "FluentCart"
+  },
+  "description": {
+    "en": "FluentCart developer tools for WordPress e-commerce: documentation search, hooks, database schema, and boilerplate generation."
+  },
+  "metadata": {
+    "categories": {
+      "development": {
+        "title": {
+          "en": "Development"
+        }
+      }
+    },
+    "labels": {
+      "wordpress": {
+        "title": {
+          "en": "WordPress"
+        }
+      },
+      "ecommerce": {
+        "title": {
+          "en": "E-commerce"
+        }
+      },
+      "mcp": {
+        "title": {
+          "en": "MCP server"
+        }
+      },
+      "skills": {
+        "title": {
+          "en": "Ships a skill"
+        }
+      }
+    },
+    "sortKeys": {
+      "npm_weekly_downloads": {
+        "title": {
+          "en": "Weekly downloads"
+        },
+        "order": "desc"
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "dsh-plugin-fluentcart",
+      "title": {
+        "en": "FluentCart Developer"
+      },
+      "description": {
+        "en": "Adds the fluentcart MCP server (12 tools over 588 documentation pages) and the fluentcart-developer skill. Free, local, no licence key."
+      },
+      "icon": "icons/fluentcart.png",
+      "author": "Atif Jubaer",
+      "homepage": "https://github.com/atifjubaer/skills/tree/main/plugins/dsh-plugin-fluentcart#readme",
+      "repository": {
+        "url": "https://github.com/atifjubaer/skills",
+        "directory": "plugins/dsh-plugin-fluentcart"
+      },
+      "metadata": {
+        "category": "development",
+        "labels": [
+          "wordpress",
+          "ecommerce",
+          "mcp",
+          "skills"
+        ],
+        "sortKeys": {
+          "npm_weekly_downloads": null
+        }
+      },
+      "versions": [
+        {
+          "version": "1.0.1",
+          "publishTimestamp": 1795127041,
+          "source": {
+            "type": "npm"
+          },
+          "engines": {
+            "dsh": ">=0.2.0 <0.3.0"
+          }
+        },
+        {
+          "version": "1.0.0",
+          "publishTimestamp": 1795126855,
+          "source": {
+            "type": "npm"
+          },
+          "engines": {
+            "dsh": ">=0.2.0 <0.3.0"
+          }
+        }
+      ]
+    }
+  ]
+}
