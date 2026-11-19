@@ -20,6 +20,24 @@ const { name } = manifest
 
 const REGISTRY = 'https://registry.npmjs.org'
 
+// The icon is inlined as a `data:` URL rather than left as a relative path.
+// A relative icon resolves against the index URL, which means the host has to
+// serve an `icons/` directory beside the JSON. A single-file host — a gist, for
+// one — cannot, and the icon then silently 404s. Inlining makes the index one
+// self-contained file that works from any static host. The format caps an
+// inline icon at 32 KiB; this one is 7 KB.
+const ICON_PATH = join(root, 'icons', 'fluentcart.png')
+const ICON_LIMIT_BYTES = 32 * 1024
+
+const iconBytes = readFileSync(ICON_PATH)
+if (iconBytes.byteLength > ICON_LIMIT_BYTES) {
+  throw new Error(
+    `make-index: ${ICON_PATH} is ${iconBytes.byteLength} bytes; ` +
+      `an inline icon is capped at ${ICON_LIMIT_BYTES}. Resize it, or serve it as a URL instead.`,
+  )
+}
+const icon = `data:image/png;base64,${iconBytes.toString('base64')}`
+
 /** @param {string} path */
 async function getJson(path) {
   const response = await fetch(`${REGISTRY}${path}`, {
@@ -98,7 +116,7 @@ const index = {
       description: {
         en: 'Adds the fluentcart MCP server (12 tools over 588 documentation pages) and the fluentcart-developer skill. Free, local, no licence key.',
       },
-      icon: 'icons/fluentcart.png',
+      icon,
       author: manifest.author ?? 'Atif Jubaer',
       homepage: manifest.homepage,
       repository: {

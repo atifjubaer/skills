@@ -78,27 +78,40 @@ restate every key you still want.
 
 ## Plugin index
 
-[`index.json`](./index.json) is a
-[plugin index](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/plugin-market.md)
-in `format: 1`. Open **Plugins → Custom plugin indexes**, add the URL of that
-file, and install from the **Discover** tab.
+Open **Plugins → Custom plugin indexes**, choose **Add index source**, and enter:
 
-**It must be served from a publicly readable URL.** This repository is private,
-and a `raw.githubusercontent.com` link to a private repository returns 401 to
-DSH's fetch, so the index has to be published somewhere public before the
-Discover tab can read it. The plain `dsh plugin add dsh-plugin-fluentcart`
-install above does not depend on the index and always works.
+```
+https://gist.githubusercontent.com/atifjubaer/48f161bee2d78a7180de16e5f23c49bc/raw/index.json
+```
 
-The icon is a relative path, so `icons/fluentcart.png` must be published next to
-`index.json`, resolved against the index URL the way an image resolves against a
-page. Both files are already laid out that way.
+Then install from the **Discover** tab.
 
-Regenerate the index after a publish, so the listed versions and their
-timestamps come from the registry rather than from memory:
+This is optional. `dsh plugin add dsh-plugin-fluentcart` does not depend on the
+index and always works; the index only adds a browsable card.
+
+The index is a [plugin
+index](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/plugin-market.md)
+in `format: 1`. It is hosted as a gist rather than served from this repository
+because this repository is private, and a `raw.githubusercontent.com` link to a
+private repository returns **401** to DSH's fetch.
+
+[`index.json`](./index.json) in this directory is the source of truth. The gist
+is a published copy of it.
+
+### Regenerating
+
+The index is generated, not hand-written: every listed version needs a real
+`publishTimestamp`, and only the registry knows those. After a publish:
 
 ```sh
 npm run make-index
+gh gist edit 48f161bee2d78a7180de16e5f23c49bc index.json
 ```
+
+The icon is inlined as a `data:` URL, so the index is a single self-contained
+file that works on any static host. A relative icon would need an `icons/`
+directory published beside the JSON, which a gist cannot provide. The format
+caps an inline icon at 32 KiB and this one is 7 KB.
 
 ## Development
 
