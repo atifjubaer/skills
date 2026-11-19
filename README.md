@@ -73,9 +73,8 @@ Every tool is registered for every caller on both transports. There is no licenc
 npm run sync:docs        # re-capture every page
 ```
 
-**[UPDATING.md](./UPDATING.md) is the operational guide** — what the script does
-step by step, the four numbers to check after every run, how to publish a
-refresh, and the traps that silently produce an empty corpus.
+**[UPDATING.md](./UPDATING.md)** — maintainer notes for refreshing the corpus
+and publishing a release. Not required to use the skill.
 
 `scripts/sync-fluentcart-docs.mjs` does this without a browser and without a single click:
 

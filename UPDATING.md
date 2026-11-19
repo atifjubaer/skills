@@ -1,5 +1,10 @@
 # Keeping the FluentCart docs current
 
+> **Maintainer notes — not part of the skill.** This is my own release routine
+> for refreshing the corpus and shipping a new version. None of it reaches
+> users: the npm package ships `references/` and the server, never this file.
+> Someone installing the plugin never needs to read it.
+
 `skills/fluentcart-developer/references/` is **generated**. Every file in it is
 captured from <https://dev.fluentcart.com>. Hand-editing one is pointless — the
 next sync overwrites it.
