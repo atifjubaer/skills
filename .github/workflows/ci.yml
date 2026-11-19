@@ -77,12 +77,12 @@ jobs:
             sleep 1
           done
           echo "healthcheck never came up"
-          docker logs suite
+          docker logs fluentcart
           exit 1
 
       - name: Container logs
         if: always()
-        run: docker logs suite || true
+        run: docker logs fluentcart || true
   sdk-compile:
     name: Generated clients compile
     runs-on: ubuntu-latest

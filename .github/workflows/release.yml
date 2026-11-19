@@ -1,0 +1,108 @@
+name: Release
+
+# Publishing is deliberate, never automatic. A merge to main runs CI and stops
+# there; a release is a person choosing a version bump.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      dry_run:
+        description: Publish with --dry-run (proves the tarball, ships nothing)
+        type: boolean
+        default: true
+
+# Never two releases at once: both would read the same version and the second
+# would fail on npm's "cannot publish over" error after the first already went out.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commit the bump and push the tag
+
+jobs:
+  release:
+    name: Publish fluentcart-developer
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: servers/fluentcart-developer
+    steps:
+      # A release always ships main, whatever branch the dispatch was started from.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: servers/fluentcart-developer/package-lock.json
+
+      - run: npm ci
+
+      # prepublishOnly runs build + verify again; this runs them first so a
+      # broken tree fails before the version number is touched.
+      - name: Build and verify
+        run: |
+          npm run build
+          npm run verify
+
+      - name: Refuse to publish a version that already exists
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already on npm. Bump the version or pick another bump."
+            exit 1
+          fi
+
+      - name: Bump version
+        id: bump
+        run: |
+          npm version "${{ inputs.bump }}" --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumped to $VERSION"
+
+      # No --provenance: npm only attests builds from a publicly readable
+      # repository, and this one is private. Turn it back on (and add
+      # `id-token: write` above) if the repo is ever made public.
+      - name: Publish (dry run)
+        if: inputs.dry_run
+        run: npm publish --access public --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        if: ${{ !inputs.dry_run }}
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit the bump and tag it
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(release): fluentcart-developer@${{ steps.bump.outputs.version }}"
+          git tag -a "v${{ steps.bump.outputs.version }}" -m "fluentcart-developer@${{ steps.bump.outputs.version }}"
+          git push origin HEAD:main
+          git push origin "v${{ steps.bump.outputs.version }}"
+
+      - name: Summarise
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "### Dry run" >> "$GITHUB_STEP_SUMMARY"
+            echo "Would have published \`fluentcart-developer@${{ steps.bump.outputs.version }}\`. Nothing shipped." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`fluentcart-developer@${{ steps.bump.outputs.version }}\` is live at https://www.npmjs.com/package/fluentcart-developer" >> "$GITHUB_STEP_SUMMARY"
+          fi
