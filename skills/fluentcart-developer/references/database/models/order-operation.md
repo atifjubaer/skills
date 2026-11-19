@@ -1,0 +1,158 @@
+# Order Operation Model
+
+| DB Table Name | {wp_db_prefix}_fct_order_operations |
+| --- | --- |
+| Schema | [Check Schema](/database/schema.md#fct-order-operations-table) |
+| Source File | fluent-cart/app/Models/OrderOperation.php |
+| Name Space | FluentCart\App\Models |
+| Class | FluentCart\App\Models\OrderOperation |
+
+## Attributes
+
+| Attribute | Data Type | Comment |
+| --- | --- | --- |
+| id | Integer | Primary Key (guarded) |
+| order_id | Integer | Reference to order |
+| created_via | String | How the order was created |
+| emails_sent | Boolean | TINYINT(1) — whether the order's emails have been sent |
+| sales_recorded | Boolean | Whether the sale has been counted into reports |
+| meta | JSON | Fillable |
+| sales_recorded | Boolean | Whether sales were recorded |
+| utm_campaign | String | UTM campaign parameter |
+| utm_term | String | UTM term parameter |
+| utm_source | String | UTM source parameter |
+| utm_content | String | UTM content parameter |
+| utm_medium | String | UTM medium parameter |
+| utm_id | String | UTM ID parameter |
+| cart_hash | String | Cart hash identifier |
+| refer_url | String | Referral URL |
+| meta | JSON | Additional operation data (has accessor/mutator but not in $fillable) |
+| created_at | Date Time | Creation timestamp |
+| updated_at | Date Time | Last update timestamp |
+
+> **Note:** The `meta` column has accessor/mutator methods for JSON encoding/decoding but is not included in `$fillable`. It must be set directly on the model instance. The `id` column is both guarded and declared as `$primaryKey`.
+
+## Usage
+
+Please check [Model Basic](/database/models.md) for Common methods.
+
+### Accessing Attributes
+
+```
+$orderOperation = FluentCart\App\Models\OrderOperation::find(1);
+
+$orderOperation->id; // returns id
+$orderOperation->order_id; // returns order ID
+$orderOperation->created_via; // returns creation method
+$orderOperation->emails_sent; // whether order emails have gone out
+```
+
+## Relations
+
+This model has the following relationships that you can use
+
+### order
+
+Access the associated order
+
+- return `FluentCart\App\Models\Order` Model
+
+#### Example:
+
+```
+// Accessing Order
+$order = $orderOperation->order;
+
+// For Filtering by order relationship
+$orderOperations = FluentCart\App\Models\OrderOperation::whereHas('order', function($query) {
+    $query->where('status', 'completed');
+})->get();
+```
+
+## Methods
+
+Along with Global Model methods, this model has few helper methods.
+
+### setMetaAttribute($value)
+
+Set meta from array (mutator). Automatically JSON-encodes the value.
+
+- Parameters $value - array|object
+
+Returns `void`
+
+#### Usage
+
+```
+$orderOperation->meta = ['analytics_data' => 'value', 'tracking_info' => 'data'];
+```
+
+### getMetaAttribute($value)
+
+Get meta as array (accessor). Automatically JSON-decodes the stored value.
+
+- Parameters $value - mixed
+
+Returns `array`
+
+#### Usage
+
+```
+$meta = $orderOperation->meta; // Returns array
+```
+
+## Usage Examples
+
+### Get Order Operations
+
+```
+$order = FluentCart\App\Models\Order::find(123);
+$operations = $order->order_operations;
+
+foreach ($operations as $operation) {
+    echo "Created via: " . $operation->created_via;
+    echo "UTM Campaign: " . $operation->utm_campaign;
+}
+```
+
+### Get Operations by UTM Source
+
+```
+$googleOperations = FluentCart\App\Models\OrderOperation::where('utm_source', 'google')->get();
+$facebookOperations = FluentCart\App\Models\OrderOperation::where('utm_source', 'facebook')->get();
+```
+
+### Create Order Operation
+
+```
+$orderOperation = FluentCart\App\Models\OrderOperation::create([
+    'order_id' => 123,
+    'created_via' => 'checkout',
+    'has_tax' => true,
+    'has_discount' => true,
+    'coupons_counted' => 2,
+    'emails_sent' => 3,
+    'sales_recorded' => true,
+    'utm_campaign' => 'summer_sale',
+    'utm_source' => 'google',
+    'utm_medium' => 'cpc',
+    'cart_hash' => 'abc123def456',
+    'refer_url' => 'https://example.com/products'
+]);
+```
+
+### Track UTM Parameters
+
+```
+$orderOperation = FluentCart\App\Models\OrderOperation::create([
+    'order_id' => 123,
+    'utm_campaign' => 'black_friday',
+    'utm_source' => 'facebook',
+    'utm_medium' => 'social',
+    'utm_content' => 'banner_ad',
+    'utm_term' => 'discount',
+    'utm_id' => 'fb_123'
+]);
+```
+
+---

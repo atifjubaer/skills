@@ -1,0 +1,175 @@
+# Scheduled Action Model
+
+| DB Table Name | {wp_db_prefix}_fct_scheduled_actions |
+| --- | --- |
+| Schema | [Check Schema](/database/schema.md#fct-scheduled-actions-table) |
+| Source File | fluent-cart/app/Models/ScheduledAction.php |
+| Name Space | FluentCart\App\Models |
+| Class | FluentCart\App\Models\ScheduledAction |
+
+## Guarded & Fillable
+
+This model uses both `$guarded` and `$fillable`:
+
+- **Guarded:** `['id']`
+- **Fillable:** `['scheduled_at', 'action', 'status', 'group', 'object_id', 'object_type', 'completed_at', 'retry_count', 'data', 'response_note']`
+
+## Attributes
+
+| Attribute | Data Type | Comment |
+| --- | --- | --- |
+| id | Integer | Primary Key (guarded) |
+| scheduled_at | Date Time | When the action is scheduled to run |
+| action | String | Action to be performed |
+| status | String | Action status. The lifecycle is `pending` -> `processing` -> `completed` -> `failed` |
+| group | String | Action group |
+| object_id | Integer | ID of the associated object |
+| object_type | String | Type of the associated object |
+| completed_at | Date Time | When the action was completed |
+| retry_count | Integer | Number of retry attempts |
+| data | JSON | Action data and parameters (manual JSON mutator/accessor) |
+| response_note | Text | LONGTEXT — response or error note |
+| created_at | Date Time | Creation timestamp |
+| updated_at | Date Time | Last update timestamp |
+
+## Usage
+
+Please check [Model Basic](/database/models.md) for Common methods.
+
+### Accessing Attributes
+
+```
+$scheduledAction = FluentCart\App\Models\ScheduledAction::find(1);
+
+$scheduledAction->id; // returns id
+$scheduledAction->scheduled_at; // returns scheduled time
+$scheduledAction->action; // returns action name
+$scheduledAction->status; // returns status
+$scheduledAction->data; // returns array (accessor)
+$scheduledAction->response_note; // returns response note
+```
+
+## Methods
+
+Along with Global Model methods, this model has few helper methods.
+
+### setDataAttribute($value)
+
+Set data with automatic JSON encoding (mutator). If the value is an array or object, it is encoded with `json_encode()`. Otherwise the raw value is stored as-is.
+
+- Parameters $value - mixed (array, object, or string)
+
+Returns `void`
+
+#### Usage
+
+```
+$scheduledAction->data = ['param1' => 'value1', 'param2' => 'value2'];
+// Automatically JSON encodes arrays and objects
+```
+
+### getDataAttribute($value)
+
+Get data with automatic JSON decoding (accessor). Decodes the stored JSON string into an associative array.
+
+- Parameters $value - mixed
+
+Returns `array` - Decoded array, or empty array if decoding fails or value is not a valid JSON array
+
+#### Usage
+
+```
+$data = $scheduledAction->data; // Returns decoded array
+```
+
+## Usage Examples
+
+### Get Scheduled Actions
+
+```
+$scheduledAction = FluentCart\App\Models\ScheduledAction::find(1);
+echo "Action: " . $scheduledAction->action;
+echo "Status: " . $scheduledAction->status;
+echo "Scheduled At: " . $scheduledAction->scheduled_at;
+```
+
+### Get Pending Actions
+
+```
+$pendingActions = FluentCart\App\Models\ScheduledAction::where('status', 'pending')
+    ->where('scheduled_at', '<=', now())
+    ->get();
+
+foreach ($pendingActions as $action) {
+    echo "Action: " . $action->action;
+    echo "Data: " . print_r($action->data, true);
+}
+```
+
+### Create Scheduled Action
+
+```
+$scheduledAction = FluentCart\App\Models\ScheduledAction::create([
+    'scheduled_at' => now()->addHours(1),
+    'action' => 'send_email',
+    'status' => 'pending',
+    'group' => 'notifications',
+    'object_id' => 123,
+    'object_type' => 'order',
+    'data' => [
+        'email' => '[email&#160;protected]',
+        'template' => 'order_confirmation',
+        'order_id' => 123
+    ]
+]);
+```
+
+### Get Actions by Group
+
+```
+$emailActions = FluentCart\App\Models\ScheduledAction::where('group', 'notifications')->get();
+$webhookActions = FluentCart\App\Models\ScheduledAction::where('group', 'webhooks')->get();
+```
+
+### Get Failed Actions
+
+```
+$failedActions = FluentCart\App\Models\ScheduledAction::where('status', 'failed')
+    ->where('retry_count', '<', 3)
+    ->get();
+```
+
+### Mark Action as Completed
+
+```
+$action = FluentCart\App\Models\ScheduledAction::find(1);
+$action->status = 'completed';
+$action->completed_at = now();
+$action->response_note = 'Successfully processed';
+$action->save();
+```
+
+### Get Actions for Object
+
+```
+$orderActions = FluentCart\App\Models\ScheduledAction::where('object_type', 'order')
+    ->where('object_id', 123)
+    ->get();
+```
+
+### Retry Failed Action
+
+```
+$failedAction = FluentCart\App\Models\ScheduledAction::where('status', 'failed')
+    ->where('retry_count', '<', 3)
+    ->first();
+
+if ($failedAction) {
+    $failedAction->status = 'pending';
+    $failedAction->retry_count = $failedAction->retry_count + 1;
+    $failedAction->scheduled_at = now()->addMinutes(5);
+    $failedAction->save();
+}
+```
+
+---

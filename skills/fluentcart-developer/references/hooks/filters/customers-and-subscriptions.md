@@ -1,0 +1,1746 @@
+# Customers & Subscriptions
+
+All filters related to [Customer](/database/models/customer.md) management, the customer portal, [Subscription](/database/models/subscription.md) lifecycle, billing configuration, and automated reminders.
+
+---
+
+## Customer Data & Portal
+
+### ` customer/view `
+
+`fluent_cart/customer/view` — Filter admin single customer view data
+
+**When it runs:** This filter is applied when preparing a single customer's data for display in the admin panel.
+
+**Parameters:**
+
+- `$customer` ([Customer](/database/models/customer.md)): The Customer model instance with loaded relations
+
+```
+$customer = [
+    'id' => 456,
+    'email' => '[email&#160;protected]',
+    'first_name' => 'John',
+    'last_name' => 'Doe',
+    'total_orders' => 5,
+    'total_spent' => 50000,
+    'selected_labels' => [...]
+];
+```
+
+- `$requestData` (array): The full request data from `$request->all()`
+
+**Returns:**
+
+- `$customer` ([Customer](/database/models/customer.md)): The modified customer data
+
+**Source:** `app/Http/Controllers/CustomerController.php:83`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer/view', function($customer, $requestData) {
+    // Add loyalty points to customer view
+    $customer['loyalty_points'] = get_user_meta($customer['user_id'], 'loyalty_points', true);
+    return $customer;
+}, 10, 2);
+```
+
+### ` widgets/single_customer `
+
+`fluent_cart/widgets/single_customer` — Filter single customer admin widgets
+
+**When it runs:** This filter is applied when loading widget data for a single customer's admin view, allowing you to inject custom widget sections.
+
+**Parameters:**
+
+- `$widgets` (array): Array of widget definitions (default: `[]`)
+- `$customer` ([Customer](/database/models/customer.md)): The Customer model instance
+
+**Returns:**
+
+- `$widgets` (array): The modified widgets array
+
+**Source:** `app/Http/Controllers/CustomerController.php:426`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/widgets/single_customer', function($widgets, $customer) {
+    // Add a custom CRM widget
+    $widgets[] = [
+        'title' => 'CRM Notes',
+        'content' => get_user_meta($customer->user_id, 'crm_notes', true)
+    ];
+    return $widgets;
+}, 10, 2);
+```
+
+### ` customer_dashboard_data `
+
+`fluent_cart/customer_dashboard_data` — Filter customer dashboard data
+
+**When it runs:** This filter is applied when preparing the customer portal dashboard data, including the recent orders list and section parts. Runs both when a customer exists and when no customer is found.
+
+**Parameters:**
+
+- `$data` (array): The dashboard response data
+
+```
+$data = [
+    'message' => 'Success',
+    'dashboard_data' => [
+        'orders' => [...] // Recent orders collection
+    ],
+    'sections_parts' => [
+        'before_orders_table' => '',
+        'after_orders_table' => ''
+    ]
+];
+```
+
+- `$context` (array): Context data containing the customer
+
+```
+$context = [
+    'customer' => $customer // Customer model or null
+];
+```
+
+**Returns:**
+
+- `$data` (array): The modified dashboard data
+
+**Source:** `app/Http/Controllers/FrontendControllers/CustomerProfileController.php:65,122`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer_dashboard_data', function($data, $context) {
+    $customer = $context['customer'];
+    if ($customer) {
+        // Add a welcome banner above the orders table
+        $data['sections_parts']['before_orders_table'] = '<div class="welcome-banner">Welcome back!</div>';
+    }
+    return $data;
+}, 10, 2);
+```
+
+### ` global_customer_menu_items `
+
+`fluent_cart/global_customer_menu_items` — Filter customer portal menu items
+
+**When it runs:** This filter is applied when building the customer portal sidebar navigation menu, after built-in items have been conditionally removed (e.g., subscriptions, licenses).
+
+**Parameters:**
+
+- `$menuItems` (array): Associative array of menu items keyed by slug
+
+```
+$menuItems = [
+    'orders' => [
+        'label' => 'Orders',
+        'css_class' => 'fct_route',
+        'link' => '/customer-portal/#/orders',
+        'icon_svg' => '<svg>...</svg>'
+    ],
+    'subscriptions' => [...],
+    'licenses' => [...],
+    'downloads' => [...],
+    'profile' => [...]
+];
+```
+
+- `$context` (array): Context data
+
+```
+$context = [
+    'base_url' => '/customer-portal/#/'
+];
+```
+
+**Returns:**
+
+- `$menuItems` (array): The modified menu items array
+
+**Source:** `app/Hooks/Handlers/ShortCodes/CustomerProfileHandler.php:299`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/global_customer_menu_items', function($menuItems, $context) {
+    // Add a custom "Support" tab before "profile"
+    $baseUrl = $context['base_url'];
+    $menuItems['support'] = [
+        'label' => 'Support',
+        'css_class' => 'fct_route',
+        'link' => $baseUrl . 'support',
+        'icon_svg' => '<svg>...</svg>'
+    ];
+    return $menuItems;
+}, 10, 2);
+```
+
+### ` customer_portal/routes ` (JavaScript)
+
+`fluent_cart/customer_portal/routes` — Add pages to the customer portal app (JS filter)
+
+**When it runs:** This is a JavaScript filter on `wp.hooks`. The customer portal applies it to its vue-router route table once, before it creates the router. Use it to add your own page to the portal app.
+
+The portal script loads as a deferred module. Enqueue your script on the `fluent_cart/customer_dashboard/enqueue_assets` action as a classic script that depends on `wp-hooks`. It then runs before the portal script, so your filter is in place in time.
+
+**Parameters:**
+
+- `routes` (Array): vue-router route records
+- `context` (Object): `{ vue }`, the portal's own Vue (read-only). Use `vue.h` and `vue.defineComponent` to build components, so they use the same Vue instance as the portal.
+
+**Returns:**
+
+- `routes` (Array): The route table. If the value is not an array, the portal uses its own routes.
+
+**Source:** `resources/public/customer-profile/Start.js:147`
+
+**Usage:**
+
+Enqueue the script:
+
+```
+add_action('fluent_cart/customer_dashboard/enqueue_assets', function () {
+    wp_enqueue_script('my-portal-pages', plugins_url('js/portal-pages.js', __FILE__), ['wp-hooks'], '1.0.0', true);
+});
+```
+
+Add the route (`js/portal-pages.js`):
+
+```
+wp.hooks.addFilter('fluent_cart/customer_portal/routes', 'my-plugin', function (routes, context) {
+    const { h, defineComponent } = context.vue;
+
+    return routes.concat([{
+        path: '/memberships',
+        name: 'my_memberships',
+        component: defineComponent({
+            render: () => h('div', { class: 'my-memberships' }, 'Your memberships')
+        }),
+        meta: {
+            active_menu: 'memberships', // the menu item key to highlight
+            title: 'Memberships'
+        }
+    }]);
+});
+```
+
+Add the menu item. The `fct_route` class makes the link open the route in the app, without a page reload:
+
+```
+add_filter('fluent_cart/global_customer_menu_items', function ($menuItems, $context) {
+    $menuItems['memberships'] = [
+        'label'     => __('Memberships', 'my-plugin'),
+        'css_class' => 'fct_route',
+        'link'      => $context['base_url'] . 'memberships',
+    ];
+    return $menuItems;
+}, 10, 2);
+```
+
+A direct visit to the URL (for example `/my-account/memberships`) also opens the page, because the portal page catches every path below it.
+
+### ` fct_allowed_svg_tags `
+
+`fct_allowed_svg_tags` — Allow-list the SVG tags/attributes for a customer nav menu icon
+
+**When it runs:** This filter is applied when rendering a customer-portal navigation menu item that has an inline `icon_svg` value. The returned value is passed straight to `wp_kses()` as the allowed-HTML list, so a menu item's inline SVG icon is only rendered if this filter allow-lists the SVG tags/attributes it uses — the default is an empty array, which strips all markup.
+
+> **Note:** This hook has no `fluent_cart/` or `fluent_cart_` prefix — it predates that naming convention. Register it exactly as `fct_allowed_svg_tags`.
+
+**Source:** `app/Views/frontend/customer_menu.php:60`
+
+**Parameters:**
+
+- `$allowedTags` (array): The `wp_kses()`-style allowed tags/attributes array. Empty by default.
+
+**Returns:**
+
+- `array` — The allowed tags/attributes array, in the format `wp_kses()` expects
+
+**Usage:**
+
+```
+add_filter('fct_allowed_svg_tags', function ($allowedTags) {
+    // Allow a basic inline <svg><path> icon
+    $allowedTags['svg'] = ['class' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'fill' => true];
+    $allowedTags['path'] = ['d' => true, 'fill' => true];
+    return $allowedTags;
+});
+```
+
+### ` customer_portal/active_tab `
+
+`fluent_cart/customer_portal/active_tab` — Filter the active tab in customer portal
+
+**When it runs:** This filter is applied when rendering the customer portal to determine which tab should be visually active by default.
+
+**Parameters:**
+
+- `$activeTab` (string): The active tab identifier (default: `''`)
+
+**Returns:**
+
+- `$activeTab` (string): The modified active tab slug
+
+**Source:** `app/Hooks/Handlers/ShortCodes/CustomerProfileHandler.php:150`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer_portal/active_tab', function($activeTab) {
+    // Default to subscriptions tab
+    return 'subscriptions';
+}, 10, 1);
+```
+
+### ` customer_portal/custom_endpoints `
+
+`fluent_cart/customer_portal/custom_endpoints` — Filter custom portal endpoints
+
+**When it runs:** This filter is applied when routing customer portal requests to check for registered custom endpoint paths. Use this to add entirely new pages to the customer portal.
+
+**Parameters:**
+
+- `$endpoints` (array): Associative array of custom endpoints (default: `[]`)
+
+```
+$endpoints = [
+    'my-page' => [
+        'render_callback' => callable,
+        // or 'page_id' => 123
+    ]
+];
+```
+
+**Returns:**
+
+- `$endpoints` (array): The modified endpoints array
+
+**Source:** `app/Hooks/Handlers/ShortCodes/CustomerProfileHandler.php:174`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer_portal/custom_endpoints', function($endpoints) {
+    $endpoints['warranty'] = [
+        'render_callback' => function() {
+            echo '<div class="warranty-page">Warranty info here</div>';
+        }
+    ];
+    return $endpoints;
+}, 10, 1);
+```
+
+TIP
+
+Consider using the `FluentCartGeneralApi::addCustomerPortalEndpoint()` helper method instead, which registers both the menu item and the endpoint in one call.
+
+### ` customer_portal/{filter} `
+
+`fluent_cart/customer_portal/{$filter}` — Provide sections for a custom customer-portal endpoint (dynamic)
+
+**When it runs:** This **dynamic** filter is applied by the customer-portal sections REST endpoint. `{$filter}` is replaced with the requested section/tab slug from the request, so an add-on that registers a portal endpoint (see `customer_portal/custom_endpoints` above) can supply that endpoint's section content by listening on its own slug.
+
+**Source:** `app/Http/Controllers/FrontendControllers/CustomerProfileController.php:228`
+
+**Parameters:**
+
+- `$sections` (array): The sections to return for this endpoint. Empty by default.
+- `$data` (array): Context data
+
+```
+$data = [
+    'customer' => $customer,  // Customer model instance
+];
+```
+
+**Returns:**
+
+- `array` — The sections for this portal endpoint, formatted for the frontend
+
+**Usage:**
+
+```
+// Supply sections for a portal endpoint registered under the "warranty" slug
+add_filter('fluent_cart/customer_portal/warranty', function ($sections, $data) {
+    $sections[] = [
+        'title'   => __('Warranty', 'fluent-cart'),
+        'content' => __('Your products are covered by our standard 12-month warranty.', 'fluent-cart'),
+    ];
+    return $sections;
+}, 10, 2);
+```
+
+### ` customer_portal/subscription_data `
+
+`fluent_cart/customer_portal/subscription_data` — Filter customer portal subscription data
+
+**When it runs:** This filter is applied when preparing a single subscription's data for display in the customer portal, after transactions have been loaded.
+
+**Parameters:**
+
+- `$formattedData` (array): The formatted subscription data including transactions
+- `$context` (array): Context data
+
+```
+$context = [
+    'subscription' => $subscription, // Subscription model
+    'customer' => $customer           // Customer model
+];
+```
+
+**Returns:**
+
+- `$formattedData` (array): The modified subscription data
+
+**Source:** `app/Http/Controllers/FrontendControllers/CustomerSubscriptionController.php:175`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer_portal/subscription_data', function($formattedData, $context) {
+    // Add next invoice preview
+    $subscription = $context['subscription'];
+    $formattedData['next_invoice_preview'] = [
+        'amount' => $subscription->recurring_amount,
+        'date' => $subscription->expiration_at
+    ];
+    return $formattedData;
+}, 10, 2);
+```
+
+### ` customer/subscription_details_section_parts `
+
+`fluent_cart/customer/subscription_details_section_parts` — Filter subscription details section parts in customer portal
+
+**When it runs:** This filter is applied when rendering a subscription details page in the customer portal, letting you inject custom HTML into specific sections of the view. Every returned value is passed through `wp_kses_post()` before output. This is the free-plugin counterpart to Pro's `customer/license_details_section_parts`.
+
+**Source:** `app/Http/Controllers/FrontendControllers/CustomerSubscriptionController.php:180`
+
+**Parameters:**
+
+- `$sectionParts` (array): Associative array of injectable HTML sections
+
+```
+$sectionParts = [
+    'end_of_subscription' => '',
+];
+```
+
+- `$context` (array): Context data
+
+```
+$context = [
+    'subscription'  => $subscription,   // Subscription model
+    'formattedData' => $formattedData,  // Formatted subscription data for display
+];
+```
+
+**Returns:**
+
+- `array` — The modified section parts. Each value is sanitized with `wp_kses_post()`.
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer/subscription_details_section_parts', function ($parts, $context) {
+    $subscription = $context['subscription'];
+
+    $parts['end_of_subscription'] = sprintf(
+        '<p>%s</p>',
+        sprintf(__('Need help? Contact us about subscription #%d.', 'fluent-cart'), $subscription->id)
+    );
+
+    return $parts;
+}, 10, 2);
+```
+
+### ` payment_methods/stripe_pub_key `
+
+`fluent_cart/payment_methods/stripe_pub_key` — Filter Stripe public key for customer portal
+
+**When it runs:** This filter is applied when localizing JavaScript data for the customer portal, providing the Stripe publishable key for client-side payment operations.
+
+**Parameters:**
+
+- `$pubKey` (string): The Stripe publishable key (default: `''`)
+
+**Returns:**
+
+- `$pubKey` (string): The modified Stripe public key
+
+**Source:** `app/Hooks/Handlers/ShortCodes/CustomerProfileHandler.php:389`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/payment_methods/stripe_pub_key', function($pubKey) {
+    // Override Stripe key for specific conditions
+    if (defined('STRIPE_TEST_MODE') && STRIPE_TEST_MODE) {
+        return 'pk_test_xxxxxxxxxxxx';
+    }
+    return $pubKey;
+}, 10, 1);
+```
+
+### ` payment_methods/paypal_client_id `
+
+`fluent_cart/payment_methods/paypal_client_id` — Filter PayPal client ID for customer portal
+
+**When it runs:** This filter is applied when localizing JavaScript data for the customer portal, providing the PayPal client ID for client-side payment operations.
+
+**Parameters:**
+
+- `$clientId` (string): The PayPal client ID (default: `''`)
+- `$context` (array): Additional context data (default: `[]`)
+
+**Returns:**
+
+- `$clientId` (string): The modified PayPal client ID
+
+**Source:** `app/Hooks/Handlers/ShortCodes/CustomerProfileHandler.php:390`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/payment_methods/paypal_client_id', function($clientId, $context) {
+    // Provide the PayPal sandbox client ID for testing
+    return 'AYourPayPalClientId';
+}, 10, 2);
+```
+
+---
+
+## Customer Statuses & Auth
+
+### ` editable_customer_statuses `
+
+`fluent_cart/editable_customer_statuses` — Filter editable customer statuses
+
+**When it runs:** Applied when building the list of customer statuses an admin can set.
+
+**Source:** `app/Helpers/Status.php:375`
+
+**Parameters:**
+
+- `$statuses` (array): Associative array of status key => label
+
+```
+$statuses = [
+    'active'   => __('Active', 'fluent-cart'),
+    'inactive' => __('Inactive', 'fluent-cart'),
+];
+```
+
+- `$context` (array): Additional context data (empty array)
+
+**Returns:**
+
+- `array` — The modified statuses array
+
+**Usage:**
+
+```
+add_filter('fluent_cart/editable_customer_statuses', function ($statuses, $context) {
+    $statuses['suspended'] = __('Suspended', 'my-plugin');
+    return $statuses;
+}, 10, 2);
+```
+
+### ` user/after_register/skip_hooks `
+
+`fluent_cart/user/after_register/skip_hooks` — Skip post-registration hooks
+
+**When it runs:** This filter is applied after a new WordPress user has been created during checkout registration. When it returns `true`, standard WordPress post-registration hooks like `register_new_user` are skipped.
+
+**Parameters:**
+
+- `$skip` (bool): Whether to skip the hooks (default: `false`)
+- `$user_id` (int): The newly created WordPress user ID
+
+**Returns:**
+
+- `$skip` (bool): Whether to skip the post-registration hooks
+
+**Source:** `app/Services/AuthService.php:122`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/user/after_register/skip_hooks', function($skip, $userId) {
+    // Skip default WP registration hooks to prevent welcome emails
+    // when creating users during checkout
+    return true;
+}, 10, 2);
+```
+
+---
+
+## Subscription Statuses & Configuration
+
+### ` subscription_statuses `
+
+`fluent_cart/subscription_statuses` — Filter subscription statuses
+
+**When it runs:** This filter is applied when retrieving the list of all available subscription statuses used throughout the system.
+
+**Parameters:**
+
+- `$statuses` (array): Associative array of status key => label
+
+```
+$statuses = [
+    'pending' => 'Pending',
+    'active' => 'Active',
+    'failing' => 'Failing',
+    'paused' => 'Paused',
+    'expired' => 'Expired',
+    'expiring' => 'Expiring',
+    'canceled' => 'Canceled',
+    'trialing' => 'Trialing',
+    'intended' => 'Intended',
+    'past_due' => 'Past Due',
+    'completed' => 'Completed'
+];
+```
+
+- `$context` (array): Additional context data (default: `[]`)
+
+**Returns:**
+
+- `$statuses` (array): The modified subscription statuses array
+
+**Source:** `app/Helpers/Status.php:265`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription_statuses', function($statuses, $context) {
+    // Add a custom "on_hold" status
+    $statuses['on_hold'] = __('On Hold', 'my-plugin');
+    return $statuses;
+}, 10, 2);
+```
+
+### ` validable_subscription_statuses `
+
+`fluent_cart/validable_subscription_statuses` — Filter valid (active) subscription statuses
+
+**When it runs:** This filter is applied when determining which subscription statuses should be considered "valid" (i.e., the subscription grants access to the product/service). Used for license validation, download access, etc.
+
+**Parameters:**
+
+- `$statuses` (array): Array of status keys considered valid
+
+```
+$statuses = ['active', 'trialing'];
+```
+
+- `$context` (array): Additional context data (default: `[]`)
+
+**Returns:**
+
+- `$statuses` (array): The modified list of valid statuses
+
+**Source:** `app/Helpers/Status.php:283`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/validable_subscription_statuses', function($statuses, $context) {
+    // Also treat "expiring" subscriptions as valid until they actually expire
+    $statuses[] = 'expiring';
+    return $statuses;
+}, 10, 2);
+```
+
+### ` subscription/view `
+
+`fluent_cart/subscription/view` — Filter admin subscription view data
+
+**When it runs:** This filter is applied when preparing a single subscription's data for display in the admin panel.
+
+**Parameters:**
+
+- `$subscription` ([Subscription](/database/models/subscription.md)): The Subscription model with loaded relations
+- `$context` (array): Additional context data (default: `[]`)
+
+**Returns:**
+
+- `$subscription` (array): The modified subscription data
+
+**Source:** `app/Modules/Subscriptions/Http/Controllers/SubscriptionController.php:83`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/view', function($subscription, $context) {
+    // Add external gateway link
+    $subscription['external_url'] = 'https://dashboard.stripe.com/subscriptions/' . $subscription['vendor_subscription_id'];
+    return $subscription;
+}, 10, 2);
+```
+
+### ` widgets/single_subscription_page `
+
+`fluent_cart/widgets/single_subscription_page` — Add widgets to the admin subscription page
+
+**When it runs:** This filter is applied when the admin opens a single subscription. The page loads its widget area from the `widgets` REST endpoint, and the cards show in the right sidebar, under Labels. The area reloads when the admin opens another subscription.
+
+The request needs the `subscriptions/view` permission, plus `customers/view` or `orders/view`. If the subscription does not exist, the endpoint returns an error and the filter does not run.
+
+**Parameters:**
+
+- `$widgets` (array): Widget definitions (default: `[]`)
+- `$data` (array): The request data, with the resolved subscription
+
+```
+$data = [
+    'subscription_id' => 42,
+    'subscription'    => $subscription, // \FluentCart\App\Models\Subscription
+];
+```
+
+**Returns:**
+
+- `$widgets` (array): Widget definitions. Each widget is an HTML card:
+
+```
+[
+    'type'    => 'html',
+    'title'   => 'Membership',
+    'content' => '<p>...</p>', // HTML, escape your own values
+]
+```
+
+**Source:** `app/Http/Controllers/WidgetsController.php:49`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/widgets/single_subscription_page', function ($widgets, $data) {
+    $subscription = $data['subscription'];
+
+    $widgets[] = [
+        'type'    => 'html',
+        'title'   => __('Membership', 'my-plugin'),
+        'content' => '<p>' . esc_html(sprintf('Plan: %s', $subscription->item_name)) . '</p>',
+    ];
+
+    return $widgets;
+}, 10, 2);
+```
+
+### ` subscription/url_{$payment_method} `
+
+`fluent_cart/subscription/url_{$payment_method}` — Filter vendor dashboard URL for a subscription (dynamic)
+
+**When it runs:** This filter is applied when generating the external vendor dashboard URL for a subscription. The hook name is dynamic, with `{$payment_method}` replaced by the subscription's current payment method (e.g., `stripe`, `paypal`).
+
+**Parameters:**
+
+- `$url` (string): The vendor dashboard URL (default: `''`)
+- `$context` (array): Context data
+
+```
+$context = [
+    'vendor_subscription_id' => 'sub_1234567890',
+    'payment_mode' => 'live', // or 'test'
+    'subscription' => $subscription // Subscription model
+];
+```
+
+**Returns:**
+
+- `$url` (string): The modified vendor dashboard URL
+
+**Source:** `app/Models/Subscription.php:284`
+
+**Usage:**
+
+```
+// Provide the Stripe dashboard URL for subscriptions
+add_filter('fluent_cart/subscription/url_stripe', function($url, $context) {
+    $subId = $context['vendor_subscription_id'];
+    $mode = $context['payment_mode'];
+    $base = ($mode === 'test')
+        ? 'https://dashboard.stripe.com/test'
+        : 'https://dashboard.stripe.com';
+    return $base . '/subscriptions/' . $subId;
+}, 10, 2);
+```
+
+### ` subscription/can_reactivate `
+
+`fluent_cart/subscription/can_reactivate` — Filter whether a subscription can be reactivated
+
+**When it runs:** This filter is applied when checking if a canceled, failing, expired, paused, expiring, or past-due subscription is eligible for reactivation.
+
+**Parameters:**
+
+- `$canReactivate` (bool): Whether the subscription can be reactivated (based on its current status)
+- `$context` (array): Context data
+
+```
+$context = [
+    'subscription' => $subscription // Subscription model
+];
+```
+
+**Returns:**
+
+- `$canReactivate` (bool): The modified reactivation eligibility
+
+**Source:** `app/Models/Subscription.php:983`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/can_reactivate', function($canReactivate, $context) {
+    $subscription = $context['subscription'];
+
+    // Prevent reactivation if canceled more than 90 days ago
+    if ($subscription->status === 'canceled') {
+        $canceledAt = strtotime($subscription->updated_at);
+        if ((time() - $canceledAt) > (90 * DAY_IN_SECONDS)) {
+            return false;
+        }
+    }
+    return $canReactivate;
+}, 10, 2);
+```
+
+### ` subscription/vendor_id_editing_enabled `
+
+`fluent_cart/subscription/vendor_id_editing_enabled` — Opt in to admin editing of gateway identifiers
+
+**When it runs:** First statement of `Subscription::canEditVendorIds()`, which is the single gate behind the admin "Edit Vendor IDs" action, the `canEditVendorIds` / `canVerifyVendorIds` permission flags, the `vendor-ids` write endpoint and the `verify-vendor-ids` lookup endpoint. Default is `false`, so the whole feature is off until a site opts in.
+
+**Parameters:**
+
+- `$enabled` (bool): `false` by default
+
+**Returns:**
+
+- `$enabled` (bool): `true` to expose the repair tool
+
+**Source:** `app/Models/Subscription.php:900`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/vendor_id_editing_enabled', '__return_true');
+```
+
+This column is what gateway webhooks resolve on
+
+`fct_subscriptions.vendor_subscription_id` is indexed but not unique, and every gateway IPN finds its subscription through it. Enable this only while a migration or support repair is in progress, or scope it — for example to a single administrator:
+
+```
+add_filter('fluent_cart/subscription/vendor_id_editing_enabled', function ($enabled) {
+    return current_user_can('manage_options') && defined('FLUENTCART_ALLOW_VENDOR_ID_EDIT');
+});
+```
+
+See [Editing Vendor IDs](/modules/subscription-vendor-ids.md) for the full feature.
+
+### ` available_subscription_interval_options `
+
+`fluent_cart/available_subscription_interval_options` — Filter subscription interval options
+
+**When it runs:** This filter is applied when retrieving the list of available subscription billing interval options for product configuration.
+
+**Parameters:**
+
+- `$intervals` (array): Array of interval option objects
+
+```
+$intervals = [
+    ['label' => 'Yearly', 'value' => 'yearly', 'map_value' => 'year'],
+    ['label' => 'Half Yearly', 'value' => 'half_yearly', 'map_value' => 'half_year'],
+    ['label' => 'Quarterly', 'value' => 'quarterly', 'map_value' => 'quarter'],
+    ['label' => 'Monthly', 'value' => 'monthly', 'map_value' => 'month'],
+    ['label' => 'Weekly', 'value' => 'weekly', 'map_value' => 'week'],
+    ['label' => 'Daily', 'value' => 'daily', 'map_value' => 'day']
+];
+```
+
+**Returns:**
+
+- `$intervals` (array): The modified intervals array
+
+**Source:** `app/Helpers/Helper.php:1740`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/available_subscription_interval_options', function($intervals) {
+    // Add a custom "Every 10 days" interval
+    $intervals[] = [
+        'label' => __('Every 10th Day', 'my-plugin'),
+        'value' => 'every_tenth_day',
+        'map_value' => '10th Day'
+    ];
+    return $intervals;
+});
+```
+
+TIP
+
+When adding custom intervals, you must also implement the `fluent_cart/subscription_interval_in_days` and `fluent_cart/subscription_billing_period` filters so the system knows how to calculate dates and communicate with payment gateways.
+
+### ` subscription_interval_in_days `
+
+`fluent_cart/subscription_interval_in_days` — Filter the number of days for a custom subscription interval
+
+**When it runs:** This filter is applied when converting a subscription interval to its day count. For built-in intervals (yearly, half_yearly, quarterly, monthly, weekly, daily), the value is calculated automatically. This filter fires for custom/unknown intervals with a default of `0`.
+
+**Parameters:**
+
+- `$days` (int): Number of days for the interval (default: `0` for custom intervals)
+- `$context` (array): Context data
+
+```
+$context = [
+    'interval' => 'every_tenth_day' // The interval key
+];
+```
+
+**Returns:**
+
+- `$days` (int): The number of days in this interval
+
+**Source:** `app/Helpers/Helper.php:1801`, `app/Services/Payments/PaymentHelper.php:282`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription_interval_in_days', function($days, $args) {
+    $interval = $args['interval'];
+
+    if ($interval === 'every_tenth_day') {
+        return 10;
+    }
+
+    if ($interval === 'biweekly') {
+        return 14;
+    }
+
+    return $days;
+}, 10, 2);
+```
+
+### ` max_trial_days_allowed `
+
+`fluent_cart/max_trial_days_allowed` — Filter maximum trial days allowed
+
+**When it runs:** This filter is applied when calculating adjusted trial days for a subscription interval. The system ensures the trial period does not exceed this maximum.
+
+**Parameters:**
+
+- `$maxDays` (int): Maximum trial days allowed (default: `365`)
+- `$context` (array): Context data
+
+```
+$context = [
+    'existing_trial_days' => 14,
+    'repeat_interval' => 'monthly',
+    'interval_in_days' => 30
+];
+```
+
+**Returns:**
+
+- `$maxDays` (int): The modified maximum trial days
+
+**Source:** `app/Helpers/Helper.php:1775`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/max_trial_days_allowed', function($maxDays, $args) {
+    // Cap trials at 30 days for monthly subscriptions
+    if ($args['repeat_interval'] === 'monthly') {
+        return 30;
+    }
+    return $maxDays;
+}, 10, 2);
+```
+
+### ` trial_info `
+
+`fluent_cart/trial_info` — Filter trial info display text
+
+**When it runs:** This filter is applied when generating the human-readable trial information text shown to customers (e.g., "Free Trial: 14 days").
+
+**Parameters:**
+
+- `$trialInfo` (string): The generated trial info text (e.g., `'Free Trial: 14 days'` or `''` if no trial)
+- `$otherInfo` (array): The product/variant pricing metadata
+
+```
+$otherInfo = [
+    'trial_days' => 14,
+    'is_trial_days_simulated' => 'no',
+    'signup_fee' => 0,
+    'manage_setup_fee' => 'no',
+    // ... other pricing info
+];
+```
+
+**Returns:**
+
+- `$trialInfo` (string): The modified trial info text
+
+**Source:** `app/Helpers/Helper.php:1339`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/trial_info', function($trialInfo, $otherInfo) {
+    $days = $otherInfo['trial_days'] ?? 0;
+    if ($days > 0) {
+        return sprintf('Try free for %d days - no credit card required!', $days);
+    }
+    return $trialInfo;
+}, 10, 2);
+```
+
+---
+
+## Subscription Billing
+
+### ` subscription_billing_period `
+
+`fluent_cart/subscription_billing_period` — Filter billing period for payment gateways
+
+**When it runs:** This filter is applied when translating a FluentCart subscription interval into the payment gateway's billing period format (used by Stripe Plans and PayPal billing cycles).
+
+**Parameters:**
+
+- `$billingPeriod` (array): The billing period for the gateway
+
+```
+$billingPeriod = [
+    'interval_unit' => 'month',      // day, week, month, year
+    'interval_frequency' => 1         // e.g., 3 for quarterly
+];
+```
+
+- `$context` (array): Context data
+
+```
+$context = [
+    'subscription_interval' => 'quarterly', // Original FluentCart interval
+    'payment_method' => 'stripe'             // or 'paypal'
+];
+```
+
+**Returns:**
+
+- `$billingPeriod` (array): The modified billing period
+
+**Source:** `app/Modules/PaymentMethods/StripeGateway/Plan.php:58`, `app/Modules/PaymentMethods/PayPalGateway/PayPalHelper.php:243`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription_billing_period', function($billingPeriod, $args) {
+    $interval = $args['subscription_interval'];
+    $method = $args['payment_method'];
+
+    if ($interval === 'every_tenth_day') {
+        if ($method === 'stripe') {
+            return [
+                'interval_unit' => 'day',
+                'interval_frequency' => 10
+            ];
+        }
+        if ($method === 'paypal') {
+            return [
+                'interval_unit' => 'DAY',
+                'interval_frequency' => 10
+            ];
+        }
+    }
+
+    return $billingPeriod;
+}, 10, 2);
+```
+
+### ` subscription/grace_period_days `
+
+`fluent_cart/subscription/grace_period_days` — Filter grace period days per billing interval
+
+**When it runs:** This filter is applied when retrieving the grace period (number of extra days after a payment fails before the subscription is marked as expired) for each billing interval.
+
+**Parameters:**
+
+- `$gracePeriods` (array): Associative array of interval => days
+
+```
+$gracePeriods = [
+    'daily' => 1,
+    'weekly' => 3,
+    'monthly' => 7,
+    'quarterly' => 15,
+    'half_yearly' => 15,
+    'yearly' => 15
+];
+```
+
+**Returns:**
+
+- `$gracePeriods` (array): The modified grace period days
+
+**Source:** `app/Services/Payments/SubscriptionHelper.php:188`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/grace_period_days', function($gracePeriods) {
+    // Give yearly subscribers more time
+    $gracePeriods['yearly'] = 30;
+
+    // Add grace period for custom interval
+    $gracePeriods['every_tenth_day'] = 5;
+
+    return $gracePeriods;
+});
+```
+
+---
+
+## Reminders
+
+### ` reminders/scan_batch_size `
+
+`fluent_cart/reminders/scan_batch_size` — Filter reminder scan batch size
+
+**When it runs:** This filter is applied when the automated reminder system scans for subscriptions or invoices that need reminders. Controls how many records are processed per batch.
+
+**Parameters:**
+
+- `$batchSize` (int): Number of records per scan batch (default: `100`, min: `10`, max: `500`)
+
+**Returns:**
+
+- `$batchSize` (int): The modified batch size
+
+**Source:** `app/Services/Reminders/ReminderService.php:355`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/scan_batch_size', function($batchSize) {
+    // Process more records per batch on high-traffic sites
+    return 250;
+});
+```
+
+### ` reminders/renewal_due_days `
+
+`fluent_cart/reminders/renewal_due_days` — Filter renewal due-reminder days
+
+**When it runs:** This filter is applied when determining how many days before a renewal is due to send a reminder. The value comes from the `renewal_reminder_due_days` store setting (default `0`) but can be overridden.
+
+**Parameters:**
+
+- `$days` (int): Number of days before the due date to send a reminder (min: `0`)
+
+**Returns:**
+
+- `$days` (int): The modified number of days
+
+**Source:** `app/Services/Reminders/RenewalReminderService.php:294`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/renewal_due_days', function($days) {
+    // Always remind 3 days before a renewal is due
+    return 3;
+});
+```
+
+### ` reminders/renewal_overdue_days `
+
+`fluent_cart/reminders/renewal_overdue_days` — Filter overdue renewal reminder intervals
+
+**When it runs:** This filter is applied when determining at which day intervals after a renewal becomes overdue to send follow-up reminders. The list is parsed from the `renewal_reminder_overdue_days` store setting (default `1,3,7`) into an array before the filter runs.
+
+**Parameters:**
+
+- `$days` (array): Array of day intervals for overdue reminders (default `[1, 3, 7]`)
+
+**Returns:**
+
+- `$days` (array): The modified array of overdue reminder day intervals
+
+**Source:** `app/Services/Reminders/RenewalReminderService.php:305`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/renewal_overdue_days', function($days) {
+    // Send overdue reminders at 1, 3, 7, and 14 days past due
+    return [1, 3, 7, 14];
+});
+```
+
+### ` reminders/billing_cycle `
+
+`fluent_cart/reminders/billing_cycle` — Filter billing cycle name for reminder processing
+
+**When it runs:** This filter is applied when mapping a subscription's billing interval to a billing cycle identifier used by the reminder system. Returns `'unsupported'` for unknown intervals by default.
+
+**Parameters:**
+
+- `$cycle` (string): The billing cycle name (e.g., `'monthly'`, `'yearly'`, `'unsupported'`)
+- `$subscription` ([Subscription](/database/models/subscription.md)): The Subscription model instance
+
+**Returns:**
+
+- `$cycle` (string): The modified billing cycle name
+
+**Source:** `app/Services/Reminders/SubscriptionReminderService.php:508`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/billing_cycle', function($cycle, $subscription) {
+    // Map custom intervals to supported reminder cycles
+    if ($subscription->billing_interval === 'every_tenth_day') {
+        return 'daily'; // Use daily reminder logic
+    }
+    return $cycle;
+}, 10, 2);
+```
+
+### ` reminders/yearly_before_days `
+
+`fluent_cart/reminders/yearly_before_days` — Filter days before yearly renewal reminder
+
+**When it runs:** This filter is applied when determining at which day intervals before a yearly subscription renewal to send reminders.
+
+**Parameters:**
+
+- `$days` (array): Array of day intervals before renewal (default from settings: `[30]`, range: 7-90)
+
+**Returns:**
+
+- `$days` (array): The modified array of reminder day intervals
+
+**Source:** `app/Services/Reminders/SubscriptionReminderService.php:540`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/yearly_before_days', function($days) {
+    // Remind at 60, 30, and 7 days before yearly renewal
+    return [60, 30, 7];
+});
+```
+
+### ` reminders/monthly_before_days `
+
+`fluent_cart/reminders/monthly_before_days` — Filter days before monthly renewal reminder
+
+**When it runs:** This filter is applied when determining at which day intervals before a monthly subscription renewal to send reminders.
+
+**Parameters:**
+
+- `$days` (array): Array of day intervals before renewal (default from settings: `[7]`, range: 3-28)
+
+**Returns:**
+
+- `$days` (array): The modified array of reminder day intervals
+
+**Source:** `app/Services/Reminders/SubscriptionReminderService.php:552`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/monthly_before_days', function($days) {
+    // Remind at 7 and 3 days before monthly renewal
+    return [7, 3];
+});
+```
+
+### ` reminders/quarterly_before_days `
+
+`fluent_cart/reminders/quarterly_before_days` — Filter days before quarterly renewal reminder
+
+**When it runs:** This filter is applied when determining at which day intervals before a quarterly subscription renewal to send reminders.
+
+**Parameters:**
+
+- `$days` (array): Array of day intervals before renewal (default from settings: `[14]`, range: 7-60)
+
+**Returns:**
+
+- `$days` (array): The modified array of reminder day intervals
+
+**Source:** `app/Services/Reminders/SubscriptionReminderService.php:564`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/quarterly_before_days', function($days) {
+    // Remind at 21 and 7 days before quarterly renewal
+    return [21, 7];
+});
+```
+
+### ` reminders/half_yearly_before_days `
+
+`fluent_cart/reminders/half_yearly_before_days` — Filter days before half-yearly renewal reminder
+
+**When it runs:** This filter is applied when determining at which day intervals before a half-yearly subscription renewal to send reminders.
+
+**Parameters:**
+
+- `$days` (array): Array of day intervals before renewal (default from settings: `[21]`, range: 7-60)
+
+**Returns:**
+
+- `$days` (array): The modified array of reminder day intervals
+
+**Source:** `app/Services/Reminders/SubscriptionReminderService.php:576`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/half_yearly_before_days', function($days) {
+    // Remind at 30 and 7 days before half-yearly renewal
+    return [30, 7];
+});
+```
+
+### ` reminders/trial_end_days `
+
+`fluent_cart/reminders/trial_end_days` — Filter days before trial end reminder
+
+**When it runs:** This filter is applied when determining at which day intervals before a trial period ends to send reminders to the customer.
+
+**Parameters:**
+
+- `$days` (array): Array of day intervals before trial ends (default from settings: `[3]`, range: 1-14)
+
+**Returns:**
+
+- `$days` (array): The modified array of reminder day intervals
+
+**Source:** `app/Services/Reminders/SubscriptionReminderService.php:588`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/reminders/trial_end_days', function($days) {
+    // Remind at 7, 3, and 1 day before trial ends
+    return [7, 3, 1];
+});
+```
+
+---
+
+## Collection Method & Auto-Charge Store-managed
+
+Filters for the [store-managed subscription engine](/modules/subscriptions.md) — how the collection method is chosen, how renewals are scheduled, and how the `system` auto-charge retry/notification behaviour is tuned.
+
+### ` subscription/management_mode `
+
+`fluent_cart/subscription/management_mode` — Filter the effective subscription management mode
+
+**When it runs:** This filter is applied when resolving the store's subscription management mode — `gateway_managed` or `store_managed` — which decides whether new subscriptions are billed by the gateway or by FluentCart's renewal engine.
+
+**Parameters:**
+
+- `$mode` (string): The management mode (`'gateway_managed'` or `'store_managed'`)
+
+**Returns:**
+
+- `$mode` (string): The (possibly overridden) mode
+
+**Source:** `app/Modules/Subscriptions/Services/SubscriptionManagementMode.php:36`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/management_mode', function($mode) {
+    return 'store_managed';
+});
+```
+
+### ` subscription_collection_method_{gateway} `
+
+`fluent_cart/subscription_collection_method_{gateway}` — Per-gateway override of the resolved collection method
+
+**When it runs:** This **dynamic** filter is applied at checkout after the collection method (`automatic` / `manual` / `system`) has been resolved for the chosen gateway. The `{gateway}` suffix is the payment method slug (e.g. `stripe`, `paypal`), so you can target a single gateway. It gets the last word over the decision matrix.
+
+**Parameters:**
+
+- `$collectionMethod` (string): The resolved collection method
+
+**Returns:**
+
+- `$collectionMethod` (string): The (possibly overridden) collection method
+
+**Source:** `app/Helpers/CheckoutProcessor.php:963`
+
+**Usage:**
+
+```
+// Force PayPal subscriptions onto the store-managed manual engine
+add_filter('fluent_cart/subscription_collection_method_paypal', function($collectionMethod) {
+    return 'manual';
+});
+```
+
+### ` subscription/allowed_intervals `
+
+`fluent_cart/subscription/allowed_intervals` — Filter the intervals a subscription may be changed to
+
+**When it runs:** This filter is applied when validating an edit to a store-managed subscription's billing interval, controlling which target intervals are permitted.
+
+**Parameters:**
+
+- `$intervals` (array): Allowed interval identifiers
+- `$context` (array): `['subscription' => Subscription, 'current_interval' => string, 'new_interval' => string]`
+
+**Returns:**
+
+- `$intervals` (array): The (possibly modified) allowed intervals
+
+**Source:** `app/Modules/Subscriptions/Services/SubscriptionService.php:966`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/allowed_intervals', function($intervals, $context) {
+    return $intervals;
+}, 10, 2);
+```
+
+### ` renewal/advance_creation_days `
+
+`fluent_cart/renewal/advance_creation_days` — Filter how many days ahead a renewal order is generated
+
+**When it runs:** This filter is applied by the renewal engine when deciding how far in advance of the due date to generate the next renewal order. The map is keyed by billing interval.
+
+**Parameters:**
+
+- `$map` (array): Interval => advance-days map (e.g. `['month' => 3, 'year' => 7]`)
+- `$interval` (string): The subscription's billing interval being resolved
+
+**Returns:**
+
+- `$map` (array): The (possibly modified) advance-days map
+
+**Source:** `app/Modules/StoreManagedRenewal/Services/RenewalService.php:911`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/renewal/advance_creation_days', function($map, $interval) {
+    $map['month'] = 5; // generate monthly renewals 5 days early
+    return $map;
+}, 10, 2);
+```
+
+### ` subscriptions/system_charge_retry_offsets `
+
+`fluent_cart/subscriptions/system_charge_retry_offsets` — Filter the off-session charge retry ladder
+
+**When it runs:** This filter is applied when building the retry schedule for a failed `system` auto-charge. Offsets are day fractions from the anchor, bounded by the grace window.
+
+**Parameters:**
+
+- `$offsets` (array): Retry offsets in days (floats)
+- `$context` (array): `['subscription' => Subscription, 'grace_days' => int]`
+
+**Returns:**
+
+- `$offsets` (array): The (possibly modified) retry offsets
+
+**Source:** `app/Modules/Subscriptions/Services/SystemChargeService.php:213`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscriptions/system_charge_retry_offsets', function($offsets, $context) {
+    return [0, 1, 3]; // retry immediately, after 1 day, after 3 days
+}, 10, 2);
+```
+
+### ` subscriptions/system_charge_failure_notify `
+
+`fluent_cart/subscriptions/system_charge_failure_notify` — Decide whether to notify the customer on a failed charge
+
+**When it runs:** This filter is applied when a `system` charge attempt fails, to decide whether the customer should be emailed for this attempt. Defaults to `true` only on the first attempt.
+
+**Parameters:**
+
+- `$notify` (bool): Whether to send a notification (default: `$attempt === 1`)
+- `$context` (array): `['order' => Order, 'subscription' => Subscription, 'attempt' => int]`
+
+**Returns:**
+
+- `$notify` (bool): Whether to notify
+
+**Source:** `app/Modules/Subscriptions/Services/SystemChargeService.php:739`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscriptions/system_charge_failure_notify', function($notify, $context) {
+    return true; // notify on every failed attempt
+}, 10, 2);
+```
+
+### ` subscriptions/upcoming_charge_notification `
+
+`fluent_cart/subscriptions/upcoming_charge_notification` — Toggle the upcoming auto-charge notice
+
+**When it runs:** This filter is applied before sending the "an automatic charge is coming up" notification for a `system` renewal.
+
+**Parameters:**
+
+- `$send` (bool): Whether to send the upcoming-charge notice (default: `true`)
+- `$data` (array): The renewal notification payload
+
+**Returns:**
+
+- `$send` (bool): Whether to send
+
+**Source:** `app/Services/Email/EmailNotificationMailer.php:95`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscriptions/upcoming_charge_notification', function($send, $data) {
+    return $send;
+}, 10, 2);
+```
+
+### ` subscriptions/system_billing_enabled `
+
+`fluent_cart/subscriptions/system_billing_enabled` — Master switch for system auto-charge billing
+
+**When it runs:** This filter is checked before the `system` charge engine runs. Returning `false` disables off-session auto-charging store-wide (subscriptions bill as `manual`).
+
+**Parameters:**
+
+- `$enabled` (bool): Whether system billing is enabled (default: `true`)
+
+**Returns:**
+
+- `$enabled` (bool): Whether to allow system billing
+
+**Source:** `app/Modules/Subscriptions/Services/SystemChargeService.php:57`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscriptions/system_billing_enabled', function($enabled) {
+    return false; // turn off all automatic renewal charges
+});
+```
+
+### ` subscriptions/system_collection_enabled `
+
+`fluent_cart/subscriptions/system_collection_enabled` — Whether new subscriptions may resolve to `system`
+
+**When it runs:** This filter gates whether a new subscription is allowed to be created with the `system` collection method at checkout. Returning `false` keeps store-managed subscriptions on `manual` even when the gateway supports auto-charge.
+
+**Parameters:**
+
+- `$enabled` (bool): Whether system collection is enabled (default: `true`)
+
+**Returns:**
+
+- `$enabled` (bool): Whether to allow the `system` collection method
+
+**Source:** `app/Modules/Subscriptions/Services/SubscriptionManagementMode.php:55`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscriptions/system_collection_enabled', function($enabled) {
+    return false; // customers pay each renewal by hand, no saved-card auto-charge
+});
+```
+
+---
+
+## Pro: Early Payments & Reactivation
+
+### ` subscription/early_payment_enabled `
+
+`fluent_cart/subscription/early_payment_enabled` — Filter whether early installment payments are enabled
+
+**When it runs:** This filter is applied when checking if the early payment feature for installment subscriptions is globally enabled. Requires FluentCart Pro to be active.
+
+**Parameters:**
+
+- `$isEnabled` (bool): Whether early payments are enabled (from store settings `enable_early_payment_for_installment`)
+
+**Returns:**
+
+- `$isEnabled` (bool): The modified enabled state
+
+**Source:** `app/Modules/Subscriptions/Services/EarlyPaymentFeature.php:14`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/early_payment_enabled', function($isEnabled) {
+    // Disable early payments during a specific promotion period
+    if (current_time('Y-m') === '2026-12') {
+        return false;
+    }
+    return $isEnabled;
+});
+```
+
+### ` subscription/can_early_pay `
+
+`fluent_cart/subscription/can_early_pay` — Filter whether a specific subscription can make an early payment
+
+**When it runs:** This filter is applied when checking if a specific installment subscription is eligible for early payment. The default check requires that early payments are globally enabled, the subscription has a finite bill count, there are remaining installments, and the subscription status is `active` or `trialing`.
+
+**Parameters:**
+
+- `$canPay` (bool): Whether the subscription can make an early payment
+- `$context` (array): Context data
+
+```
+$context = [
+    'subscription' => $subscription // Subscription model
+];
+```
+
+**Returns:**
+
+- `$canPay` (bool): The modified eligibility
+
+**Source:** `app/Modules/Subscriptions/Services/EarlyPaymentFeature.php:26`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/can_early_pay', function($canPay, $context) {
+    $subscription = $context['subscription'];
+
+    // Only allow early payments for subscriptions with more than 2 remaining installments
+    $remaining = $subscription->bill_times - $subscription->bill_count;
+    if ($remaining <= 2) {
+        return false;
+    }
+
+    return $canPay;
+}, 10, 2);
+```
+
+### ` subscription/reactivation_same_price_days_limit `
+
+`fluent_cart/subscription/reactivation_same_price_days_limit` Pro — Filter days limit for same-price reactivation
+
+**When it runs:** This filter is applied when a customer reactivates a canceled or expired subscription. If the subscription was canceled within this many days, the customer can reactivate at the original price without going through a new checkout.
+
+**Parameters:**
+
+- `$daysLimit` (int): Number of days within which same-price reactivation is allowed (default: `60`)
+- `$context` (array): Context data
+
+```
+$context = [
+    'subscription' => $subscription // Subscription model
+];
+```
+
+**Returns:**
+
+- `$daysLimit` (int): The modified days limit
+
+**Source:** `fluent-cart-pro/app/Hooks/Handlers/SubscriptionRenewalHandler.php:288`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/subscription/reactivation_same_price_days_limit', function($daysLimit, $context) {
+    $subscription = $context['subscription'];
+
+    // Give yearly subscribers a longer reactivation window
+    if ($subscription->billing_interval === 'yearly') {
+        return 180; // 6 months
+    }
+
+    return $daysLimit;
+}, 10, 2);
+```
+
+---
+
+## Pro: License Customer Portal
+
+### ` customer/license_details_section_parts `
+
+`fluent_cart/customer/license_details_section_parts` Pro — Filter license details section parts in customer portal
+
+**When it runs:** This filter is applied when rendering a license details page in the customer portal, allowing you to inject custom HTML into specific sections of the license view.
+
+**Parameters:**
+
+- `$sectionParts` (array): Associative array of injectable HTML sections
+
+```
+$sectionParts = [
+    'before_summary' => '',
+    'after_summary' => '',
+    'end_of_details' => '',
+    'additional_actions' => ''
+];
+```
+
+- `$context` (array): Context data
+
+```
+$context = [
+    'license' => $license,          // License model
+    'formattedData' => $formattedData // Formatted license data for display
+];
+```
+
+**Returns:**
+
+- `$sectionParts` (array): The modified section parts
+
+**Source:** `fluent-cart-pro/app/Modules/Licensing/Http/Controllers/CustomerProfileController.php:97`
+
+**Usage:**
+
+```
+add_filter('fluent_cart/customer/license_details_section_parts', function($parts, $context) {
+    $license = $context['license'];
+
+    // Add activation instructions after the summary
+    $parts['after_summary'] = '<div class="activation-guide">'
+        . '<h4>How to Activate</h4>'
+        . '<p>Copy your license key and paste it in your plugin settings.</p>'
+        . '</div>';
+
+    // Add a custom action button
+    $parts['additional_actions'] = '<button class="btn-regenerate" onclick="regenerateLicense(\'' . $license->id . '\')">Regenerate Key</button>';
+
+    return $parts;
+}, 10, 2);
+```
+
+---
