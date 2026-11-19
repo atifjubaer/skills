@@ -1,0 +1,123 @@
+name: Release plugin
+
+# Same shape as release.yml, for dsh-plugin-fluentcart. That package is a
+# separate npm package with its own version line, so it gets its own workflow
+# rather than a second job: two packages releasing from one dispatch would
+# bump both versions whether or not either needed a release.
+#
+# The filename is not cosmetic. npm's trusted publisher for this package names
+# this exact file, and a publish from any other workflow is refused — so
+# renaming it means updating the trust config on npmjs.com first.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      dry_run:
+        description: Publish with --dry-run (proves the tarball, ships nothing)
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-plugin
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commit the bump and push the tag
+  id-token: write # trusted publishing: npm authenticates this workflow over OIDC
+
+jobs:
+  release:
+    name: Publish dsh-plugin-fluentcart
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/dsh-plugin-fluentcart
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # No registry-url on purpose: setup-node would write an .npmrc holding
+      # ${NODE_AUTH_TOKEN}, and with no such secret the empty token shadows the
+      # OIDC credential.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: plugins/dsh-plugin-fluentcart/package-lock.json
+
+      # Trusted publishing requires npm >= 11.5.1; the npm bundled with Node 22 is 10.x.
+      - name: Upgrade npm
+        run: |
+          npm install -g npm@11
+          npm --version
+
+      - run: npm ci
+
+      # The plugin's only real test. It mounts the plugin in a real Cordis
+      # context, connects a real spawned MCP server, asserts all 12 tools and
+      # the skill, then disposes the fiber. The timeout is not padding: a
+      # leaked child fails by hanging, and a hang without one is a green CI run
+      # that occupies a runner for hours.
+      - name: Mount the plugin and connect the real server
+        timeout-minutes: 5
+        run: npm test
+
+      - name: Bump version
+        id: bump
+        run: |
+          npm version "${{ inputs.bump }}" --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumped to $VERSION"
+
+      # After the bump, never before: the version on disk at the start of a
+      # release is already published, so checking first refuses every release
+      # but the first.
+      - name: Refuse to publish a version that already exists
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already on npm. Someone published it by hand; the bump would collide."
+            exit 1
+          fi
+
+      - name: Publish (dry run)
+        if: inputs.dry_run
+        run: npm publish --access public --dry-run
+
+      - name: Publish
+        if: ${{ !inputs.dry_run }}
+        run: npm publish --access public
+
+      - name: Commit the bump and tag it
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(release): dsh-plugin-fluentcart@${{ steps.bump.outputs.version }}"
+          git tag -a "plugin-v${{ steps.bump.outputs.version }}" -m "dsh-plugin-fluentcart@${{ steps.bump.outputs.version }}"
+          git push origin HEAD:main
+          git push origin "plugin-v${{ steps.bump.outputs.version }}"
+
+      - name: Summarise
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "### Dry run" >> "$GITHUB_STEP_SUMMARY"
+            echo "Would have published \`dsh-plugin-fluentcart@${{ steps.bump.outputs.version }}\`. Nothing shipped." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`dsh-plugin-fluentcart@${{ steps.bump.outputs.version }}\` is live at https://www.npmjs.com/package/dsh-plugin-fluentcart" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Refresh the plugin index once the registry has processed it (it can lag by minutes, so this is not run here):" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "npm run make-index && npm run publish-index" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
