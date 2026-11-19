@@ -63,15 +63,6 @@ jobs:
           npm run build
           npm run verify
 
-      - name: Refuse to publish a version that already exists
-        run: |
-          NAME=$(node -p "require('./package.json').name")
-          VERSION=$(node -p "require('./package.json').version")
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
-            echo "::error::$NAME@$VERSION is already on npm. Bump the version or pick another bump."
-            exit 1
-          fi
-
       - name: Bump version
         id: bump
         run: |
@@ -79,6 +70,18 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Bumped to $VERSION"
+
+      # After the bump, never before. The version on disk at the start of a
+      # release is by definition already published, so checking first refuses
+      # every release that is not the very first one.
+      - name: Refuse to publish a version that already exists
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already on npm. Someone published it by hand; the bump would collide."
+            exit 1
+          fi
 
       # No --provenance: npm only attests builds from a publicly readable
       # repository, and this one is private. Turn it back on if the repo is
