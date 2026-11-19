@@ -105,8 +105,12 @@ The index is generated, not hand-written: every listed version needs a real
 
 ```sh
 npm run make-index
-gh gist edit 48f161bee2d78a7180de16e5f23c49bc index.json
+npm run publish-index
 ```
+
+`publish-index` PATCHes the gist through the API rather than using
+`gh gist edit`, which cannot replace an existing file — `--add` appends, leaves
+the stale content served, and looks like it worked.
 
 The icon is inlined as a `data:` URL, so the index is a single self-contained
 file that works on any static host. A relative icon would need an `icons/`

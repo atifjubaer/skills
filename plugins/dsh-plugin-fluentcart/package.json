@@ -67,6 +67,7 @@
   "scripts": {
     "test": "node test/e2e.mjs",
     "prepublishOnly": "npm test",
-    "make-index": "node scripts/make-index.mjs"
+    "make-index": "node scripts/make-index.mjs",
+    "publish-index": "node scripts/publish-index.mjs"
   }
 }
