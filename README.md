@@ -122,8 +122,12 @@ with `npx -y fluentcart-developer@5.0.0` in the config below.
 
 ### Method 1: Any MCP client (recommended)
 
-Works with Claude Code, Cursor, Windsurf, Cline, Zed, OpenCode — anything that
-speaks MCP. Add this to your client's MCP config:
+Every client launches the same command — `npx -y fluentcart-developer` — but
+they **do not all use the same file layout**. Pick the one below that matches
+yours.
+
+**Claude Code** reads `.mcp.json` at the project root. **Cursor** (`.cursor/mcp.json`),
+**Windsurf** (`mcp_config.json`) and **Cline** take the same shape:
 
 ```json
 {
@@ -136,8 +140,30 @@ speaks MCP. Add this to your client's MCP config:
 }
 ```
 
-Claude Code reads `.mcp.json` at the project root; most clients take the same
-shape with a different filename.
+**OpenCode** (`opencode.json`) nests under `mcp.servers` and takes the command as
+one array:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "fluentcart": {
+        "type": "local",
+        "command": ["npx", "-y", "fluentcart-developer"]
+      }
+    }
+  }
+}
+```
+
+**Zed**, **Continue**, **JetBrains** and anything else: the command is the same
+three words, so copy the OpenCode or Claude shape and rename the key to whatever
+that client documents. There is nothing else to configure — no API key, no
+environment variable, no port.
+
+For Claude Code you can skip the file entirely — the one-line form is under
+[Running it locally](#running-it-locally-with-no-marketplace) above.
 
 ---
 
