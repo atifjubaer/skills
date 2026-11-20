@@ -29,13 +29,13 @@ Skills tell the model what to do. The server gives it the tools to do it — wit
 
 | Server | Tools |
 | --- | --- |
-| **[`fluentcart-developer`](./servers/fluentcart-developer)** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate`, `get_info` |
+| **[`fluentcart-developer`](./servers/fluentcart-developer)** | `fc_search_docs`, `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate`, `get_info` |
 
-Every session also exposes the skills catalog itself (`skills/list`, `resources/read`). Three tools reach the documentation directly, which is how 588 pages stay out of the context window:
+Every session also exposes the skills catalog itself (`skills/list`, `resources/read`). Three tools reach the documentation directly, which is how 593 pages stay out of the context window:
 
 | Tool | What it answers |
 | --- | --- |
-| `fc_search_docs` | Full-text across all 588 pages. `query` words must all match; optional `prefix` scopes to `restapi/`, `database/`, `hooks/`, `modules/` |
+| `fc_search_docs` | Full-text across all 593 pages. `query` words must all match; optional `prefix` scopes to `restapi/`, `database/`, `hooks/`, `modules/` |
 | `fc_get_reference` | One page by path (`restapi/operations/orders/void-renewal.md`), or a single heading inside it |
 | `fc_get_db_schema` | One `wp_fct_*` table, read from `database/schema.md` |
 
@@ -67,7 +67,7 @@ Every tool is registered for every caller on both transports. There is no licenc
 
 ## Keeping the documentation current
 
-`skills/fluentcart-developer/references/` is a **generated mirror of <https://dev.fluentcart.com>** — 588 Markdown pages laid out exactly as the site lays them out, plus an `INDEX.md`. It is regenerated, never hand-edited:
+`skills/fluentcart-developer/references/` is a **generated mirror of <https://dev.fluentcart.com>** — 593 Markdown pages laid out exactly as the site lays them out, plus an `INDEX.md`. It is regenerated, never hand-edited:
 
 ```bash
 npm run sync:docs        # re-capture every page
@@ -95,75 +95,86 @@ The Agensi listing is a **curated subset** (`AGENSI_SECTIONS` in `scripts/packag
 
 ## Installation & Setup
 
-Choose the installation method that fits your environment and AI coding assistant:
+There are two things to install, and they do different jobs:
 
-### Method 1: The `skills.sh` Method (Recommended for Cursor, Claude Code, Windsurf, Antigravity)
+- **The MCP server** gives the model 6 tools that read the documentation on demand.
+- **The skill** is a Markdown file of rules the model reads if it chooses to.
 
-Install this skill directly into your project's local workspace using the official `skills.sh` manager:
+Install the server. The skill is optional once you have it, because the server
+sends the same rules in its `initialize` handshake, which every client injects
+into the system prompt before the first turn.
+
+### Method 1: Any MCP client (recommended)
+
+Works with Claude Code, Cursor, Windsurf, Cline, Zed, OpenCode — anything that
+speaks MCP. Add this to your client's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "fluentcart": {
+      "command": "npx",
+      "args": ["-y", "fluentcart-developer"]
+    }
+  }
+}
+```
+
+Claude Code reads `.mcp.json` at the project root; most clients take the same
+shape with a different filename.
+
+---
+
+### Method 2: DeepSeek Harness
+
+As a plugin, which registers the server *and* the skill in one row:
+
+**Desktop app** — **Plugins → Add plugin**, enter `dsh-plugin-fluentcart`, keep
+**Official npm registry**, and choose **Install**.
+
+**CLI**:
 
 ```bash
-# Install specific skill into current project
+dsh plugin --profile web add dsh-plugin-fluentcart
+```
+
+---
+
+### Method 3: Claude Code plugin marketplace
+
+```
+/plugin marketplace add atifjubaer/skills
+```
+
+---
+
+### Method 4: `skills.sh` — the skill files only
+
+This installs the Markdown, not the tools. Use it if you want the rules
+somewhere the MCP server cannot reach.
+
+```bash
 npx skills add atifjubaer/skills --skill "fluentcart-developer"
-
-# Or run interactively without flags to pick from list
-npx skills add atifjubaer/skills
 ```
+
+You can also clone the repository and copy `skills/fluentcart-developer/` into
+your assistant's skill directory yourself — that directory is self-contained
+(`SKILL.md`, `references/`, `examples/`, `scripts/`).
 
 ---
 
-### Method 2: Updating Installed Skills
-
-To fetch and update your installed skills to the latest version on GitHub:
+### Updating
 
 ```bash
-# Update all installed skills in current workspace via skills.sh
+# MCP server — npx -y pulls the latest on every run
+# DeepSeek Harness plugin
+dsh plugin --profile web add dsh-plugin-fluentcart
+
+# Skill files
 npx skills update
-
-# Or force reinstall the latest version from GitHub
-npx skills add atifjubaer/skills --skill "fluentcart-developer" --force
 ```
 
-If you cloned this repository locally:
-```bash
-git pull origin main
-```
-
----
-
-### Method 3: Direct CLI Initializer & Interactive Wizard
-
-Run the CLI command without arguments for an interactive selection prompt:
-
-```bash
-npx fluentcart-developer
-```
-
-Or pass direct command flags:
-
-```bash
-# Initialize both global skills and current project rules for all IDEs
-npx fluentcart-developer init
-
-# Setup ONLY global skills (~/.gemini/, ~/.claude/)
-npx fluentcart-developer global
-
-# Setup ONLY local project rules
-npx fluentcart-developer project
-
-# Safely remove rule markers from project and global files
-npx fluentcart-developer remove
-```
-
----
-
-### Method 4: Manual Installation
-
-If you prefer manual setup:
-1. **For Antigravity / Gemini**: Copy `SKILL.md`, `references/`, and `examples/` from `skills/fluentcart-developer/` into your global Gemini config path:
-   `~/.gemini/config/skills/fluentcart-developer/`
-2. **For Cursor / Windsurf / Cline / Zed**: Copy `.cursorrules` to your project root.
-3. **For Claude Code**: Copy `CLAUDE.md` to your project root.
-4. **For Web-based AIs**: Copy the content of `fluentcart-rules.md` and paste it into your chat session.
+If you cloned the repository: `git pull origin main`.
 
 ---
 
@@ -171,38 +182,47 @@ If you prefer manual setup:
 
 ```
 skills/
-├── README.md                  # Installation guide and repository overview
-├── package.json               # Package configuration
-├── copy-skills.js             # Automated skill sync builder
-├── skills.sh.json             # skills.sh catalog layout configuration
-├── CLAUDE.md                  # Claude Code instructions
-├── CONTRIBUTING.md            # Guidelines for repository contributors
-├── LICENSE                    # MIT License
-├── bin/
-│   └── index.js               # Interactive CLI runner
-├── .github/
-│   └── workflows/
-│       └── sync-docs.yml      # GitHub Actions automated doc sync workflow
-├── references/                # Root reference manuals catalog
-├── examples/                  # Standalone boilerplate code examples
-│   ├── sample-custom-payment-gateway/
-│   ├── sample-shipping-carrier/
-│   └── fluentcart-starter-child-theme/
-├── servers/                   # 👈 MCP server (MIT, free)
+├── README.md                     # this file
+├── package.json                  # repo scripts: checks, doc sync, packaging
+├── skills.sh.json                # skills.sh catalog layout
+├── mcpize.yaml                   # MCPize deployment manifest
+├── CLAUDE.md · UPDATING.md · CONTRIBUTING.md · LICENSE
+│
+├── .claude-plugin/               # Claude Code plugin + marketplace manifests
+├── .mcp.json                     # MCP config for this repo
+├── .github/workflows/
+│   ├── ci.yml                    # build, protocol probe, docker, sample compile
+│   ├── release.yml               # publishes fluentcart-developer (OIDC + provenance)
+│   └── release-plugin.yml        # publishes dsh-plugin-fluentcart
+│
+├── scripts/                      # repo tooling: doc sync, validators, packaging
+├── marketplace/                  # listing artifacts for third-party directories
+│
+├── servers/                      # 👈 the MCP server (npm: fluentcart-developer)
 │   └── fluentcart-developer/
 │       ├── src/
-│       │   ├── auth.ts        # Session descriptor (no gating)
-│       │   ├── server.ts      # Server factory + skills catalog
-│       │   ├── index.ts       # stdio entry
-│       │   ├── http.ts        # Streamable HTTP entry
-│       │   └── cards/         # This package's tools
-│       ├── scripts/           # Skill bundler + stdio protocol probe
-│       └── Dockerfile         # Build from repo root
-└── skills/                    # 👈 Skill content (MIT, public)
+│       │   ├── server.ts         # server factory + instructions + skills catalog
+│       │   ├── index.ts          # stdio entry
+│       │   ├── http.ts           # streamable HTTP entry
+│       │   ├── auth.ts           # session descriptor (no gating)
+│       │   └── cards/fluentcart/tools.ts   # the 6 tools
+│       ├── scripts/              # skill bundler + stdio protocol probe
+│       └── Dockerfile
+│
+├── plugins/                      # 👈 the DeepSeek Harness plugin
+│   └── dsh-plugin-fluentcart/
+│       ├── cordis.patch.yml      # one compose row
+│       ├── lib/index.js          # mounts the MCP server + registers the skill
+│       ├── skills/fluentcart-developer/SKILL.md
+│       ├── scripts/make-index.mjs
+│       └── test/e2e.mjs
+│
+└── skills/                       # 👈 the skill content
     └── fluentcart-developer/
         ├── SKILL.md
-        ├── references/
-        └── examples/
+        ├── references/           # 593 documentation pages
+        ├── examples/
+        └── scripts/
 ```
 
 ---

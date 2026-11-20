@@ -1,6 +1,6 @@
 {
   "name": "fluentcart-developer",
-  "description": "The complete FluentCart developer documentation, mirrored locally as Markdown — 588 pages covering 474 REST API operations, 49 database models, 22 hook reference pages, 11 modules, payment gateways, shipping carriers and licensing. Ships a local MCP server with 6 tools: search any page, read any heading, look up a table or a hook, and generate boilerplate. Free, offline, no account.",
+  "description": "The complete FluentCart developer documentation, mirrored locally as Markdown — 593 pages covering 474 REST API operations, 49 database models, 22 hook reference pages, 11 modules, payment gateways, shipping carriers and licensing. Ships a local MCP server with 6 tools: search any page, read any heading, look up a table or a hook, and generate boilerplate. Free, offline, no account.",
   "version": "3.0.0",
   "author": {
     "name": "FastrSoft",

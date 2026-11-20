@@ -34,7 +34,7 @@ This skill is the **complete documentation of FluentCart**, captured from
 <https://dev.fluentcart.com> and stored locally as Markdown. It is a mirror of
 the vendor's own documentation — not a summary, not a paraphrase.
 
-**588 pages** live under [`references/`](references/INDEX.md), laid out exactly as
+**593 pages** live under [`references/`](references/INDEX.md), laid out exactly as
 the documentation site lays them out. If a page exists on the site, it exists
 here under the same path.
 
