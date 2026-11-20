@@ -8,5 +8,6 @@
   },
   "homepage": "https://github.com/atifjubaer/skills",
   "repository": "https://github.com/atifjubaer/skills",
-  "license": "MIT"
+  "license": "MIT",
+  "icon": "./plugins/dsh-plugin-fluentcart/icons/fluentcart.svg"
 }

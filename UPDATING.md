@@ -249,9 +249,14 @@ trial-abuse-prevention.md
 device-licensing-and-hardware-tracking.md
 ```
 
-The sync writes to `.vendor-docs/`, and only the *copy* step fills
-`references/`. Preserve these five when the folder is cleared, restore them
-after, then rebuild `references/INDEX.md`.
+The sync writes to `.vendor-docs/`, and only `npm run sync:docs:apply` fills
+`references/`. That script copies every captured page across and touches nothing
+else, so these five are safe by construction — it only ever writes files the
+capture produced, and the vendor site has never heard of them.
+
+Check `references/INDEX.md` by hand after a sync that added pages: it is
+curated (it separates the FastrSoft originals from the vendor mirror) and is
+deliberately not regenerated.
 
 They used to be withheld from public builds as a paid tier. That tier is gone:
 every reference file now ships in the npm package and in the repo alike, so

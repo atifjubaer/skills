@@ -70,8 +70,13 @@ Every tool is registered for every caller on both transports. There is no licenc
 `skills/fluentcart-developer/references/` is a **generated mirror of <https://dev.fluentcart.com>** — 593 Markdown pages laid out exactly as the site lays them out, plus an `INDEX.md`. It is regenerated, never hand-edited:
 
 ```bash
-npm run sync:docs        # re-capture every page
+npm run sync:docs        # re-capture every page into .vendor-docs/
+npm run sync:docs:apply  # copy the capture into references/
 ```
+
+You do not have to remember to run it: `.github/workflows/sync-docs.yml`
+re-captures the corpus every Monday and opens a pull request when any page
+changed, so vendor drift arrives as a reviewable diff.
 
 **[UPDATING.md](./UPDATING.md)** — maintainer notes for refreshing the corpus
 and publishing a release. Not required to use the skill.
@@ -85,7 +90,11 @@ and publishing a release. Not required to use the skill.
 5. **OpenAPI fallback** — the 449 `restapi/operations/*` pages are shells, because VitePress renders them client-side and the HTML ships an empty body. When a capture comes back under 200 bytes the script fetches `/openapi/public/<path>.json` and renders the real endpoint: method, route, parameters table, request body and every response code.
 6. **Manifest** — `.vendor-docs/fluentcart-dev/_manifest.json` records url, status, bytes and a sha256 for every page, so two syncs can be diffed.
 
-Output lands in `.vendor-docs/` (git-ignored) and is copied into `skills/fluentcart-developer/references/`. The five FastrSoft-authored files are preserved through every sync — they do not come from the vendor site, so a sync must not overwrite them.
+Output lands in `.vendor-docs/` (git-ignored). `npm run sync:docs:apply` copies
+it into `skills/fluentcart-developer/references/`, writing only pages the capture
+produced — so the five FastrSoft-authored files, which do not come from the
+vendor site, are never overwritten. It reports pages that appeared or changed and
+never deletes one on its own.
 
 The Agensi listing is a **curated subset** (`AGENSI_SECTIONS` in `scripts/package-agensi-skills.mjs`), because that marketplace rejects archives over 50 files: hooks, modules, payment integration, guides and a generated index — 50 files exactly.
 
@@ -103,6 +112,13 @@ There are two things to install, and they do different jobs:
 Install the server. The skill is optional once you have it, because the server
 sends the same rules in its `initialize` handshake, which every client injects
 into the system prompt before the first turn.
+
+**Does any of this need npm?** Only one thing does: launching the MCP server,
+which every method does with `npx -y fluentcart-developer`. The Claude Code and
+DeepSeek Harness plugin installs themselves use `git` and the npm registry
+respectively, and neither needs you to run an npm command by hand. If you would
+rather pin a version than track the latest, replace `npx -y fluentcart-developer`
+with `npx -y fluentcart-developer@5.0.0` in the config below.
 
 ### Method 1: Any MCP client (recommended)
 
@@ -142,9 +158,18 @@ dsh plugin --profile web add dsh-plugin-fluentcart
 
 ### Method 3: Claude Code plugin marketplace
 
+This clones the repository with `git` and installs from it. **No npm package is
+installed and no account is needed** — npm only enters the picture when the
+plugin's MCP server starts, because it is launched with `npx`.
+
 ```
 /plugin marketplace add atifjubaer/skills
+/plugin install fluentcart-developer@fluentcart-skills
 ```
+
+Then install the plugin from the `/plugin` panel. To receive future versions,
+turn on auto-update for this marketplace under **Marketplaces** in `/plugin` —
+it is off by default for every marketplace that is not Anthropic's own.
 
 ---
 
@@ -165,14 +190,20 @@ your assistant's skill directory yourself — that directory is self-contained
 
 ### Updating
 
-```bash
-# MCP server — npx -y pulls the latest on every run
-# DeepSeek Harness plugin
-dsh plugin --profile web add dsh-plugin-fluentcart
+Each method caches differently, so each has its own way of getting the next
+version:
 
-# Skill files
-npx skills update
-```
+| Installed as | How you update |
+| --- | --- |
+| MCP server (any client) | Nothing — `npx -y` resolves the latest on every launch |
+| Claude Code plugin | `/plugin marketplace update fluentcart-skills`, or turn on auto-update in `/plugin → Marketplaces` |
+| DeepSeek Harness plugin | Run the `add` command again: `dsh plugin --profile web add dsh-plugin-fluentcart` |
+| `skills.sh` skill files | `npx skills update` |
+| Git clone | `git pull origin main` |
+
+The full mechanics — what each surface reads, what a version bump does, and why
+a pinned version can hold you on a stale copy — are in
+**[DISTRIBUTION.md](./DISTRIBUTION.md)**.
 
 If you cloned the repository: `git pull origin main`.
 
@@ -215,6 +246,7 @@ The index title (**FastrSoft**) is the marketplace; each card is one product.
 ```
 skills/
 ├── README.md                     # this file
+├── DISTRIBUTION.md               # 👈 how it ships and how updates reach users
 ├── package.json                  # repo scripts: checks, doc sync, packaging
 ├── skills.sh.json                # skills.sh catalog layout
 ├── mcpize.yaml                   # MCPize deployment manifest
