@@ -101,6 +101,12 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: npm publish --access public --provenance
 
+      # The tag push has been rejected by the remote twice out of eight
+      # releases with "[remote rejected] … (failed)" and no further detail,
+      # seconds after the commit push to main succeeded. The publish has
+      # already happened by then, so the failure leaves a shipped version with
+      # no tag — worse than a transient error. Retried with backoff rather than
+      # left for someone to push by hand.
       - name: Commit the bump and tag it
         if: ${{ !inputs.dry_run }}
         run: |
@@ -110,7 +116,14 @@ jobs:
           git commit -m "chore(release): fluentcart-developer@${{ steps.bump.outputs.version }}"
           git tag -a "v${{ steps.bump.outputs.version }}" -m "fluentcart-developer@${{ steps.bump.outputs.version }}"
           git push origin HEAD:main
-          git push origin "v${{ steps.bump.outputs.version }}"
+
+          for attempt in 1 2 3 4 5; do
+            if git push origin "v${{ steps.bump.outputs.version }}"; then exit 0; fi
+            echo "::warning::tag push rejected (attempt $attempt of 5); retrying"
+            sleep $((attempt * 10))
+          done
+          echo "::error::v${{ steps.bump.outputs.version }} was published but its tag could not be pushed. Push it by hand."
+          exit 1
 
       - name: Summarise
         run: |

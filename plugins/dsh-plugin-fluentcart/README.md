@@ -103,9 +103,10 @@ Then commit `index.json`. There is no separate publish step — the file is
 served from the repository, so committing it *is* publishing it.
 
 The icon is inlined as a `data:` URL, so the index is a single self-contained
-file that works on any static host. A relative icon would need an `icons/`
-directory published beside the JSON, which a gist cannot provide. The format
-caps an inline icon at 32 KiB and this one is 7 KB.
+file. A relative icon resolves against the index URL and would work here, since
+`icons/` sits beside the JSON — but inlining means the file can be moved to any
+host, or pasted anywhere, without a second asset to forget. The format caps an
+inline icon at 32 KiB and this one is 7 KB.
 
 ## Development
 
