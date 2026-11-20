@@ -133,6 +133,33 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       `${info?.version} vs ${pkg.version}`
     );
 
+    // The instructions are the one thing a client cannot skip: a model that
+    // never opens the skill still gets these, because they arrive in the
+    // handshake. So assert they actually come back over the wire, not that the
+    // source contains a constant. A client that drops the field leaves the
+    // model with twelve tools and no rules, which is the failure this exists
+    // to prevent.
+    const instructions = init.result?.instructions;
+    check(
+      'initialize carries instructions',
+      typeof instructions === 'string' && instructions.length > 800,
+      instructions ? `${instructions.length} chars` : 'missing'
+    );
+    check(
+      'instructions say to look things up',
+      instructions?.includes('Do not answer a FluentCart question from memory'),
+      'look-before-you-write'
+    );
+    // Every domain tool must be discoverable from the text alone; one that is
+    // not named is one the model has to guess exists. get_info is excluded on
+    // purpose — it is introspection, not a way to answer a FluentCart question.
+    const unnamed = TOOLS.filter(t => !instructions?.includes(t));
+    check(
+      `instructions name all ${TOOLS.length} domain tools`,
+      unnamed.length === 0,
+      unnamed.join(', ') || 'all named'
+    );
+
     s.request('notifications/initialized', {}).catch(() => {});
 
     const listed = await s.request('tools/list', {});
