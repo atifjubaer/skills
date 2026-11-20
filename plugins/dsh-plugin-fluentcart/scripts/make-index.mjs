@@ -91,9 +91,13 @@ if (versions.length === 0) {
 
 const index = {
   format: 1,
-  title: { en: 'FluentCart' },
+  // The index title is the MARKETPLACE, not a product. It names whoever
+  // publishes the plugins in it; each plugin then carries its own title on its
+  // card. Calling the marketplace "FluentCart" made a one-product index, and
+  // that name is what a reader sees when they pick an index source.
+  title: { en: 'FastrSoft' },
   description: {
-    en: 'FluentCart developer tools for WordPress e-commerce: documentation search, hooks, database schema, and boilerplate generation.',
+    en: 'Plugins from FastrSoft for AI coding tools — documentation search, code generation, and the connectors around them.',
   },
   metadata: {
     categories: {
@@ -114,10 +118,10 @@ const index = {
       name,
       title: { en: 'FluentCart Developer' },
       description: {
-        en: 'Adds the fluentcart MCP server (6 tools over 588 documentation pages) and the fluentcart-developer skill. Free, local, no licence key.',
+        en: 'Adds the fluentcart MCP server (6 tools over 593 documentation pages) and the fluentcart-developer skill. Free, local, no licence key.',
       },
       icon,
-      author: manifest.author ?? 'Atif Jubaer',
+      author: 'FastrSoft',
       homepage: manifest.homepage,
       repository: {
         url: 'https://github.com/atifjubaer/skills',
