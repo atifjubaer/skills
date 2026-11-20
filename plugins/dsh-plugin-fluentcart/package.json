@@ -53,7 +53,7 @@
       "description": {
         "en": "Adds the fluentcart MCP server (6 tools over 593 documentation pages) and the fluentcart-developer skill. Free, local, no licence key."
       },
-      "icon": "./icons/fluentcart.png",
+      "icon": "./icons/fluentcart.svg",
       "category": "development",
       "labels": [
         "wordpress",
@@ -83,5 +83,6 @@
   "scripts": {
     "test": "node test/e2e.mjs",
     "prepublishOnly": "npm test"
-  }
+  },
+  "icon": "./icons/fluentcart.svg"
 }
