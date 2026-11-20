@@ -24,7 +24,7 @@ and nothing is fetched at runtime.
 
 ## What it adds
 
-**12 MCP tools**, namespaced `mcp__fluentcart__*`:
+**6 MCP tools**, namespaced `mcp__fluentcart__*`:
 
 | Tool | What it answers |
 | --- | --- |
@@ -32,13 +32,7 @@ and nothing is fetched at runtime.
 | `fc_get_reference` | One page by path, or one heading inside it. |
 | `fc_search_hooks` | An action or filter by name or domain. |
 | `fc_get_db_schema` | One `wp_fct_*` table. |
-| `fc_generate_payment_gateway_boilerplate` | A payment gateway class. |
-| `fc_generate_licensing_boilerplate` | Software licensing through FluentCart Pro. |
-| `fc_generate_customer_endpoint_boilerplate` | A customer dashboard tab. |
-| `fc_generate_device_licensing_boilerplate` | Licensing for a desktop app, extension, or CLI. |
-| `fc_generate_trial_guard_boilerplate` | A trial guard. |
-| `fc_generate_client_sdk` | A Node, .NET, Go, or Kotlin licence client. |
-| `fc_generate_native_client` | A native client for a non-WordPress product. |
+| `fc_generate` | Working code. Pass a `type`: `payment_gateway`, `licensing`, `customer_endpoint`, `device_licensing`, `trial_guard`, `client_sdk` or `native_client`. |
 | `get_info` | Server version and corpus stats. |
 
 **One skill**, `fluentcart-developer`, which tells the model the tools exist,
@@ -125,7 +119,7 @@ npm test
 ```
 
 `npm test` mounts the plugin in a real Cordis context, connects the real MCP
-server as a real child process, asserts all 12 tools and the skill came back,
+server as a real child process, asserts all 6 tools and the skill came back,
 and then disposes the fiber. If the teardown were wrong the process would hang
 on the child's open stdio pipes instead of exiting — so a passing run also
 proves the server is not leaked.

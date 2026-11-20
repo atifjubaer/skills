@@ -21,13 +21,7 @@ const EXPECTED = [
   'fc_get_reference',
   'fc_search_hooks',
   'fc_get_db_schema',
-  'fc_generate_payment_gateway_boilerplate',
-  'fc_generate_licensing_boilerplate',
-  'fc_generate_customer_endpoint_boilerplate',
-  'fc_generate_device_licensing_boilerplate',
-  'fc_generate_trial_guard_boilerplate',
-  'fc_generate_client_sdk',
-  'fc_generate_native_client',
+  'fc_generate',
   'get_info',
 ]
 

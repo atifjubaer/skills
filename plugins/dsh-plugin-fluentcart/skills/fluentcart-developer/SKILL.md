@@ -30,7 +30,7 @@ between versions. Look them up.
 | `fc_get_reference` | Read one page by path, or one heading inside it. |
 | `fc_search_hooks` | Find an action or filter by name or domain. |
 | `fc_get_db_schema` | Read one `wp_fct_*` table. |
-| `fc_generate_*` | Generate a gateway, licensing, customer endpoint, device licensing, trial guard, or client SDK. |
+| `fc_generate` | Generate code. Pass a `type`: `payment_gateway`, `licensing`, `customer_endpoint`, `device_licensing`, `trial_guard`, `client_sdk` or `native_client`. |
 | `get_info` | Server version and corpus stats. |
 
 ## Workflow
@@ -40,7 +40,7 @@ between versions. Look them up.
    `database/` for tables, `hooks/` for actions and filters.
 2. **Read.** `fc_get_reference` on the path it returned. Read the whole page
    unless you only need one heading.
-3. **Generate or write.** Prefer a `fc_generate_*` tool over hand-writing a
+3. **Generate or write.** Prefer `fc_generate` over hand-writing a
    gateway or licensing class: the generators already encode the required
    hooks, the order they fire in, and the response shapes.
 4. **Verify.** Re-read the page your code depends on. A signature you did not
