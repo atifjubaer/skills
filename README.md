@@ -178,6 +178,38 @@ If you cloned the repository: `git pull origin main`.
 
 ---
 
+## The FastrSoft plugin index
+
+DeepSeek Harness can browse a catalogue and install from it. This repository
+serves one:
+
+```
+https://raw.githubusercontent.com/atifjubaer/skills/main/index.json
+```
+
+Turn on **Custom plugin indexes** under **Experimental plugins** in the Plugins
+page — the **Discover** tab only appears once that is on — then
+**Add index source** with the URL above.
+
+[`index.json`](./index.json) is generated, never hand-edited: every listed
+version needs a real `publishTimestamp` and only the registry has those.
+
+```sh
+npm run make-index    # after a publish, then commit index.json
+```
+
+It is generated from `plugins/`, so a new plugin appears with no edit to any
+generator. Each one declares two things in its own `package.json`:
+
+| Key | What it is |
+|---|---|
+| `dsh.bundle` | the compose layer — makes the package installable |
+| `dsh.marketplace` | the card — title, description, icon, category, labels |
+
+The index title (**FastrSoft**) is the marketplace; each card is one product.
+
+---
+
 ## Repository Folder Structure
 
 ```
@@ -195,7 +227,9 @@ skills/
 │   ├── release.yml               # publishes fluentcart-developer (OIDC + provenance)
 │   └── release-plugin.yml        # publishes dsh-plugin-fluentcart
 │
-├── scripts/                      # repo tooling: doc sync, validators, packaging
+├── index.json                    # 👈 the FastrSoft marketplace, served to Discover
+├── scripts/                      # repo tooling: doc sync, validators, packaging,
+│                                 #   make-index (regenerates index.json)
 ├── marketplace/                  # listing artifacts for third-party directories
 │
 ├── servers/                      # 👈 the MCP server (npm: fluentcart-developer)
@@ -209,12 +243,11 @@ skills/
 │       ├── scripts/              # skill bundler + stdio protocol probe
 │       └── Dockerfile
 │
-├── plugins/                      # 👈 the DeepSeek Harness plugin
+├── plugins/                      # 👈 one directory per DeepSeek Harness plugin
 │   └── dsh-plugin-fluentcart/
 │       ├── cordis.patch.yml      # one compose row
 │       ├── lib/index.js          # mounts the MCP server + registers the skill
 │       ├── skills/fluentcart-developer/SKILL.md
-│       ├── scripts/make-index.mjs
 │       └── test/e2e.mjs
 │
 └── skills/                       # 👈 the skill content

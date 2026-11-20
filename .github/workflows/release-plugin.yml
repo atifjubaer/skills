@@ -131,6 +131,6 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "Refresh the plugin index once the registry has processed it (it can lag by minutes, so this is not run here):" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
-            echo "npm run make-index   # then commit index.json; the repo serves it" >> "$GITHUB_STEP_SUMMARY"
+            echo "(from the repo root) npm run make-index   # then commit index.json" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
