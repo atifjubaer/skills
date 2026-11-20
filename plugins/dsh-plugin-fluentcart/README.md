@@ -75,7 +75,7 @@ restate every key you still want.
 Open **Plugins → Custom plugin indexes**, choose **Add index source**, and enter:
 
 ```
-https://gist.githubusercontent.com/atifjubaer/48f161bee2d78a7180de16e5f23c49bc/raw/index.json
+https://raw.githubusercontent.com/atifjubaer/skills/main/plugins/dsh-plugin-fluentcart/index.json
 ```
 
 Then install from the **Discover** tab.
@@ -85,12 +85,10 @@ index and always works; the index only adds a browsable card.
 
 The index is a [plugin
 index](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/plugin-market.md)
-in `format: 1`. It is hosted as a gist rather than served from this repository
-because this repository is private, and a `raw.githubusercontent.com` link to a
-private repository returns **401** to DSH's fetch.
-
-[`index.json`](./index.json) in this directory is the source of truth. The gist
-is a published copy of it.
+in `format: 1`, served straight from this repository. It used to live on a
+public gist because a `raw.githubusercontent.com` link to a private repository
+returns **401** to DSH's fetch; the repository is public now, so the gist is
+gone and the file in this directory is what clients read.
 
 ### Regenerating
 
@@ -99,12 +97,10 @@ The index is generated, not hand-written: every listed version needs a real
 
 ```sh
 npm run make-index
-npm run publish-index
 ```
 
-`publish-index` PATCHes the gist through the API rather than using
-`gh gist edit`, which cannot replace an existing file — `--add` appends, leaves
-the stale content served, and looks like it worked.
+Then commit `index.json`. There is no separate publish step — the file is
+served from the repository, so committing it *is* publishing it.
 
 The icon is inlined as a `data:` URL, so the index is a single self-contained
 file that works on any static host. A relative icon would need an `icons/`
