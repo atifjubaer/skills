@@ -1,6 +1,6 @@
 /**
  * Complete licence-client templates for platforms not covered by
- * fc_generate_client_sdk.
+ * fc_generate's `client_sdk` type.
  *
  * Every template implements the full contract against a FluentCart store
  * running Fastr Devices: activate, check, deactivate, RS256 verification of

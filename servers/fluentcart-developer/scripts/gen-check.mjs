@@ -80,15 +80,15 @@ try {
 
   const node = grab(
     await s.request('tools/call', {
-      name: 'fc_generate_client_sdk',
-      arguments: { platform: 'node', storeUrl, productId, appName }
+      name: 'fc_generate',
+      arguments: { type: 'client_sdk', platform: 'node', storeUrl, productId, appName }
     })
   );
 
   const tauri = grab(
     await s.request('tools/call', {
-      name: 'fc_generate_device_licensing_boilerplate',
-      arguments: { platform: 'tauri_rust', storeUrl, productId, appName }
+      name: 'fc_generate',
+      arguments: { type: 'device_licensing', platform: 'tauri_rust', storeUrl, productId, appName }
     })
   );
 

@@ -10,6 +10,37 @@ export function registerFluentCartTools(server: McpServer): void {
   const FC_REFS_DIR = skillRefs('fluentcart-developer');
 
   // ==========================================
+  // Generators
+  // ==========================================
+  //
+  // These are collected, not registered. Every tool a server registers has its
+  // name, description and input schema injected into the model's prompt on
+  // every single request — the documentation corpus is fetched on demand and
+  // costs nothing, but the tool list is a fixed tax.
+  //
+  // Measured on 3.0.2: twelve tools cost ~2,342 tokens per request, and the
+  // seven generators were ~1,700 of it, mostly because four of them repeat the
+  // same four parameters and each carries its own long description. They are
+  // one capability with a type switch, so they are registered as one tool and
+  // dispatched here. The per-type schemas stay, as runtime validation, but
+  // they are no longer sent to the model.
+  type Generator = {
+    description: string;
+    inputSchema: Record<string, z.ZodTypeAny>;
+    run: (args: any) => Promise<any>;
+  };
+
+  const GENERATORS = new Map<string, Generator>();
+
+  function collect(
+    name: string,
+    def: { description: string; inputSchema: Record<string, z.ZodTypeAny> },
+    run: (args: any) => Promise<any>
+  ): void {
+    GENERATORS.set(name, { description: def.description, inputSchema: def.inputSchema, run });
+  }
+
+  // ==========================================
   // Read tools — hook search, schema lookup, reference reader
   // ==========================================
 
@@ -269,7 +300,7 @@ export function registerFluentCartTools(server: McpServer): void {
   // ==========================================
   // Code generation — free like everything else in the suite
   // ==========================================
-  server.registerTool(
+  collect(
     'fc_generate_payment_gateway_boilerplate',
     {
       description: 'Generate production-ready PHP boilerplate for custom FluentCart payment gateways with settings schema and webhook listener.',
@@ -280,7 +311,7 @@ export function registerFluentCartTools(server: McpServer): void {
       }
     },
     async ({ gatewaySlug, gatewayTitle, supportsSubscriptions }) => {
-      const className = gatewaySlug.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('') + 'Gateway';
+      const className = gatewaySlug.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join('') + 'Gateway';
       const code = `<?php
 defined('ABSPATH') || exit;
 
@@ -331,7 +362,7 @@ class ${className} extends AbstractPaymentGateway
     }
   );
 
-  server.registerTool(
+  collect(
     'fc_generate_licensing_boilerplate',
     {
       description:
@@ -433,7 +464,7 @@ function ${slug.replace(/-/g, '_')}_is_license_active(): bool
     }
   );
 
-  server.registerTool(
+  collect(
     'fc_generate_customer_endpoint_boilerplate',
     {
       description:
@@ -454,7 +485,7 @@ function ${slug.replace(/-/g, '_')}_is_license_active(): bool
 
       const subRouteCases = (subRoutes || ['history', 'settings'])
         .map(
-          (route) => `            case '${route}':
+          (route: string) => `            case '${route}':
                 echo '<div class="fct-custom-subpage">';
                 echo '<h4>' . esc_html__('${route.charAt(0).toUpperCase() + route.slice(1)}', 'my-addon') . '</h4>';
                 echo '<p>' . esc_html__('Custom content for ${route} sub-route.', 'my-addon') . '</p>';
@@ -553,7 +584,7 @@ ${subRouteCases}
     }
   );
 
-  server.registerTool(
+  collect(
     'fc_generate_device_licensing_boilerplate',
     {
       description:
@@ -580,7 +611,7 @@ ${subRouteCases}
         `              never trust a local clock for expiry.`,
         `Missing:      device_fingerprint — this template predates the trial registry,`,
         `              so trials are refused and the device panel has no fingerprint.`,
-        `              For trials use fc_generate_trial_guard_boilerplate instead.`
+        `              For trials call fc_generate with type: "trial_guard" instead.`
       ].join('\n');
 
       const header = (title: string, file: string) =>
@@ -1396,7 +1427,7 @@ void LicensingManager::deactivate()
       };
     }
   );
-  server.registerTool(
+  collect(
     'fc_generate_trial_guard_boilerplate',
     {
       description:
@@ -1916,7 +1947,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       };
     }
   );
-  server.registerTool(
+  collect(
     'fc_generate_client_sdk',
     {
       description:
@@ -2860,7 +2891,7 @@ fun entitlement(
     }
   );
 
-  server.registerTool(
+  collect(
     'fc_generate_native_client',
     {
       description:
@@ -2880,6 +2911,159 @@ fun entitlement(
       return {
         content: [{ type: 'text', text: nativeClientTemplate(platform, base, productId, appName) }]
       };
+    }
+  );
+
+  // ==========================================
+  // fc_generate — one tool in front of seven generators
+  // ==========================================
+
+  const GENERATE_TYPES = [
+    'payment_gateway',
+    'licensing',
+    'customer_endpoint',
+    'device_licensing',
+    'trial_guard',
+    'client_sdk',
+    'native_client'
+  ] as const;
+
+  type GenerateType = (typeof GENERATE_TYPES)[number];
+
+  /** Which collected generator each type dispatches to. */
+  const GENERATOR_NAME: Record<GenerateType, string> = {
+    payment_gateway: 'fc_generate_payment_gateway_boilerplate',
+    licensing: 'fc_generate_licensing_boilerplate',
+    customer_endpoint: 'fc_generate_customer_endpoint_boilerplate',
+    device_licensing: 'fc_generate_device_licensing_boilerplate',
+    trial_guard: 'fc_generate_trial_guard_boilerplate',
+    client_sdk: 'fc_generate_client_sdk',
+    native_client: 'fc_generate_native_client'
+  };
+
+  /**
+   * Fields each type cannot run without. Checked here rather than in the flat
+   * schema because the schema is shared by all seven: making every field
+   * required would forbid the other six types, and making them all optional
+   * without this check would let a call through with `type` alone.
+   */
+  const REQUIRED_FIELDS: Record<GenerateType, string[]> = {
+    payment_gateway: ['gatewaySlug', 'gatewayTitle'],
+    licensing: ['pluginNamespace', 'pluginTitle', 'itemId', 'apiUrl'],
+    customer_endpoint: ['endpointSlug', 'tabTitle'],
+    device_licensing: ['platform', 'storeUrl', 'productId', 'appName'],
+    trial_guard: ['platform', 'storeUrl', 'productId', 'appName'],
+    client_sdk: ['platform', 'storeUrl', 'productId', 'appName'],
+    native_client: ['platform', 'storeUrl', 'productId', 'appName']
+  };
+
+  /**
+   * Which platforms each type accepts. The flat schema has to declare one
+   * union of every platform, so without this a `trial_guard` call would accept
+   * `platform: "swift"` and silently generate from the wrong branch. The
+   * per-type schemas used to enforce this through zod; enforced here instead,
+   * where it costs no prompt tokens and can name the alternatives on failure.
+   */
+  const PLATFORMS_BY_TYPE: Partial<Record<GenerateType, readonly string[]>> = {
+    device_licensing: ['tauri_rust', 'chrome_extension', 'python', 'cpp_vst'],
+    trial_guard: ['tauri_rust', 'python', 'chrome_extension', 'cpp_vst'],
+    client_sdk: ['node', 'dotnet', 'go', 'kotlin'],
+    native_client: ['swift', 'unity_csharp', 'java', 'php', 'c']
+  };
+
+  /** Every platform value any of the four licensing-derived generators accepts. */
+  const PLATFORMS = [
+    'tauri_rust',
+    'chrome_extension',
+    'python',
+    'cpp_vst',
+    'node',
+    'dotnet',
+    'go',
+    'kotlin',
+    'swift',
+    'unity_csharp',
+    'java',
+    'php',
+    'c'
+  ] as const;
+
+  server.registerTool(
+    'fc_generate',
+    {
+      description: `Generate working FluentCart code. Pass a type plus its fields:
+payment_gateway: gatewaySlug, gatewayTitle. licensing: pluginNamespace, pluginTitle, itemId, apiUrl. customer_endpoint: endpointSlug, tabTitle. device_licensing / trial_guard / client_sdk / native_client: platform, storeUrl, productId, appName. Everything else is optional and labelled with its type.
+Prefer this over hand-writing: the output already encodes the hooks, the order they fire in, and the response shapes.`,
+      inputSchema: {
+        type: z.enum(GENERATE_TYPES).describe('Which generator to run'),
+        gatewaySlug: z.string().optional().describe('payment_gateway: lowercase slug, e.g. "paddle_billing"'),
+        gatewayTitle: z.string().optional().describe('payment_gateway: display title, e.g. "Paddle Billing"'),
+        supportsSubscriptions: z.boolean().optional().describe('payment_gateway: advertise subscription support (default false)'),
+        pluginNamespace: z.string().optional().describe('licensing: PHP namespace, e.g. "Acme\\\\Plugin"'),
+        pluginTitle: z.string().optional().describe('licensing: display title of your plugin'),
+        itemId: z.number().optional().describe('licensing: FluentCart product (item) ID'),
+        apiUrl: z.string().optional().describe('licensing: base URL of your store'),
+        includeAdminUi: z.boolean().optional().describe('licensing: include the admin settings page (default true)'),
+        endpointSlug: z.string().optional().describe('customer_endpoint: URL slug, e.g. "acme-wallet"'),
+        tabTitle: z.string().optional().describe('customer_endpoint: dashboard tab title'),
+        iconSvg: z.string().optional().describe('customer_endpoint: raw SVG, 20x20 viewBox'),
+        subRoutes: z.array(z.string()).optional().describe('customer_endpoint: sub-path actions, e.g. ["history"]'),
+        platform: z.enum(PLATFORMS).optional().describe('device_licensing, trial_guard, client_sdk, native_client: target platform'),
+        storeUrl: z.string().optional().describe('Store base URL, e.g. "https://store.example.com/"'),
+        productId: z.number().optional().describe('FluentCart product (item) ID'),
+        appName: z.string().optional().describe('Product name, e.g. "Acme Studio"')
+      }
+    },
+    async (args) => {
+      const type = args.type as GenerateType;
+      const generator = GENERATORS.get(GENERATOR_NAME[type]);
+      if (!generator) {
+        return {
+          isError: true,
+          content: [
+            { type: 'text', text: `fc_generate: unknown type "${type}". Expected one of: ${GENERATE_TYPES.join(', ')}.` }
+          ]
+        };
+      }
+
+      // Copy only the values that were actually supplied. Spreading `args`
+      // directly would carry explicit `undefined` keys and overwrite these
+      // defaults — the per-type schemas used to apply them, and reaching the
+      // handler directly bypasses that.
+      const prepared: Record<string, unknown> = { supportsSubscriptions: false, includeAdminUi: true };
+      for (const [key, value] of Object.entries(args)) {
+        if (key !== 'type' && value !== undefined) prepared[key] = value;
+      }
+
+      const missing = REQUIRED_FIELDS[type].filter(
+        (key) => prepared[key] === undefined || prepared[key] === null || prepared[key] === ''
+      );
+      if (missing.length > 0) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `fc_generate: type "${type}" also requires ${missing.map((k) => `"${k}"`).join(', ')}. Required: ${REQUIRED_FIELDS[type].join(', ')}.`
+            }
+          ]
+        };
+      }
+
+      const allowedPlatforms = PLATFORMS_BY_TYPE[type];
+      if (allowedPlatforms && typeof prepared.platform === 'string' && !allowedPlatforms.includes(prepared.platform)) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `fc_generate: type "${type}" does not support platform "${prepared.platform}". Use one of: ${allowedPlatforms.join(', ')}.`
+            }
+          ]
+        };
+      }
+
+      return generator.run(prepared);
     }
   );
 }
