@@ -107,7 +107,8 @@ title, description, icon and labels), and the next run picks it up.
 
 The icon is inlined as a `data:` URL by the generator, so the index stays one
 self-contained file that works on any static host. The format caps an inline
-icon at 32 KiB and this one is 7 KB.
+icon at 32 KiB and this one is 543 bytes — a 2-path SVG, so it stays sharp at
+any size.
 
 ## Development
 
