@@ -199,18 +199,47 @@ it is off by default for every marketplace that is not Anthropic's own.
 
 ---
 
-### Method 4: `skills.sh` — the skill files only
+### Method 4: the skill on its own
 
-This installs the Markdown, not the tools. Use it if you want the rules
-somewhere the MCP server cannot reach.
+The tools and the skill are **separate installs**. Every method above gives you
+the six tools; this gives you the Markdown rules, which is what you want in a
+harness that has no plugin system — **OpenCode, Cursor, Codex, anything else**.
+
+The skill directory is self-contained (`SKILL.md`, `references/`, `examples/`,
+`scripts/`), so installing it is a copy:
+
+```bash
+git clone --depth 1 https://github.com/atifjubaer/skills /tmp/fluentcart-skill
+mkdir -p ~/.claude/skills
+cp -r /tmp/fluentcart-skill/skills/fluentcart-developer ~/.claude/skills/
+```
+
+**One path covers more than Claude Code.** OpenCode scans these directories, and
+treats the first as a compatibility location:
+
+| Harness | Where it looks for a skill |
+| --- | --- |
+| Claude Code | `~/.claude/skills/<name>/SKILL.md`, or `.claude/skills/` inside a project |
+| OpenCode | `.opencode/skills/`, `~/.config/opencode/skills`, **and** `.claude/skills` / `~/.claude/skills` / `.agents/skills` |
+| Clients on the `.agents` convention | `~/.agents/skills/` |
+
+So copying into `~/.claude/skills/` registers the skill in Claude Code and
+OpenCode at once. For a project-local install, use `.claude/skills/` or
+`.opencode/skills/` in that repository instead.
+
+There is also a packageised route, which fetches the same files:
 
 ```bash
 npx skills add atifjubaer/skills --skill "fluentcart-developer"
 ```
 
-You can also clone the repository and copy `skills/fluentcart-developer/` into
-your assistant's skill directory yourself — that directory is self-contained
-(`SKILL.md`, `references/`, `examples/`, `scripts/`).
+This method installs no tools. Use it together with Method 1 — the two do not
+conflict: the server gives the model the `fc_*` tools, the skill tells it when to
+reach for them.
+
+**A copied skill does not update itself.** Re-run the two commands when you want
+a newer version; there is no background refresh, unlike the MCP server, which
+`npx` re-resolves on every launch.
 
 ---
 
