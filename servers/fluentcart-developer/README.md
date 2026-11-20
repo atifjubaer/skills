@@ -1,6 +1,6 @@
 # fluentcart-developer
 
-MCP server for FluentCart developer knowledge: documentation search, database schema lookup, hook discovery, reference reading, and boilerplate generation for gateways, licensing, customers, device licensing, trial guards and client SDKs.
+MCP server for FluentCart developer knowledge: documentation search, database schema lookup, hook discovery, reference reading, and boilerplate generation for gateways, licensing, customers, device licensing and client SDKs.
 
 Free and MIT-licensed. No licence key, account, or purchase required.
 
@@ -24,7 +24,7 @@ Free and MIT-licensed. No licence key, account, or purchase required.
 | `fc_search_hooks` | Search 680+ hooks by name or domain |
 | `fc_get_db_schema` | Read one `wp_fct_*` table |
 | `fc_get_reference` | Read one documentation page, or one heading inside it |
-| `fc_generate` | Generate code — pass a `type`: `payment_gateway`, `licensing`, `customer_endpoint`, `device_licensing`, `trial_guard`, `client_sdk`, `native_client` |
+| `fc_generate` | Generate code — pass a `type`: `payment_gateway`, `licensing`, `customer_endpoint`, `device_licensing`, `client_sdk`, `native_client` |
 | `get_info` | Server version, tool list and licence |
 
 `fc_generate` replaces seven separate generator tools. Every registered tool's

@@ -59,7 +59,7 @@ Tools:
 - fc_get_reference — read one page by path, or one heading inside it.
 - fc_search_hooks — an action or filter, by name or domain.
 - fc_get_db_schema — one wp_fct_* table.
-- fc_generate — working code: a payment gateway, licensing, a customer endpoint, device licensing, a trial guard, a client SDK or a native client. Pass a type; the tool's description lists the fields each type needs. Prefer this to hand-writing: it already encodes the hooks, the order they fire in, and the response shapes.
+- fc_generate — working code: a payment gateway, licensing, a customer endpoint, device licensing, a client SDK or a native client. Pass a type; the tool's description lists the fields each type needs. Prefer this to hand-writing: it already encodes the hooks, the order they fire in, and the response shapes.
 
 Read the page before writing code that depends on it. A signature you did not read is a signature you invented. Cite the page you used, for example restapi/operations/orders/get-orders.md.
 
@@ -124,7 +124,7 @@ function serverInfo(auth: AuthContext, verbose = false) {
   return {
     name: 'fluentcart-developer',
     version: SERVER_VERSION,
-    description: "MCP server for FluentCart developer knowledge: documentation search, database schema lookup, hook discovery, reference reading, and boilerplate generation for gateways, licensing, customers, device licensing, trial guards and client SDKs.",
+    description: "MCP server for FluentCart developer knowledge: documentation search, database schema lookup, hook discovery, reference reading, and boilerplate generation for gateways, licensing, customers, device licensing and client SDKs.",
     price: 'free',
     licence: 'MIT',
     session: {

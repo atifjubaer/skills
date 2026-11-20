@@ -206,8 +206,18 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       );
     }
     {
-      const text = await call(s, 'fc_generate', {"type":"trial_guard","platform":"python","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
-      check('call fc_generate trial_guard', text.length > 500, text ? `${text.length} chars` : 'empty');
+      // trial_guard was removed: it needed the Fastr Devices add-on, so it was
+      // the one generator that could not run against a plain FluentCart store.
+      // The `type` enum refuses it before the dispatcher sees it, which is the
+      // right layer. zod answers by listing the options it does accept rather
+      // than echoing the rejected one, so assert both halves: it errored, and
+      // trial_guard is not among the accepted values.
+      const text = await call(s, 'fc_generate', { type: 'trial_guard', platform: 'python', storeUrl: 'https://store.example.com/', productId: 1, appName: 'Acme' });
+      check(
+        'trial_guard is refused',
+        text.startsWith('ERROR:') && text.includes('Invalid option') && !text.includes('"trial_guard"'),
+        text.slice(0, 120)
+      );
     }
     {
       const text = await call(s, 'fc_generate', {"type":"client_sdk","platform":"node","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
@@ -249,7 +259,7 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
     }
     {
       const text = await call(s, 'fc_generate', {
-        type: 'trial_guard', platform: 'swift',
+        type: 'device_licensing', platform: 'swift',
         storeUrl: 'https://store.example.com/', productId: 1, appName: 'Acme'
       });
       check('fc_generate refuses a wrong platform', text.startsWith('ERROR:') && text.includes('does not support platform'), text.slice(0, 70));
