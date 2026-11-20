@@ -18,7 +18,7 @@ This repository provides ready-to-use configurations, reference manuals, and cod
   - **6 Runnable Example Projects:** Custom Addon plugin, Fee Surcharge plugin, Payment Gateway plugin, Shipping Carrier, Starter Child Theme, and Software Licensing SDK plugin.
 
 - **MCP server** — the skill ships with its own, so installing it never drags in a second product:
-  - **[`fluentcart-developer`](./servers/fluentcart-developer)** — 11 tools for FluentCart.
+  - **[`fluentcart-developer`](./servers/fluentcart-developer)** — 6 tools for FluentCart.
   - It is free for every client: no licence key, account, or request quota.
 
 ---
@@ -29,7 +29,7 @@ Skills tell the model what to do. The server gives it the tools to do it — wit
 
 | Server | Tools |
 | --- | --- |
-| **[`fluentcart-developer`](./servers/fluentcart-developer)** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate_payment_gateway_boilerplate`, `fc_generate_licensing_boilerplate`, `fc_generate_customer_endpoint_boilerplate`, `fc_generate_device_licensing_boilerplate`, `fc_generate_trial_guard_boilerplate`, `fc_generate_client_sdk`, `fc_generate_native_client`, `get_info` |
+| **[`fluentcart-developer`](./servers/fluentcart-developer)** | `fc_search_hooks`, `fc_get_db_schema`, `fc_get_reference`, `fc_generate`, `get_info` |
 
 Every session also exposes the skills catalog itself (`skills/list`, `resources/read`). Three tools reach the documentation directly, which is how 588 pages stay out of the context window:
 

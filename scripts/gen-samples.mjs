@@ -89,7 +89,8 @@ async function generate(tool, args) {
 let written = 0;
 
 for (const [platform, file] of Object.entries(CLIENT_FILES)) {
-  const code = await generate('fc_generate_client_sdk', {
+  const code = await generate('fc_generate', {
+    type: 'client_sdk',
     platform,
     storeUrl: STORE,
     productId: PRODUCT,
@@ -102,7 +103,8 @@ for (const [platform, file] of Object.entries(CLIENT_FILES)) {
 }
 
 for (const [platform, file] of Object.entries(NATIVE_FILES)) {
-  const code = await generate('fc_generate_native_client', {
+  const code = await generate('fc_generate', {
+    type: 'native_client',
     platform,
     storeUrl: STORE,
     productId: PRODUCT,
@@ -117,7 +119,8 @@ for (const [platform, file] of Object.entries(NATIVE_FILES)) {
 // Trial guards are multi-file projects, not single compilable units. Generating
 // them here still catches a template that throws or emits nothing.
 for (const platform of TRIAL_PLATFORMS) {
-  const code = await generate('fc_generate_trial_guard_boilerplate', {
+  const code = await generate('fc_generate', {
+    type: 'trial_guard',
     platform,
     storeUrl: STORE,
     productId: PRODUCT,

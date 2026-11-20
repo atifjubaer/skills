@@ -105,13 +105,7 @@ const TOOLS = [
   "fc_get_db_schema",
   "fc_get_reference",
   "fc_search_docs",
-  "fc_generate_payment_gateway_boilerplate",
-  "fc_generate_licensing_boilerplate",
-  "fc_generate_customer_endpoint_boilerplate",
-  "fc_generate_device_licensing_boilerplate",
-  "fc_generate_trial_guard_boilerplate",
-  "fc_generate_client_sdk",
-  "fc_generate_native_client"
+  "fc_generate"
 ];
 const ALL_TOOLS = [...TOOLS, 'get_info'];
 
@@ -188,20 +182,20 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       check('call fc_get_reference', text.length > 100, text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_generate_payment_gateway_boilerplate', {"gatewaySlug":"paddle_billing","gatewayTitle":"Paddle Billing","supportsSubscriptions":true});
-      check('call fc_generate_payment_gateway_boilerplate', text.includes('PaddleBillingGateway'), text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"payment_gateway","gatewaySlug":"paddle_billing","gatewayTitle":"Paddle Billing","supportsSubscriptions":true});
+      check('call fc_generate payment_gateway', text.includes('PaddleBillingGateway'), text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_generate_licensing_boilerplate', {"pluginNamespace":"Acme\\AwesomePlugin","pluginTitle":"Awesome Plugin Pro","itemId":1,"apiUrl":"https://store.example.com/"});
-      check('call fc_generate_licensing_boilerplate', text.length > 500, text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"licensing","pluginNamespace":"Acme\\AwesomePlugin","pluginTitle":"Awesome Plugin Pro","itemId":1,"apiUrl":"https://store.example.com/"});
+      check('call fc_generate licensing', text.length > 500, text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_generate_customer_endpoint_boilerplate', {"endpointSlug":"acme-wallet","tabTitle":"My Wallet"});
-      check('call fc_generate_customer_endpoint_boilerplate', text.includes('addCustomerDashboardEndpoint'), text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"customer_endpoint","endpointSlug":"acme-wallet","tabTitle":"My Wallet"});
+      check('call fc_generate customer_endpoint', text.includes('addCustomerDashboardEndpoint'), text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_generate_device_licensing_boilerplate', {"platform":"tauri_rust","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
-      check('call fc_generate_device_licensing_boilerplate', text.length > 500, text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"device_licensing","platform":"tauri_rust","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
+      check('call fc_generate device_licensing', text.length > 500, text ? `${text.length} chars` : 'empty');
       // keyring 3 ships no backend, so a bare keyring = "3" compiles and then
       // silently fails to persist: a new device id every launch, one seat burnt
       // each time, and deactivate() unable to release what it cannot find.
@@ -212,12 +206,12 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       );
     }
     {
-      const text = await call(s, 'fc_generate_trial_guard_boilerplate', {"platform":"python","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
-      check('call fc_generate_trial_guard_boilerplate', text.length > 500, text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"trial_guard","platform":"python","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
+      check('call fc_generate trial_guard', text.length > 500, text ? `${text.length} chars` : 'empty');
     }
     {
-      const text = await call(s, 'fc_generate_client_sdk', {"platform":"node","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
-      check('call fc_generate_client_sdk', text.length > 500, text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"client_sdk","platform":"node","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
+      check('call fc_generate client_sdk', text.length > 500, text ? `${text.length} chars` : 'empty');
       // The device contract needs a persisted identity, a clock guard and an
       // offline grace window; a client without them burns a seat per launch.
       check('node client: persists a device id', text.includes('export function deviceId'), 'deviceId()');
@@ -228,8 +222,8 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
       check('node client: refuses a non-valid status', text.includes('Activation refused by the store'), 'throws');
     }
     {
-      const text = await call(s, 'fc_generate_native_client', {"platform":"java","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
-      check('call fc_generate_native_client', text.length > 500, text ? `${text.length} chars` : 'empty');
+      const text = await call(s, 'fc_generate', {"type":"native_client","platform":"java","storeUrl":"https://store.example.com/","productId":1,"appName":"Acme Studio"});
+      check('call fc_generate native_client', text.length > 500, text ? `${text.length} chars` : 'empty');
     }
     {
       const text = await call(s, 'fc_get_reference', {
@@ -243,6 +237,22 @@ const ALL_TOOLS = [...TOOLS, 'get_info'];
 
       const scoped = await call(s, 'fc_search_docs', { query: 'order', prefix: 'hooks/' });
       check('call fc_search_docs prefix', scoped.includes('hooks/'), `${scoped.length} chars`);
+    }
+
+    // fc_generate shares one flat schema across seven types, so it cannot mark
+    // a field required for one type and absent for another. These two refusals
+    // are what stops a bad call from generating from a default branch: a type
+    // with a field missing, and a platform the type does not support.
+    {
+      const text = await call(s, 'fc_generate', { type: 'payment_gateway' });
+      check('fc_generate refuses a missing field', text.startsWith('ERROR:') && text.includes('also requires'), text.slice(0, 70));
+    }
+    {
+      const text = await call(s, 'fc_generate', {
+        type: 'trial_guard', platform: 'swift',
+        storeUrl: 'https://store.example.com/', productId: 1, appName: 'Acme'
+      });
+      check('fc_generate refuses a wrong platform', text.startsWith('ERROR:') && text.includes('does not support platform'), text.slice(0, 70));
     }
 
     // Path traversal must be refused, not silently resolved.

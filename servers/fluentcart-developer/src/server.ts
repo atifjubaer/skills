@@ -59,7 +59,7 @@ Tools:
 - fc_get_reference — read one page by path, or one heading inside it.
 - fc_search_hooks — an action or filter, by name or domain.
 - fc_get_db_schema — one wp_fct_* table.
-- fc_generate_payment_gateway_boilerplate, fc_generate_licensing_boilerplate, fc_generate_customer_endpoint_boilerplate, fc_generate_device_licensing_boilerplate, fc_generate_trial_guard_boilerplate, fc_generate_client_sdk, fc_generate_native_client — working code. Prefer these to hand-writing: they already encode the hooks, the order they fire in, and the response shapes.
+- fc_generate — working code: a payment gateway, licensing, a customer endpoint, device licensing, a trial guard, a client SDK or a native client. Pass a type; the tool's description lists the fields each type needs. Prefer this to hand-writing: it already encodes the hooks, the order they fire in, and the response shapes.
 
 Read the page before writing code that depends on it. A signature you did not read is a signature you invented. Cite the page you used, for example restapi/operations/orders/get-orders.md.
 
@@ -116,13 +116,7 @@ const TOOLS = [
   "fc_get_db_schema",
   "fc_get_reference",
   "fc_search_docs",
-  "fc_generate_payment_gateway_boilerplate",
-  "fc_generate_licensing_boilerplate",
-  "fc_generate_customer_endpoint_boilerplate",
-  "fc_generate_device_licensing_boilerplate",
-  "fc_generate_trial_guard_boilerplate",
-  "fc_generate_client_sdk",
-  "fc_generate_native_client"
+  "fc_generate"
 ];
 
 function serverInfo(auth: AuthContext, verbose = false) {
