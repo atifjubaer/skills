@@ -2,8 +2,9 @@
 
 ## Price: free
 
-The suite has no paid tier. The server ([`server/`](../server/README.md)) and the
-skills ([`skills/`](../skills)) are MIT, every tool is registered for every
+The suite has no paid tier. The server
+([`server/`](../servers/fluentcart-developer/README.md)) and the skills
+([`skills/`](../skills/fluentcart-developer)) are MIT, every tool is registered for every
 caller, and there is nothing to buy, unlock, or renew.
 
 That decision was made on **2026-10-30** and replaced an earlier three-SKU

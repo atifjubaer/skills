@@ -60,7 +60,7 @@ jobs:
       - run: npm ci
 
       # The plugin's only real test. It mounts the plugin in a real Cordis
-      # context, connects a real spawned MCP server, asserts all 12 tools and
+      # context, connects a real spawned MCP server, asserts all 6 tools and
       # the skill, then disposes the fiber. The timeout is not padding: a
       # leaked child fails by hanging, and a hang without one is a green CI run
       # that occupies a runner for hours.

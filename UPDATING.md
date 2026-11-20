@@ -123,21 +123,98 @@ report **37/37**.
 The npm package bundles its own copy of the docs — a published version is a
 snapshot, so a docs refresh only reaches users when you publish.
 
+Publishing runs on GitHub Actions, not from a laptop. There is no npm token to
+hold: the workflow authenticates over OIDC trusted publishing and attaches a
+provenance attestation, which npm only accepts when the workflow filename
+matches the trusted publisher configured for the package. Renaming
+`.github/workflows/release.yml` therefore breaks publishing until the npm trust
+config is updated to match.
+
 ```bash
-# 1. bump
-cd servers/fluentcart-developer
-npm version patch          # or minor / major
+# 1. build + probe locally first — CI will run this again
+npm run build:servers && npm run verify:servers
 
-# 2. build + probe (prepublishOnly forces this anyway)
-npm run build && npm run verify
-
-# 3. ship
-npm publish
+# 2. commit and merge to main
+# 3. GitHub -> Actions -> "Release" -> Run workflow
+#      bump: patch | minor | major
+#      dry_run: true   (proves the tarball, ships nothing)
+#    then run it again with dry_run: false to actually publish
 ```
+
+The workflow bumps the version, refuses to publish one that already exists on
+the registry, publishes with `--provenance`, then commits the bump and pushes a
+`v<version>` tag.
+
+After the registry has processed it (it can lag by minutes), refresh the plugin
+index so the marketplace card shows the new version:
+
+```bash
+npm run make-index    # from the repo root, then commit index.json
+```
+
+The same `make-index` run is what publishes `dsh-plugin-fluentcart` releases
+into the FastrSoft index — see below.
 
 `prepack` runs `scripts/copy-skills.mjs`, which copies `references/` into
 `dist/skills/` and **refuses to publish fewer than 500 pages**. That guard is
 deliberate: a half-synced corpus should fail the release, not ship.
+
+---
+
+## Releasing the DeepSeek Harness plugin
+
+`dsh-plugin-fluentcart` is a second npm package with its own version line, so it
+has its own workflow (`.github/workflows/release-plugin.yml`) and its own trusted
+publisher on npmjs.com. Same dispatch shape as the server release.
+
+Its version must be able to *reach* the server version it depends on. A caret
+range stops at every major, so `^3.0.1` can never resolve `4.0.0` — the plugin
+silently installs an old server and the tools on its card do not match the
+package's own README. When the server goes to a new major, bump the plugin's
+`fluentcart-developer` dependency in the same release:
+
+```bash
+cd plugins/dsh-plugin-fluentcart
+npm install fluentcart-developer@^<new-major> && npm test
+```
+
+`npm test` mounts the plugin in a real Cordis context and connects a real spawned
+server, so it fails if the dependency resolved to the wrong version.
+
+---
+
+## The marketplace index (`index.json`)
+
+`index.json` at the repository root is the **FastrSoft** plugin marketplace that
+DeepSeek Harness reads over **Plugins → Custom plugin indexes**. It is generated:
+
+```bash
+npm run make-index    # then commit index.json
+```
+
+Never hand-edit it. Every listed version needs a real `publishTimestamp` and only
+the registry has those; a hand-kept file drifts the first time someone publishes
+without touching it. There is no separate publish step — serving it from the repo
+means committing it *is* publishing it.
+
+Adding a plugin needs no change to the generator. Create `plugins/<name>/` whose
+`package.json` declares both keys:
+
+| Key | What it is |
+|---|---|
+| `dsh.bundle` | the compose layer — makes the package installable |
+| `dsh.marketplace` | the card — title, description, icon, category, labels |
+
+The next `make-index` picks it up. Icons are inlined as `data:` URLs (capped at
+32 KiB) so the index stays a single self-contained file.
+
+Two traps worth knowing:
+
+- **The raw URL must serve 2xx without a redirect.** A `github.com/.../blob/...`
+  link redirects and Discover rejects it; use `raw.githubusercontent.com`.
+- **A fresh publish is not instantly installable.** pnpm's `minimumReleaseAge`
+  cooldown skips versions younger than the threshold, so a brand-new release can
+  resolve to an *older* one. Pin the exact version (`@3.0.1`) when verifying.
 
 ---
 

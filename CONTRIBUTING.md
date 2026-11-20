@@ -1,6 +1,6 @@
 # Contributing to Atif Jubaer's Agent Skills
 
-Thank you for your interest in contributing to this skills repository! We welcome contributions for new custom AI agent skills, updates to existing references, and improvements to our installer.
+Thank you for your interest in contributing to this skills repository! We welcome contributions for new custom AI agent skills, updates to existing references, and fixes to the MCP server.
 
 Here is a guide on how you (or your AI coding assistant) can add new skills and submit improvements.
 
@@ -55,14 +55,32 @@ To make sure your skill displays under the correct section on the public `skills
 
 ## 2. Testing Your Changes Locally
 
-Before submitting a Pull Request, verify your skill installer executes correctly:
+There is no installer script and no CLI. Skills are plain Markdown plus a
+`SKILL.md` frontmatter block, consumed directly from this repository — so the
+checks are the repository's own, and they need no install: the root of this repo
+has no dependencies.
 
-1.  Navigate to your repository root.
-2.  Run the local installer sync:
-    ```bash
-    node bin/index.js init
-    ```
-3.  Check that the skill files are compiled and successfully synced to your local editor profile directories (like Cursor, Claude, or Gemini).
+```bash
+npm run ci        # validate skills, the package, and server/skill parity
+```
+
+That runs three checks:
+
+| Script | What it refuses |
+| --- | --- |
+| `npm run check:skills` | a `SKILL.md` with broken frontmatter, a missing section, or a dead internal link |
+| `npm run check:package` | a published tarball that ships a file it should not, or drops one it needs |
+| `npm run check:parity` | a skill copy that has drifted from the server's own bundled copy |
+
+To check the MCP server itself, not just the Markdown:
+
+```bash
+npm run build:servers     # compile servers/fluentcart-developer
+npm run verify:servers    # boot it over stdio and call every tool for real
+```
+
+`verify:servers` is the one that catches a tool that registers but throws — a
+green build proves nothing on its own.
 
 ---
 

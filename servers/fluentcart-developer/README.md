@@ -21,6 +21,7 @@ Free and MIT-licensed. No licence key, account, or purchase required.
 
 | Tool | What it does |
 |------|--------------|
+| `fc_search_docs` | Full-text across all 593 documentation pages. Every query word must match; optional `prefix` scopes to `restapi/`, `database/`, `hooks/`, `modules/` |
 | `fc_search_hooks` | Search 680+ hooks by name or domain |
 | `fc_get_db_schema` | Read one `wp_fct_*` table |
 | `fc_get_reference` | Read one documentation page, or one heading inside it |

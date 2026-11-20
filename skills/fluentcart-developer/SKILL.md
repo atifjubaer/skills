@@ -1,6 +1,6 @@
 ---
 name: "fluentcart-developer"
-description: "Complete FluentCart developer documentation — every page of dev.fluentcart.com captured as local Markdown: 585 pages covering the 474 REST API operations, 49 database models, 22 hook files, 11 modules, payment-method integration, shipping carriers, and the licensing SDK, plus FastrSoft's own add-on and licensing notes."
+description: "Complete FluentCart developer documentation — every page of dev.fluentcart.com captured as local Markdown: 593 pages covering the 474 REST API operations, 49 database models, 22 hook files, 11 modules, payment-method integration, shipping carriers, and the licensing SDK, plus FastrSoft's own add-on and licensing notes."
 summary: "The full FluentCart developer documentation as local Markdown — REST API, database models, action and filter hooks, modules, payment gateways, and shipping."
 version: "3.0.0"
 license: "MIT"
