@@ -99,6 +99,9 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: npm publish --access public --provenance
 
+      # See the same step in release.yml: the remote rejects this tag push
+      # intermittently, seconds after accepting the commit push, and by then the
+      # version is already on npm.
       - name: Commit the bump and tag it
         if: ${{ !inputs.dry_run }}
         run: |
@@ -108,7 +111,14 @@ jobs:
           git commit -m "chore(release): dsh-plugin-fluentcart@${{ steps.bump.outputs.version }}"
           git tag -a "plugin-v${{ steps.bump.outputs.version }}" -m "dsh-plugin-fluentcart@${{ steps.bump.outputs.version }}"
           git push origin HEAD:main
-          git push origin "plugin-v${{ steps.bump.outputs.version }}"
+
+          for attempt in 1 2 3 4 5; do
+            if git push origin "plugin-v${{ steps.bump.outputs.version }}"; then exit 0; fi
+            echo "::warning::tag push rejected (attempt $attempt of 5); retrying"
+            sleep $((attempt * 10))
+          done
+          echo "::error::plugin-v${{ steps.bump.outputs.version }} was published but its tag could not be pushed. Push it by hand."
+          exit 1
 
       - name: Summarise
         run: |
