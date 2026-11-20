@@ -85,7 +85,7 @@ and publishing a release. Not required to use the skill.
 5. **OpenAPI fallback** — the 449 `restapi/operations/*` pages are shells, because VitePress renders them client-side and the HTML ships an empty body. When a capture comes back under 200 bytes the script fetches `/openapi/public/<path>.json` and renders the real endpoint: method, route, parameters table, request body and every response code.
 6. **Manifest** — `.vendor-docs/fluentcart-dev/_manifest.json` records url, status, bytes and a sha256 for every page, so two syncs can be diffed.
 
-Output lands in `.vendor-docs/` (git-ignored) and is copied into `skills/fluentcart-developer/references/`. The five FastrSoft-authored files listed in `premium-references.json` are preserved through every sync and withheld from public builds.
+Output lands in `.vendor-docs/` (git-ignored) and is copied into `skills/fluentcart-developer/references/`. The five FastrSoft-authored files are preserved through every sync — they do not come from the vendor site, so a sync must not overwrite them.
 
 The Agensi listing is a **curated subset** (`AGENSI_SECTIONS` in `scripts/package-agensi-skills.mjs`), because that marketplace rejects archives over 50 files: hooks, modules, payment integration, guides and a generated index — 50 files exactly.
 

@@ -32,7 +32,7 @@ and nothing is fetched at runtime.
 | `fc_get_reference` | One page by path, or one heading inside it. |
 | `fc_search_hooks` | An action or filter by name or domain. |
 | `fc_get_db_schema` | One `wp_fct_*` table. |
-| `fc_generate` | Working code. Pass a `type`: `payment_gateway`, `licensing`, `customer_endpoint`, `device_licensing`, `trial_guard`, `client_sdk` or `native_client`. |
+| `fc_generate` | Working code. Pass a `type`: `payment_gateway`, `licensing`, `customer_endpoint`, `device_licensing`, `client_sdk` or `native_client`. |
 | `get_info` | Server version and corpus stats. |
 
 **One skill**, `fluentcart-developer`, which tells the model the tools exist,

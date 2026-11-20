@@ -159,10 +159,10 @@ top-level section appears, so the agent knows where to look.
 
 ---
 
-## The five files that are never touched
+## The five files that never come from the vendor site
 
-`premium-references.json` lists files that are **not** from the vendor site —
-they document FastrSoft's own work and are withheld from public builds:
+These five are **not** from the vendor site — they document FastrSoft's own
+work, so a sync will not regenerate them:
 
 ```
 fastr-addon-hooks.md
@@ -175,6 +175,10 @@ device-licensing-and-hardware-tracking.md
 The sync writes to `.vendor-docs/`, and only the *copy* step fills
 `references/`. Preserve these five when the folder is cleared, restore them
 after, then rebuild `references/INDEX.md`.
+
+They used to be withheld from public builds as a paid tier. That tier is gone:
+every reference file now ships in the npm package and in the repo alike, so
+there is no longer a list to maintain and no `FASTR_INCLUDE_PREMIUM` to set.
 
 ---
 
