@@ -75,25 +75,24 @@ restate every key you still want.
 Open **Plugins → Custom plugin indexes**, choose **Add index source**, and enter:
 
 ```
-https://raw.githubusercontent.com/atifjubaer/skills/main/plugins/dsh-plugin-fluentcart/index.json
+https://raw.githubusercontent.com/atifjubaer/skills/main/index.json
 ```
 
-Then install from the **Discover** tab.
+Turn on **Custom plugin indexes** under **Experimental plugins** first — the
+Discover tab does not exist without it. Then install from **Discover**.
 
 This is optional. `dsh plugin add dsh-plugin-fluentcart` does not depend on the
 index and always works; the index only adds a browsable card.
 
 The index is a [plugin
 index](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/plugin-market.md)
-in `format: 1`, served straight from this repository. It used to live on a
-public gist because a `raw.githubusercontent.com` link to a private repository
-returns **401** to DSH's fetch; the repository is public now, so the gist is
-gone and the file in this directory is what clients read.
+in `format: 1`, served straight from this repository. It lives at the
+repository root, not here, because an index is a **marketplace**: it lists
+every FastrSoft plugin, and this package is one card in it.
 
 ### Regenerating
 
-The index is generated, not hand-written: every listed version needs a real
-`publishTimestamp`, and only the registry knows those. After a publish:
+Run from the **repository root**, not this directory:
 
 ```sh
 npm run make-index
@@ -102,11 +101,13 @@ npm run make-index
 Then commit `index.json`. There is no separate publish step — the file is
 served from the repository, so committing it *is* publishing it.
 
-The icon is inlined as a `data:` URL, so the index is a single self-contained
-file. A relative icon resolves against the index URL and would work here, since
-`icons/` sits beside the JSON — but inlining means the file can be moved to any
-host, or pasted anywhere, without a second asset to forget. The format caps an
-inline icon at 32 KiB and this one is 7 KB.
+Adding a plugin needs no change to the generator. Create `plugins/<name>/` with
+a `dsh.bundle` (the compose layer) and a `dsh.marketplace` block (the card
+title, description, icon and labels), and the next run picks it up.
+
+The icon is inlined as a `data:` URL by the generator, so the index stays one
+self-contained file that works on any static host. The format caps an inline
+icon at 32 KiB and this one is 7 KB.
 
 ## Development
 

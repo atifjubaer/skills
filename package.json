@@ -11,7 +11,8 @@
     "ci": "npm run check:skills && npm run check:package && npm run check:parity",
     "check:parity": "node scripts/check-server-parity.mjs",
     "sync:docs": "node scripts/sync-fluentcart-docs.mjs",
-    "deploy:mcpize": "node scripts/deploy-mcpize.mjs"
+    "deploy:mcpize": "node scripts/deploy-mcpize.mjs",
+    "make-index": "node scripts/make-index.mjs"
   },
   "repository": {
     "type": "git",
@@ -30,5 +31,51 @@
     "cursor"
   ],
   "author": "Fastrsoft",
-  "license": "MIT"
+  "license": "MIT",
+  "marketplace": {
+    "title": {
+      "en": "FastrSoft"
+    },
+    "description": {
+      "en": "Plugins from FastrSoft for AI coding tools — documentation search, code generation, and the connectors around them."
+    },
+    "author": "FastrSoft",
+    "categories": {
+      "development": {
+        "title": {
+          "en": "Development"
+        }
+      }
+    },
+    "labels": {
+      "wordpress": {
+        "title": {
+          "en": "WordPress"
+        }
+      },
+      "ecommerce": {
+        "title": {
+          "en": "E-commerce"
+        }
+      },
+      "mcp": {
+        "title": {
+          "en": "MCP server"
+        }
+      },
+      "skills": {
+        "title": {
+          "en": "Ships a skill"
+        }
+      }
+    },
+    "sortKeys": {
+      "npm_weekly_downloads": {
+        "title": {
+          "en": "Weekly downloads"
+        },
+        "order": "desc"
+      }
+    }
+  }
 }
