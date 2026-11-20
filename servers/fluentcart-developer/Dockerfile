@@ -8,11 +8,8 @@ COPY servers/fluentcart-developer/tsconfig.json ./
 COPY servers/fluentcart-developer/src ./src
 COPY servers/fluentcart-developer/scripts ./scripts
 COPY skills/fluentcart-developer /app/skills/fluentcart-developer
-# copy-skills.mjs reads the premium manifest from the repo root and refuses to
-# build without it, so it has to be in the context. This image is a server
-# deployment like MCPize, not the public npm package: it gets the full set.
-COPY premium-references.json /app/premium-references.json
-ENV FASTR_INCLUDE_PREMIUM=1
+# There is no premium manifest any more: the image, the npm package and the
+# repo all carry the same corpus, so copy-skills.mjs needs nothing extra here.
 RUN npm run build
 
 FROM node:22-alpine

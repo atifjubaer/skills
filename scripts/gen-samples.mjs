@@ -53,7 +53,6 @@ const NATIVE_FILES = {
   c: 'fastr_license.c',
 };
 
-const TRIAL_PLATFORMS = ['tauri_rust', 'python', 'chrome_extension', 'cpp_vst'];
 
 function extract(result) {
   if (typeof result === 'string') return result;
@@ -116,20 +115,7 @@ for (const [platform, file] of Object.entries(NATIVE_FILES)) {
   written++;
 }
 
-// Trial guards are multi-file projects, not single compilable units. Generating
-// them here still catches a template that throws or emits nothing.
-for (const platform of TRIAL_PLATFORMS) {
-  const code = await generate('fc_generate', {
-    type: 'trial_guard',
-    platform,
-    storeUrl: STORE,
-    productId: PRODUCT,
-    appName: APP,
-  });
-
-  fs.writeFileSync(path.join(outDir, `trial-guard-${platform}.txt`), code, 'utf8');
-  console.log(`guard  ${platform.padEnd(14)} ${String(code.split('\n').length).padStart(4)} lines`);
-  written++;
-}
+// The trial_guard generator was removed: it required the Fastr Devices add-on,
+// so it was the one type that could not run against a plain FluentCart store.
 
 console.log(`\n${written} artefacts written to ${path.relative(root, outDir)}`);

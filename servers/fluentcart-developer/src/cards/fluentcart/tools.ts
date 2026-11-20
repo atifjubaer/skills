@@ -610,8 +610,7 @@ ${subRouteCases}
         `Clock guard:  compare local time against the server's "server_time_unix" reply;`,
         `              never trust a local clock for expiry.`,
         `Missing:      device_fingerprint — this template predates the trial registry,`,
-        `              so trials are refused and the device panel has no fingerprint.`,
-        `              For trials call fc_generate with type: "trial_guard" instead.`
+        `              so trials are refused and the device panel has no fingerprint.`
       ].join('\n');
 
       const header = (title: string, file: string) =>
@@ -1424,526 +1423,6 @@ void LicensingManager::deactivate()
 
       return {
         content: [{ type: 'text', text: code }]
-      };
-    }
-  );
-  collect(
-    'fc_generate_trial_guard_boilerplate',
-    {
-      description:
-        'Generate client code that makes a FluentCart Pro trial one-per-machine: hardware fingerprinting, a pre-checkout eligibility call that returns a signed token, activation with device_fingerprint, and handling for trial_already_used / trial_fingerprint_required / trial_device_mismatch. Requires the Fastr Devices for FluentCart add-on.',
-      inputSchema: {
-        platform: z
-          .enum(['tauri_rust', 'python', 'chrome_extension'])
-          .describe('Client platform to generate code for'),
-        storeUrl: z.string().describe('Base URL of the FluentCart store, e.g. "https://store.example.com/"'),
-        productId: z.number().describe('FluentCart product (item) ID the trial belongs to'),
-        appName: z.string().describe('Product name, e.g. "Acme Studio"')
-      }
-    },
-    async ({ platform, storeUrl, productId, appName }) => {
-      const base = storeUrl.endsWith('/') ? storeUrl : storeUrl + '/';
-      const slug = appName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-
-      const shared = [
-        `Store:        ${base}`,
-        `Product ID:   ${productId}`,
-        `Eligibility:  POST ?fluent-cart=fastr_trial_eligibility  (product_id, device_fingerprint, email)`,
-        `Activation:   POST ?fluent-cart=activate_license         (+ device_fingerprint)`,
-        `Heartbeat:    POST ?fluent-cart=check_license            (+ device_fingerprint)`,
-        `Refusals:     trial_already_used | trial_fingerprint_required | trial_device_mismatch`,
-        `              All are HTTP 422 with success=false. Never trust a local clock for expiry.`
-      ].join('\n');
-
-      const header = (title: string, file: string) =>
-        `// ${appName} - FluentCart trial guard (${title})\n// File: ${file}\n${shared
-          .split('\n')
-          .map((line) => `// ${line}`)
-          .join('\n')}\n`;
-
-      if (platform === 'tauri_rust') {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `${header('Tauri / Rust', 'src/trial.rs')}
-//
-// Cargo.toml
-//   reqwest     = { version = "0.12", features = ["json"] }
-//   serde       = { version = "1", features = ["derive"] }
-//   serde_json  = "1"
-//   machine-uid = "0.5"
-//   keyring     = "2"
-//   whoami      = "1"
-
-use serde::Deserialize;
-
-const STORE: &str = "${base}";
-const PRODUCT_ID: i64 = ${productId};
-const KEYRING_SERVICE: &str = "${slug}-trial";
-
-#[derive(Deserialize, Debug)]
-pub struct Eligibility {
-    pub eligible: bool,
-    pub reason: String,
-    pub token: Option<String>,
-    pub risk_score: Option<i64>,
-}
-
-/// Stable, versioned machine fingerprint. Survives app updates; changes on
-/// OS reinstall or disk replacement, which is a support reset, not abuse.
-pub fn fingerprint() -> String {
-    let uid = machine_uid::get().unwrap_or_else(|_| "unknown".to_string());
-    let host = whoami::fallible::hostname().unwrap_or_else(|_| "host".to_string());
-    format!(
-        "v1|MACHINEID={}|HOST={}|OS={}|ARCH={}",
-        uid,
-        host,
-        std::env::consts::OS,
-        std::env::consts::ARCH
-    )
-}
-
-/// One persisted device:// id, used as site_url. Separate from the fingerprint:
-/// the id identifies the install, the fingerprint identifies the machine.
-pub fn device_id() -> String {
-    if let Ok(entry) = keyring::Entry::new(KEYRING_SERVICE, "device_id") {
-        if let Ok(id) = entry.get_password() {
-            return id;
-        }
-        let id = format!("device://{}", uuid::Uuid::new_v4());
-        let _ = entry.set_password(&id);
-        return id;
-    }
-    "device://unknown".to_string()
-}
-
-pub async fn check_trial(client: &reqwest::Client, email: &str) -> Result<Eligibility, String> {
-    let res = client
-        .post(format!("{}?fluent-cart=fastr_trial_eligibility", STORE))
-        .form(&[
-            ("product_id", PRODUCT_ID.to_string()),
-            ("device_fingerprint", fingerprint()),
-            ("email", email.to_string()),
-        ])
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    res.json::<Eligibility>().await.map_err(|e| e.to_string())
-}
-
-pub async fn activate(
-    client: &reqwest::Client,
-    license_key: &str,
-    email: &str,
-) -> Result<serde_json::Value, String> {
-    let res = client
-        .post(format!("{}?fluent-cart=activate_license", STORE))
-        .form(&[
-            ("item_id", PRODUCT_ID.to_string()),
-            ("license_key", license_key.to_string()),
-            ("site_url", device_id()),
-            ("device_fingerprint", fingerprint()),
-            ("device_name", whoami::fallible::hostname().unwrap_or_default()),
-            ("device_type", "Desktop (Tauri)".to_string()),
-            ("os", std::env::consts::OS.to_string()),
-            ("arch", std::env::consts::ARCH.to_string()),
-            ("email", email.to_string()),
-            ("server_version", env!("CARGO_PKG_VERSION").to_string()),
-        ])
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    let body: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
-
-    match body.get("error_type").and_then(|v| v.as_str()) {
-        Some("trial_already_used") => Err("trial_already_used".into()),
-        Some("trial_fingerprint_required") => Err("client_outdated".into()),
-        Some("trial_device_mismatch") => Err("trial_device_mismatch".into()),
-        Some("device_blocked") => Err("device_blocked".into()),
-        _ => Ok(body),
-    }
-}
-
-// Flow: check_trial() before showing the trial button; hide or disable it when
-// eligible=false. activate() on submit. Cache the server's server_time_unix and
-// compare it on every launch instead of trusting the local clock.
-`
-            }
-          ]
-        };
-      }
-
-      if (platform === 'python') {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `"""${appName} - FluentCart trial guard (Python)
-
-Store:        ${base}
-Product ID:   ${productId}
-Dependencies: httpx, keyring
-
-Flow: check_trial() before offering the trial, activate() on submit,
-      check() on every launch. Never trust the local clock for expiry.
-"""
-
-import platform
-import socket
-import subprocess
-import sys
-import time
-import uuid
-
-import httpx
-import keyring
-
-STORE = "${base}"
-PRODUCT_ID = ${productId}
-KEYRING_SERVICE = "${slug}-trial"
-
-
-def machine_id() -> str:
-    """Stable machine identifier. Linux: /etc/machine-id, Windows: MachineGuid."""
-    if sys.platform.startswith("win"):
-        try:
-            import winreg
-
-            key = winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE,
-                r"SOFTWARE\\Microsoft\\Cryptography",
-            )
-            value, _ = winreg.QueryValueEx(key, "MachineGuid")
-            return str(value)
-        except Exception:
-            return ""
-    if sys.platform == "darwin":
-        try:
-            out = subprocess.check_output(
-                ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
-                text=True,
-            )
-            for line in out.splitlines():
-                if "IOPlatformUUID" in line:
-                    return line.split("=")[-1].strip().strip('"')
-        except Exception:
-            return ""
-    try:
-        with open("/etc/machine-id", "r", encoding="utf-8") as handle:
-            return handle.read().strip()
-    except OSError:
-        return ""
-
-
-def fingerprint() -> str:
-    uname = platform.uname()
-    return "v1|MACHINEID={}|HOST={}|OS={}|ARCH={}".format(
-        machine_id() or "unknown",
-        socket.gethostname(),
-        uname.system,
-        uname.machine,
-    )
-
-
-def device_id() -> str:
-    stored = keyring.get_password(KEYRING_SERVICE, "device_id")
-    if stored:
-        return stored
-    new_id = "device://" + str(uuid.uuid4())
-    keyring.set_password(KEYRING_SERVICE, "device_id", new_id)
-    return new_id
-
-
-def check_trial(email: str) -> dict:
-    payload = {
-        "product_id": PRODUCT_ID,
-        "device_fingerprint": fingerprint(),
-        "email": email,
-    }
-    with httpx.Client(timeout=10.0) as client:
-        response = client.post(STORE + "?fluent-cart=fastr_trial_eligibility", data=payload)
-        return response.json()
-
-
-def activate(license_key: str, email: str) -> dict:
-    uname = platform.uname()
-    payload = {
-        "item_id": PRODUCT_ID,
-        "license_key": license_key,
-        "site_url": device_id(),
-        "device_fingerprint": fingerprint(),
-        "device_name": socket.gethostname(),
-        "device_type": "Python Desktop / CLI",
-        "os": uname.system,
-        "arch": uname.machine,
-        "email": email,
-        "server_version": "1.0.0",
-    }
-    with httpx.Client(timeout=10.0) as client:
-        response = client.post(STORE + "?fluent-cart=activate_license", data=payload)
-        body = response.json()
-
-    error = body.get("error_type")
-    if error in {
-        "trial_already_used",
-        "trial_fingerprint_required",
-        "trial_device_mismatch",
-        "device_blocked",
-    }:
-        raise RuntimeError(error)
-
-    if body.get("status") == "valid":
-        keyring.set_password(KEYRING_SERVICE, "license_key", license_key)
-        keyring.set_password(KEYRING_SERVICE, "last_server_time", str(body.get("server_time_unix", 0)))
-
-    return body
-`
-            }
-          ]
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `${header('Chrome Extension MV3', 'background.js')}
-//
-// manifest.json permissions: "storage", "alarms"
-// Note: a user can clear chrome.storage in seconds, so browser trials are
-// account-bound in practice. The fingerprint raises friction, it does not
-// guarantee device identity.
-
-const STORE = "${base}";
-const PRODUCT_ID = ${productId};
-// Offline entitlement is bounded by the signed token's own exp, which the
-// server issues. Nothing below trusts a timestamp this extension wrote:
-// chrome.storage is editable from DevTools in seconds.
-const PUBLIC_KEY_URL = STORE + "?fluent-cart=fastr_license_public_key";
-
-async function getInstallId() {
-  const data = await chrome.storage.local.get("install_id");
-  if (data.install_id) return data.install_id;
-  const id = "device://" + crypto.randomUUID();
-  await chrome.storage.local.set({ install_id: id });
-  return id;
-}
-
-async function fingerprint() {
-  const manifest = chrome.runtime.getManifest();
-  return [
-    "v1",
-    "INSTALL=" + (await getInstallId()),
-    "EXT=" + chrome.runtime.id,
-    "CORES=" + (navigator.hardwareConcurrency || 0),
-    "TZ=" + Intl.DateTimeFormat().resolvedOptions().timeZone,
-    "VER=" + manifest.version
-  ].join("|");
-}
-
-export async function checkTrial(email) {
-  const body = new URLSearchParams({
-    product_id: String(PRODUCT_ID),
-    device_fingerprint: await fingerprint(),
-    email: email || ""
-  });
-
-  const res = await fetch(STORE + "?fluent-cart=fastr_trial_eligibility", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString()
-  });
-
-  const json = await res.json();
-  await chrome.storage.local.set({ trial_risk: json.risk_score || 0 });
-  return json;
-}
-
-export async function activateLicense(licenseKey, email) {
-  const installId = await getInstallId();
-  const body = new URLSearchParams({
-    item_id: String(PRODUCT_ID),
-    license_key: licenseKey,
-    site_url: installId,
-    device_fingerprint: await fingerprint(),
-    device_name: "Chrome Browser Profile",
-    device_type: "Chrome Extension",
-    os: navigator.userAgentData ? navigator.userAgentData.platform : navigator.platform,
-    email: email || "",
-    server_version: chrome.runtime.getManifest().version
-  });
-
-  const res = await fetch(STORE + "?fluent-cart=activate_license", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString()
-  });
-
-  const json = await res.json();
-
-  if (json.error_type === "trial_already_used") throw new Error("trial_already_used");
-  if (json.error_type === "trial_fingerprint_required") throw new Error("client_outdated");
-  if (json.error_type === "trial_device_mismatch") throw new Error("trial_device_mismatch");
-
-  if (json.status === "valid" && json.license_token) {
-    await chrome.storage.local.set({
-      license_key: licenseKey,
-      activation_hash: json.activation_hash,
-      license_token: json.license_token,
-      server_time_unix: json.server_time_unix,
-      local_at_check: Date.now()
-    });
-  }
-
-  return json;
-}
-
-function b64Bytes(input) {
-  const bin = atob(input.replace(/-/g, "+").replace(/_/g, "/"));
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-async function storePublicKey() {
-  const cached = await chrome.storage.local.get("fastr_public_key");
-  if (cached.fastr_public_key) return cached.fastr_public_key;
-
-  const res = await fetch(PUBLIC_KEY_URL, { cache: "no-store" });
-  const json = await res.json();
-  // The store answers { kid, alg, public_key_pem, ... }. Guessing a shorter
-  // name here means the key is never found and every user is locked out.
-  const pem = String(json.public_key_pem || json.public_key || json.pem || "");
-
-  if (pem) await chrome.storage.local.set({ fastr_public_key: pem });
-  return pem;
-}
-
-// RS256 verification. A token the user forges fails here; a token the store
-// signed cannot be edited without breaking the signature.
-export async function verifyLicenseToken(token, pem) {
-  const parts = String(token || "").split(".");
-  if (parts.length !== 3 || !pem) return null;
-
-  try {
-    const der = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
-
-    const key = await crypto.subtle.importKey(
-      "spki",
-      b64Bytes(der),
-      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-      false,
-      ["verify"]
-    );
-
-    const ok = await crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
-      key,
-      b64Bytes(parts[2]),
-      new TextEncoder().encode(parts[0] + "." + parts[1])
-    );
-
-    if (!ok) return null;
-
-    const claims = JSON.parse(new TextDecoder().decode(b64Bytes(parts[1])));
-
-    if (typeof claims.exp === "number" && claims.exp <= Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-
-    return claims;
-  } catch (error) {
-    return null;
-  }
-}
-
-// What the extension should gate on. Verified offline against the store's key,
-// so the answer survives losing the network but not editing storage.
-export async function hasAccess() {
-  const data = await chrome.storage.local.get([
-    "license_key",
-    "license_token",
-    "local_at_check"
-  ]);
-
-  if (!data.license_key || !data.license_token) {
-    return { status: "unlicensed" };
-  }
-
-  // A clock that now reads earlier than it did at the last successful check
-  // defeats the expiry check below, so refuse instead of guessing.
-  if (data.local_at_check && Date.now() < data.local_at_check) {
-    return { status: "invalid", reason: "clock_rollback" };
-  }
-
-  const pem = await storePublicKey();
-  const claims = await verifyLicenseToken(data.license_token, pem);
-
-  if (!claims) {
-    return { status: "expired", reason: "token_invalid_or_expired" };
-  }
-
-  return { status: "valid", source: "offline_token", claims };
-}
-
-export async function checkLicense() {
-  const data = await chrome.storage.local.get([
-    "license_key",
-    "install_id",
-    "license_token"
-  ]);
-
-  if (!data.license_key || !data.install_id) return { status: "unlicensed" };
-
-  const body = new URLSearchParams({
-    item_id: String(PRODUCT_ID),
-    license_key: data.license_key,
-    site_url: data.install_id,
-    device_fingerprint: await fingerprint()
-  });
-
-  try {
-    const res = await fetch(STORE + "?fluent-cart=check_license", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: body.toString()
-    });
-
-    const json = await res.json();
-
-    if (json.status !== "valid") {
-      // The store said no. Whatever is still on disk is now a lie.
-      await chrome.storage.local.remove(["license_token", "local_at_check"]);
-      return json;
-    }
-
-    await chrome.storage.local.set({
-      license_token: json.license_token || data.license_token,
-      server_time_unix: json.server_time_unix,
-      local_at_check: Date.now()
-    });
-
-    return json;
-  } catch (error) {
-    // No network. The signed token is the best evidence available, and it
-    // expires on the server's schedule rather than ours.
-    return await hasAccess();
-  }
-}
-
-chrome.alarms.create("fastr_license_check", { periodInMinutes: 60 });
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "fastr_license_check") checkLicense();
-});
-`
-          }
-        ]
       };
     }
   );
@@ -2923,7 +2402,6 @@ fun entitlement(
     'licensing',
     'customer_endpoint',
     'device_licensing',
-    'trial_guard',
     'client_sdk',
     'native_client'
   ] as const;
@@ -2936,15 +2414,14 @@ fun entitlement(
     licensing: 'fc_generate_licensing_boilerplate',
     customer_endpoint: 'fc_generate_customer_endpoint_boilerplate',
     device_licensing: 'fc_generate_device_licensing_boilerplate',
-    trial_guard: 'fc_generate_trial_guard_boilerplate',
     client_sdk: 'fc_generate_client_sdk',
     native_client: 'fc_generate_native_client'
   };
 
   /**
    * Fields each type cannot run without. Checked here rather than in the flat
-   * schema because the schema is shared by all seven: making every field
-   * required would forbid the other six types, and making them all optional
+   * schema because the schema is shared by all six: making every field
+   * required would forbid the other five types, and making them all optional
    * without this check would let a call through with `type` alone.
    */
   const REQUIRED_FIELDS: Record<GenerateType, string[]> = {
@@ -2952,21 +2429,19 @@ fun entitlement(
     licensing: ['pluginNamespace', 'pluginTitle', 'itemId', 'apiUrl'],
     customer_endpoint: ['endpointSlug', 'tabTitle'],
     device_licensing: ['platform', 'storeUrl', 'productId', 'appName'],
-    trial_guard: ['platform', 'storeUrl', 'productId', 'appName'],
     client_sdk: ['platform', 'storeUrl', 'productId', 'appName'],
     native_client: ['platform', 'storeUrl', 'productId', 'appName']
   };
 
   /**
    * Which platforms each type accepts. The flat schema has to declare one
-   * union of every platform, so without this a `trial_guard` call would accept
-   * `platform: "swift"` and silently generate from the wrong branch. The
-   * per-type schemas used to enforce this through zod; enforced here instead,
-   * where it costs no prompt tokens and can name the alternatives on failure.
+   * union of every platform, so without this a `device_licensing` call would
+   * accept `platform: "swift"` and silently generate from the wrong branch.
+   * The per-type schemas used to enforce this through zod; enforced here
+   * instead, where it costs no prompt tokens and names the alternatives.
    */
   const PLATFORMS_BY_TYPE: Partial<Record<GenerateType, readonly string[]>> = {
     device_licensing: ['tauri_rust', 'chrome_extension', 'python', 'cpp_vst'],
-    trial_guard: ['tauri_rust', 'python', 'chrome_extension', 'cpp_vst'],
     client_sdk: ['node', 'dotnet', 'go', 'kotlin'],
     native_client: ['swift', 'unity_csharp', 'java', 'php', 'c']
   };
@@ -2992,7 +2467,7 @@ fun entitlement(
     'fc_generate',
     {
       description: `Generate working FluentCart code. Pass a type plus its fields:
-payment_gateway: gatewaySlug, gatewayTitle. licensing: pluginNamespace, pluginTitle, itemId, apiUrl. customer_endpoint: endpointSlug, tabTitle. device_licensing / trial_guard / client_sdk / native_client: platform, storeUrl, productId, appName. Everything else is optional and labelled with its type.
+payment_gateway: gatewaySlug, gatewayTitle. licensing: pluginNamespace, pluginTitle, itemId, apiUrl. customer_endpoint: endpointSlug, tabTitle. device_licensing / client_sdk / native_client: platform, storeUrl, productId, appName. Everything else is optional and labelled with its type.
 Prefer this over hand-writing: the output already encodes the hooks, the order they fire in, and the response shapes.`,
       inputSchema: {
         type: z.enum(GENERATE_TYPES).describe('Which generator to run'),
@@ -3008,7 +2483,7 @@ Prefer this over hand-writing: the output already encodes the hooks, the order t
         tabTitle: z.string().optional().describe('customer_endpoint: dashboard tab title'),
         iconSvg: z.string().optional().describe('customer_endpoint: raw SVG, 20x20 viewBox'),
         subRoutes: z.array(z.string()).optional().describe('customer_endpoint: sub-path actions, e.g. ["history"]'),
-        platform: z.enum(PLATFORMS).optional().describe('device_licensing, trial_guard, client_sdk, native_client: target platform'),
+        platform: z.enum(PLATFORMS).optional().describe('device_licensing, client_sdk, native_client: target platform'),
         storeUrl: z.string().optional().describe('Store base URL, e.g. "https://store.example.com/"'),
         productId: z.number().optional().describe('FluentCart product (item) ID'),
         appName: z.string().optional().describe('Product name, e.g. "Acme Studio"')

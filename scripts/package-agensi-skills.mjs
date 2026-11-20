@@ -143,8 +143,8 @@ function copyFolder(src, dest, skip) {
  * the parts that read as a coherent manual on their own: every hook, every
  * module, payment integration, and the guides.
  *
- * Nothing here is premium content — `premium-references.json` files never leave
- * the repo, and the full corpus ships through npm and MCPize instead.
+ * This archive is a curated subset only; the full corpus ships through npm and
+ * MCPize. There is no premium tier any more — every reference file is public.
  */
 const AGENSI_SECTIONS = [
   'hooks',

@@ -1,7 +1,7 @@
 {
   "name": "fluentcart-developer",
   "version": "4.0.0",
-  "description": "MCP server for FluentCart developer knowledge: documentation search, database schema lookup, hook discovery, reference reading, and boilerplate generation for gateways, licensing, customers, device licensing, trial guards and client SDKs.",
+  "description": "MCP server for FluentCart developer knowledge: documentation search, database schema lookup, hook discovery, reference reading, and boilerplate generation for gateways, licensing, customers, device licensing and client SDKs.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
