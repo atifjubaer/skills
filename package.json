@@ -11,6 +11,7 @@
     "ci": "npm run check:skills && npm run check:package && npm run check:parity",
     "check:parity": "node scripts/check-server-parity.mjs",
     "sync:docs": "node scripts/sync-fluentcart-docs.mjs",
+    "sync:docs:apply": "node scripts/sync-docs-into-skill.mjs",
     "deploy:mcpize": "node scripts/deploy-mcpize.mjs",
     "make-index": "node scripts/make-index.mjs"
   },

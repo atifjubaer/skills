@@ -1,0 +1,133 @@
+name: Sync vendor docs
+
+# The 593 pages under skills/fluentcart-developer/references/ are a mirror of
+# dev.fluentcart.com, not something anyone hand-edits. Nothing about a snapshot
+# tells you it has gone stale, so this runs weekly and turns any drift into a
+# reviewable pull request instead of a surprise months later.
+#
+# It opens a PR rather than committing to main on purpose: a vendor change can
+# add a page, rename a heading, or quietly drop an endpoint, and the pages are
+# what generated code is validated against. A human should see the diff.
+#
+# The branch name is fixed, so a second week of drift updates the same PR
+# instead of opening a duplicate.
+on:
+  schedule:
+    # 04:17 on Mondays, UTC. Not on the hour: every cron in the world fires at
+    # :00, and a runner queue at 04:00 UTC is worse than one at 04:17.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-docs
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Re-capture dev.fluentcart.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # No dependencies to install: the sync script is plain Node with no
+      # imports outside the standard library, which is why the repo root has no
+      # lockfile.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Nothing is committed by the script, so a failure here leaves the tree
+      # untouched and the job red. A partial sync that still writes files is
+      # the case worth watching: the script fails loudly on a page it could not
+      # fetch, which is why this step is allowed to be the gate.
+      - name: Re-capture every page
+        run: npm run sync:docs
+
+      # The capture lands in .vendor-docs/, which is git-ignored, so on its own
+      # it can never show up as a diff. This is the step that moves it into the
+      # checked-in corpus — without it this whole workflow would report "no
+      # drift" every week no matter what the vendor site did.
+      - name: Apply the capture to the corpus
+        run: npm run sync:docs:apply
+
+      - name: Check what changed
+        id: drift
+        run: |
+          # status, not `git diff`: a page the vendor added upstream is untracked
+          # in the working tree, and `git diff` only reports tracked files — so
+          # the one case that most needs a review would have looked like no
+          # drift at all.
+          if [ -z "$(git status --porcelain -- skills/fluentcart-developer/references)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No drift: every page matches the vendor site."
+            exit 0
+          fi
+
+          CHANGED=$(git diff --numstat -- skills/fluentcart-developer/references | wc -l)
+          ADDED=$(git status --porcelain -- skills/fluentcart-developer/references | grep -c '^??' || true)
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "files=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "added=$ADDED" >> "$GITHUB_OUTPUT"
+          echo "Drift in $CHANGED modified and $ADDED new page(s)."
+
+      # The corpus is what the tools answer from, so a sync that breaks a link
+      # or a frontmatter block should fail here rather than inside a user's
+      # session. run: ci also re-checks server/skill parity and the tarball.
+      - name: Validate the refreshed corpus
+        if: steps.drift.outputs.changed == 'true'
+        run: npm run ci
+
+      - name: Open or update the pull request
+        if: steps.drift.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B chore/docs-sync
+          git add -A skills/fluentcart-developer/references
+          git commit -m "chore(docs): re-capture dev.fluentcart.com"
+          git push --force origin chore/docs-sync
+
+          BODY=$(cat <<'EOF'
+          Automated re-capture of <https://dev.fluentcart.com> by `.github/workflows/sync-docs.yml`.
+
+          Review the diff rather than the count: a vendor change can rename a heading, add an endpoint, or drop a page that generated code still cites. If a page a template depends on disappeared, fix the template in this PR rather than merging without it.
+
+          Merging this refreshes the corpus inside the npm package on its next release. It does not bump a version — Claude Code and DeepSeek Harness users will not see it until a release runs.
+          EOF
+          )
+
+          if gh pr view chore/docs-sync --json number >/dev/null 2>&1; then
+            gh pr edit chore/docs-sync --body "$BODY"
+            echo "Updated the existing pull request."
+          else
+            gh pr create \
+              --base main \
+              --head chore/docs-sync \
+              --title "chore(docs): re-capture dev.fluentcart.com" \
+              --body "$BODY"
+          fi
+
+      - name: Summarise
+        run: |
+          {
+            if [ "${{ steps.drift.outputs.changed }}" = "true" ]; then
+              echo "### Drift found"
+              echo ""
+              echo "${{ steps.drift.outputs.changed }} modified page(s), ${{ steps.drift.outputs.added }} new."
+              echo "A pull request is open on \`chore/docs-sync\`."
+            else
+              echo "### No drift"
+              echo ""
+              echo "Every page still matches the vendor site. Nothing to review."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
