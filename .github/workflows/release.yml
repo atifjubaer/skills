@@ -63,13 +63,25 @@ jobs:
           npm run build
           npm run verify
 
+      # Bumps the Claude Code plugin manifest in the same breath as the npm
+      # package. Claude Code computes a plugin's version from that field and
+      # only re-copies a plugin when the value changes, so a release that
+      # skipped it would publish to npm while every Claude Code user stayed on
+      # their cached copy — the exact silent freeze DISTRIBUTION.md warns about.
       - name: Bump version
         id: bump
         run: |
           npm version "${{ inputs.bump }}" --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
+          node -e "
+            const { readFileSync, writeFileSync } = require('node:fs');
+            const path = '../../.claude-plugin/plugin.json';
+            const manifest = JSON.parse(readFileSync(path, 'utf8'));
+            manifest.version = process.argv[1];
+            writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
+          " "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Bumped to $VERSION"
+          echo "Bumped to $VERSION (npm package and Claude Code plugin manifest)"
 
       # After the bump, never before. The version on disk at the start of a
       # release is by definition already published, so checking first refuses
@@ -112,7 +124,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json src/version.ts
+          git add package.json package-lock.json src/version.ts ../../.claude-plugin/plugin.json
           git commit -m "chore(release): fluentcart-developer@${{ steps.bump.outputs.version }}"
           git tag -a "v${{ steps.bump.outputs.version }}" -m "fluentcart-developer@${{ steps.bump.outputs.version }}"
           git push origin HEAD:main
