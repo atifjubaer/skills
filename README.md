@@ -58,8 +58,14 @@ node dist/http.js                 # Streamable HTTP on :8080
 Register it with Claude Code in one line:
 
 ```bash
-claude mcp add fluentcart -- npx -y fluentcart-developer
+claude mcp add -s user fluentcart -- npx -y fluentcart-developer
 ```
+
+`-s user` matters. Without it the scope defaults to `local`, which registers the
+server for **one project on one machine** — the command appears to work and the
+tools then seem to vanish the moment you open a different folder. Use
+`-s project` instead to commit the registration to a repository's `.mcp.json`
+for everyone who clones it.
 
 Every tool is registered for every caller on both transports. There is no licence key, no account, no purchase, and no per-request quota. `npm run verify` boots the built server over stdio and asserts a real call against every tool.
 
