@@ -215,7 +215,10 @@ It ships **no `skills/` directory** on purpose. The server sends its rules in th
 `SKILL.md` here would be a second copy of the same guidance able to drift from
 the first — and its relative links would point at files a lean install does not
 have. The full skill remains available through the DeepSeek Harness plugin and
-`skills.sh`.
+`skills.sh`, and by copying `skills/fluentcart-developer/` into a directory the
+client scans — `~/.claude/skills/` is read by Claude Code **and** OpenCode, which
+treats `.claude/skills`, `.agents/skills` and their home-directory forms as
+compatibility paths.
 
 ### The icon does not show, and cannot
 
@@ -271,6 +274,7 @@ Never set `version` in both files — the manifest wins without warning and
 | **Claude Code** | `/plugin marketplace update fluentcart-skills` then `/plugin update`, or turn on auto-update for the marketplace | After the bump to `plugin.json` reaches the marketplace clone. Auto-update is **off by default** for any marketplace that is not Anthropic's own. |
 | **DeepSeek Harness** | `dsh plugin --profile web add dsh-plugin-fluentcart` again, or the card's **Update available** | When a new npm version exists **and** `index.json` lists it. The card is only as fresh as the index, so run `make-index` after publishing. |
 | **skills.sh (skill only)** | `npx skills update` | Next run. It re-reads the repository. |
+| **Skill copied into `~/.claude/skills/`** | re-run the copy | **Never on its own.** A `cp -r` is a snapshot; there is no updater watching it. This is the one surface where a user can silently sit on an old copy forever. |
 | **Git clone** | `git pull` | Immediately. |
 
 Two of those are manual steps a maintainer can forget, so they are automated or
