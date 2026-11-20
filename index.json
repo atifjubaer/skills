@@ -54,7 +54,7 @@
       "description": {
         "en": "Adds the fluentcart MCP server (6 tools over 593 documentation pages) and the fluentcart-developer skill. Free, local, no licence key."
       },
-      "icon": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiByeD0iMzAiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMzYuNTYxIDIwNS45NDRINDcuMTM2N0w2MS4xNzA0IDE3My40OTFDNjUuMjkwNiAxNjMuOTYzIDc0LjY3ODQgMTU3Ljc5NSA4NS4wNTg5IDE1Ny43OTVIMTkxLjU4NEwxODQuMzM4IDE3NC41NTFDMTc2LjA5OCAxOTMuNjA3IDE1Ny4zMjIgMjA1Ljk0NCAxMzYuNTYxIDIwNS45NDRaIiBmaWxsPSIjMDAwMDlGIi8+CjxwYXRoIGQ9Ik0yMTAuNjQzIDE0Mi40MzlIODQuODU3NEw5Mi4xMDM1IDEyNS42ODNDMTAwLjM0NCAxMDYuNjI3IDExOS4xMiA5NC4yOTA1IDEzOS44ODEgOTQuMjkwNUgyNDguNTY1TDIzNC41MzEgMTI2Ljc0M0MyMzAuNDExIDEzNi4yNzEgMjIxLjAyMyAxNDIuNDM5IDIxMC42NDMgMTQyLjQzOVoiIGZpbGw9IiMwMDAwOUYiLz4KPC9zdmc+Cg==",
+      "icon": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQo8cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgcng9IjMwIiBmaWxsPSJ3aGl0ZSIvPg0KPHBhdGggZD0iTTEzNi41NjEgMjA1Ljk0NEg0Ny4xMzY3TDYxLjE3MDQgMTczLjQ5MUM2NS4yOTA2IDE2My45NjMgNzQuNjc4NCAxNTcuNzk1IDg1LjA1ODkgMTU3Ljc5NUgxOTEuNTg0TDE4NC4zMzggMTc0LjU1MUMxNzYuMDk4IDE5My42MDcgMTU3LjMyMiAyMDUuOTQ0IDEzNi41NjEgMjA1Ljk0NFoiIGZpbGw9IiMwMDAwOUYiLz4NCjxwYXRoIGQ9Ik0yMTAuNjQzIDE0Mi40MzlIODQuODU3NEw5Mi4xMDM1IDEyNS42ODNDMTAwLjM0NCAxMDYuNjI3IDExOS4xMiA5NC4yOTA1IDEzOS44ODEgOTQuMjkwNUgyNDguNTY1TDIzNC41MzEgMTI2Ljc0M0MyMzAuNDExIDEzNi4yNzEgMjIxLjAyMyAxNDIuNDM5IDIxMC42NDMgMTQyLjQzOVoiIGZpbGw9IiMwMDAwOUYiLz4NCjwvc3ZnPg0K",
       "author": "FastrSoft",
       "homepage": "https://github.com/atifjubaer/skills/tree/main/plugins/dsh-plugin-fluentcart#readme",
       "repository": {
@@ -74,6 +74,16 @@
         }
       },
       "versions": [
+        {
+          "version": "3.0.2",
+          "publishTimestamp": 1795196805,
+          "source": {
+            "type": "npm"
+          },
+          "engines": {
+            "dsh": ">=0.2.0 <0.3.0"
+          }
+        },
         {
           "version": "3.0.1",
           "publishTimestamp": 1795180698,
