@@ -114,7 +114,7 @@ const index = {
       name,
       title: { en: 'FluentCart Developer' },
       description: {
-        en: 'Adds the fluentcart MCP server (12 tools over 588 documentation pages) and the fluentcart-developer skill. Free, local, no licence key.',
+        en: 'Adds the fluentcart MCP server (6 tools over 588 documentation pages) and the fluentcart-developer skill. Free, local, no licence key.',
       },
       icon,
       author: manifest.author ?? 'Atif Jubaer',

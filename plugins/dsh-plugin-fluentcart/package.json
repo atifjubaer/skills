@@ -48,7 +48,7 @@
     }
   },
   "dependencies": {
-    "fluentcart-developer": "^3.0.1"
+    "fluentcart-developer": "^4.0.0"
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-mcp-client": ">=0.2.0 <0.3.0"
