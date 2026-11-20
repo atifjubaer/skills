@@ -1,6 +1,6 @@
 ---
 name: "fluentcart-developer"
-description: "FluentCart developer knowledge for WordPress e-commerce: the 474 REST API operations, 49 database models, 22 hook reference files, 11 modules, payment gateway and shipping carriers, and FluentCart Pro software licensing. Use the fc_* MCP tools to search and read the 588 local documentation pages instead of guessing an endpoint, hook signature, or table name."
+description: "FluentCart developer knowledge for WordPress e-commerce: the 474 REST API operations, 49 database models, 22 hook reference files, 11 modules, payment gateway and shipping carriers, and FluentCart Pro software licensing. Use the fc_* MCP tools to search and read the 593 local documentation pages instead of guessing an endpoint, hook signature, or table name."
 summary: "Search and read the full FluentCart developer documentation through the fc_* MCP tools, and generate validated boilerplate for gateways, licensing, customers, device licensing and client SDKs."
 version: "3.0.0"
 license: "MIT"

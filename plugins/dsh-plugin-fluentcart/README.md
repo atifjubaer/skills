@@ -28,7 +28,7 @@ and nothing is fetched at runtime.
 
 | Tool | What it answers |
 | --- | --- |
-| `fc_search_docs` | Full-text across 588 documentation pages. Every query word must match; optional `prefix` scopes to `restapi/`, `database/`, `hooks/`, `modules/`. |
+| `fc_search_docs` | Full-text across 593 documentation pages. Every query word must match; optional `prefix` scopes to `restapi/`, `database/`, `hooks/`, `modules/`. |
 | `fc_get_reference` | One page by path, or one heading inside it. |
 | `fc_search_hooks` | An action or filter by name or domain. |
 | `fc_get_db_schema` | One `wp_fct_*` table. |
@@ -40,7 +40,7 @@ when to reach for them, and the rules that keep generated code correct — never
 patch FluentCart core, prefix everything, guard every PHP file, escape output,
 check capabilities.
 
-The skill is deliberately short. The 588 documentation pages are served by the
+The skill is deliberately short. The 593 documentation pages are served by the
 tools, not pasted into the prompt, so a session costs a few hundred tokens
 until it actually looks something up.
 
