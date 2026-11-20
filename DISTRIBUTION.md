@@ -172,16 +172,18 @@ dsh plugin --profile web add dsh-plugin-fluentcart
 
 ## 4. Claude Code: a marketplace, not a package
 
-`.claude-plugin/marketplace.json` lists one plugin whose `source` is `"./"` —
-the repository root itself. Users run:
+`.claude-plugin/marketplace.json` lists one plugin whose `source` is
+`"./plugins/claude-plugin-fluentcart"`. Users run:
 
 ```
 /plugin marketplace add atifjubaer/skills
+/plugin install fluentcart-developer@fluentcart-skills
 ```
 
 **This needs no npm, no npx, and no account.** Claude Code clones the repository
-with `git` and copies the plugin into `~/.claude/plugins/cache/`. npm enters the
-picture only *later*, when the plugin's `.mcp.json` starts the server:
+with `git` and copies *only that directory* into `~/.claude/plugins/cache/` —
+2,726 bytes, three files. npm enters the picture only *later*, when the plugin's
+`.mcp.json` starts the server:
 
 ```json
 { "mcpServers": { "fluentcart": { "command": "npx", "args": ["-y", "fluentcart-developer"] } } }
@@ -196,19 +198,24 @@ There is a plugin entry for the marketplace (`marketplace.json`) and a manifest
 for the plugin itself (`plugin.json`). They must agree on `name`, or install
 fails with `Plugin "<name>" not found in marketplace "<marketplace>"`.
 
-Because the entry's `source` is the repository root, the root is simultaneously
-the plugin root — so everything at the top level ships to every user, including
-`CLAUDE.md`, `CONTRIBUTING.md` and `DISTRIBUTION.md`. `claude plugin validate`
-warns about exactly that:
+### Why the plugin is a subdirectory, not the repository root
 
-```
-⚠ root: CLAUDE.md at the plugin root is not loaded as project context.
-```
+It used to be the root. That worked, and it was expensive: installing a plugin
+copies its directory into the cache, so every user copied the entire 4 MB
+documentation corpus — which the tools never read, because they fetch it from
+npm. Three copies of the same pages ended up on disk: the marketplace clone
+(7.5 MB), the plugin copy (4 MB), and the npm package (3.5 MB).
 
-The warning is accurate and harmless: Claude Code does not read a plugin's
-`CLAUDE.md`. The alternative — moving the plugin into a subdirectory — would
-mean the marketplace clone no longer contains the corpus it needs, so the
-flattened layout is the deliberate trade.
+The plugin is now three files — `plugin.json`, `.mcp.json`, `README.md` — and
+`npm run check:plugin` fails if it grows past 64 KB, ships a `references/` page,
+stops launching through `npx`, or falls behind the server's version.
+
+It ships **no `skills/` directory** on purpose. The server sends its rules in the
+`initialize` handshake, which Claude Code injects into the system prompt, so a
+`SKILL.md` here would be a second copy of the same guidance able to drift from
+the first — and its relative links would point at files a lean install does not
+have. The full skill remains available through the DeepSeek Harness plugin and
+`skills.sh`.
 
 ### The icon does not show, and cannot
 
@@ -218,9 +225,17 @@ That is not a third-party-tools problem and not a bug in this repository:
 > `icon` — Icon for the plugin's listing in **Anthropic's directory**. **Claude Code doesn't read it.**
 
 Claude Code has no icon rendering in `/plugin` at all. The field is read only
-when a plugin is submitted to Anthropic's published directory, so setting it
-costs nothing and future-proofs that submission — but no file in this repo can
-put an image in that dialog today.
+when a plugin is submitted to Anthropic's published directory — and that
+submission needs a **square PNG, 512–2048 px, under 2 MB**:
+
+```
+⚠ icon: No icon (ICON_MISSING)
+   SVG and WebP are not accepted.
+```
+
+So the SVG that backs the DeepSeek Harness card could not be reused here even
+if it were read. No `icon` is set: it would be a file nothing loads. Add one at
+`.claude-plugin/icon.png` when there is a listing to submit to.
 
 ### Which version a user is on
 

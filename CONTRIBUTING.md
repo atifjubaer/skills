@@ -70,7 +70,8 @@ That runs three checks:
 | --- | --- |
 | `npm run check:skills` | a `SKILL.md` with broken frontmatter, a missing section, or a dead internal link |
 | `npm run check:package` | a published tarball that ships a file it should not, or drops one it needs |
-| `npm run check:parity` | a skill copy that has drifted from the server's own bundled copy |
+| `npm run check:parity` | a server that names a different package, advertises a foreign card, or carries the retired suite's identity |
+| `npm run check:plugin` | a Claude Code plugin that has bloated past 64 KB, drifted off npm, or fallen behind the server's version |
 
 To check the MCP server itself, not just the Markdown:
 

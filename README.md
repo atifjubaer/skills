@@ -252,7 +252,7 @@ skills/
 ├── mcpize.yaml                   # MCPize deployment manifest
 ├── CLAUDE.md · UPDATING.md · CONTRIBUTING.md · LICENSE
 │
-├── .claude-plugin/               # Claude Code plugin + marketplace manifests
+├── .claude-plugin/marketplace.json   # the Claude Code marketplace catalogue
 ├── .mcp.json                     # MCP config for this repo
 ├── .github/workflows/
 │   ├── ci.yml                    # build, protocol probe, docker, sample compile
@@ -275,12 +275,15 @@ skills/
 │       ├── scripts/              # skill bundler + stdio protocol probe
 │       └── Dockerfile
 │
-├── plugins/                      # 👈 one directory per DeepSeek Harness plugin
-│   └── dsh-plugin-fluentcart/
-│       ├── cordis.patch.yml      # one compose row
-│       ├── lib/index.js          # mounts the MCP server + registers the skill
-│       ├── skills/fluentcart-developer/SKILL.md
-│       └── test/e2e.mjs
+├── plugins/                      # 👈 one directory per installable plugin
+│   ├── dsh-plugin-fluentcart/    # DeepSeek Harness
+│   │   ├── cordis.patch.yml      # one compose row
+│   │   ├── lib/index.js          # mounts the MCP server + registers the skill
+│   │   ├── skills/fluentcart-developer/SKILL.md
+│   │   └── test/e2e.mjs
+│   └── claude-plugin-fluentcart/ # Claude Code — 3 files, 2.7 KB
+│       ├── .claude-plugin/plugin.json
+│       └── .mcp.json             # launches npx fluentcart-developer
 │
 └── skills/                       # 👈 the skill content
     └── fluentcart-developer/
