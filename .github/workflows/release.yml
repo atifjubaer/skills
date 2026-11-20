@@ -83,20 +83,23 @@ jobs:
             exit 1
           fi
 
-      # No --provenance: npm only attests builds from a publicly readable
-      # repository, and this one is private. Turn it back on if the repo is
-      # ever made public.
+      # --provenance is on the real publish only. npm attests a build from a
+      # publicly readable repository, which this now is, and the attestation
+      # is what lets a user confirm the tarball came from this commit by this
+      # workflow rather than from someone's laptop. A dry run uploads nothing,
+      # so there is nothing to attest and it is left off there.
       #
-      # No NODE_AUTH_TOKEN either. The npm CLI prefers OIDC when the runner
-      # offers it, so this publishes with the trusted publisher configured on
-      # npmjs.com and nothing stored in this repository.
+      # No NODE_AUTH_TOKEN. The npm CLI prefers OIDC when the runner offers it,
+      # so this publishes with the trusted publisher configured on npmjs.com
+      # and nothing stored in this repository. That same OIDC token is what
+      # signs the provenance statement — the two do not need separate setup.
       - name: Publish (dry run)
         if: inputs.dry_run
         run: npm publish --access public --dry-run
 
       - name: Publish
         if: ${{ !inputs.dry_run }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
       - name: Commit the bump and tag it
         if: ${{ !inputs.dry_run }}

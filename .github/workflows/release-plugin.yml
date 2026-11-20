@@ -88,13 +88,16 @@ jobs:
             exit 1
           fi
 
+      # --provenance on the real publish only: a dry run uploads nothing, so
+      # there is no build to attest. The repo is public, which is what npm
+      # requires to link the attestation back to this commit and workflow.
       - name: Publish (dry run)
         if: inputs.dry_run
         run: npm publish --access public --dry-run
 
       - name: Publish
         if: ${{ !inputs.dry_run }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
       - name: Commit the bump and tag it
         if: ${{ !inputs.dry_run }}
@@ -118,6 +121,6 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "Refresh the plugin index once the registry has processed it (it can lag by minutes, so this is not run here):" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
-            echo "npm run make-index && npm run publish-index" >> "$GITHUB_STEP_SUMMARY"
+            echo "npm run make-index   # then commit index.json; the repo serves it" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
