@@ -45,6 +45,22 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "marketplace": {
+      "title": {
+        "en": "FluentCart Developer"
+      },
+      "description": {
+        "en": "Adds the fluentcart MCP server (6 tools over 593 documentation pages) and the fluentcart-developer skill. Free, local, no licence key."
+      },
+      "icon": "./icons/fluentcart.png",
+      "category": "development",
+      "labels": [
+        "wordpress",
+        "ecommerce",
+        "mcp",
+        "skills"
+      ]
     }
   },
   "dependencies": {
@@ -66,7 +82,6 @@
   },
   "scripts": {
     "test": "node test/e2e.mjs",
-    "prepublishOnly": "npm test",
-    "make-index": "node scripts/make-index.mjs"
+    "prepublishOnly": "npm test"
   }
 }
